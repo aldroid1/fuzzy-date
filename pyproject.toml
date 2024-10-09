@@ -1,0 +1,31 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "fuzzy-date"
+description = "Convert various time strings into datetime objects"
+authors = [
+    { name = "Antti Launiainen", email = "antti@antictools.com" }
+]
+readme = "README.md"
+keywords = ["date", "parser", "relative", "time", "strtotime"]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/aldroid1/fuzzy-date"
+Issues = "https://github.com/aldroid1/fuzzy-date/issues"
+Repository = "https://github.com/aldroid1/fuzzy-date.git"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
