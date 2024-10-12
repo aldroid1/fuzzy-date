@@ -201,7 +201,7 @@ pub(crate) fn tokenize(
     let last_index: usize = source.len() - 1;
     let mut part_start = 0;
 
-    for (part_index, part_char) in source.chars().enumerate() {
+    for (part_index, part_char) in source.char_indices() {
         let mut part_chars = "";
         let mut part_letter: String = String::from("");
 
@@ -285,13 +285,13 @@ pub(crate) fn tokenize(
 /// or the supported reverse cases, such as "@123456789
 fn parse_string_and_number(part_chars: &str) -> (String, String) {
     let prefixed_number: bool = TokenList::is_prefixed(
-        &part_chars.chars().next().unwrap().to_string().as_str()
+        &part_chars.char_indices().next().unwrap().1.to_string().as_str()
     );
 
     let mut curr_number = String::from("");
     let mut curr_string = String::from("");
 
-    for curr_char in part_chars.chars() {
+    for (_, curr_char) in part_chars.char_indices() {
         if prefixed_number.eq(&false) && curr_string.len() == 0 && curr_char.is_digit(10) {
             curr_number.push(curr_char);
             continue;
@@ -644,18 +644,20 @@ mod tests {
 
     #[test]
     fn test_custom_tokens() {
-        let weekdays_finnish = HashMap::from([
+        let monday_examples = HashMap::from([
             (String::from("maanantai"), Token { token: TokenType::Weekday, value: 1 }),
-            (String::from("tiistai"), Token { token: TokenType::Weekday, value: 2 }),
-            (String::from("keskiviikko"), Token { token: TokenType::Weekday, value: 3 }),
-            (String::from("torstai"), Token { token: TokenType::Weekday, value: 4 }),
-            (String::from("perjantai"), Token { token: TokenType::Weekday, value: 5 }),
-            (String::from("lauantai"), Token { token: TokenType::Weekday, value: 6 }),
-            (String::from("sunnuntai"), Token { token: TokenType::Weekday, value: 7 }),
+            (String::from("måndag"), Token { token: TokenType::Weekday, value: 1 }),
         ]);
 
         assert_eq!(
-            tokenize("next maanantai", weekdays_finnish), (
+            tokenize("next Maanantai", monday_examples.to_owned()), (
+                String::from("next [wday]"),
+                vec![Token { token: TokenType::Weekday, value: 1 }],
+            ),
+        );
+
+        assert_eq!(
+            tokenize("next Måndag", monday_examples.to_owned()), (
                 String::from("next [wday]"),
                 vec![Token { token: TokenType::Weekday, value: 1 }],
             ),
