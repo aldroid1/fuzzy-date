@@ -158,11 +158,13 @@ struct TokenList {
 
 impl TokenList {
     fn new(custom: HashMap<String, Token>) -> Self {
-        let mut tokens = custom.to_owned();
+        let mut tokens = HashMap::new();
 
         for (keyword, token) in STANDARD_TOKENS {
             tokens.insert(keyword.to_string(), token);
         }
+
+        tokens.extend(custom.to_owned());
 
         Self { tokens: tokens }
     }
