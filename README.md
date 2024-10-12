@@ -21,6 +21,21 @@ fd.to_datetime('next Summer')
 # ValueError: Unable to convert "next Summer" into datetime
 ```
 
+## Localization
+
+```python
+import fuzzydate as fd
+
+fd.config.add_tokens({
+    'måndag': fd.token.WDAY_MON,
+})
+
+a = fd.to_date('next Monday')
+b = fd.to_date('next Måndag')
+
+assert a == b
+```
+
 ## Requirements
 
 - Python >= 3.8
@@ -55,10 +70,9 @@ pip install fuzzy-date
 
 ## Methods
 
-```python
-fuzzydate.add_tokens(
-    tokens=dict[str, int]) -> None
+### Conversion
 
+```python
 fuzzydate.to_date(
     source: str,
     today: datetime.date = None,
@@ -70,21 +84,14 @@ fuzzydate.to_datetime(
     weekday_start_mon: bool = True) -> datetime.datetime
 ```
 
-## Localization
-
-Add your own tokens to support additional locations.
+### Configuration
 
 ```python
-import fuzzydate as fd
+# Read-only
+fuzzydate.config.tokens: dict[str, int]
 
-fd.add_tokens({
-    'måndag': fd.token.WDAY_MON,
-})
-
-a = fd.to_date('next Monday')
-b = fd.to_date('next Måndag')
-
-assert a == b
+fuzzydate.config.add_tokens(
+    tokens: dict[str, int]) -> None
 ```
 
 ## Background

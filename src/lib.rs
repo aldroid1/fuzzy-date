@@ -15,7 +15,7 @@ mod fuzzydate {
     use super::*;
     use crate::fuzzydate::__core__::Config;
 
-    const ATTR_CONFIG: &'static str = "__config__";
+    const ATTR_CONFIG: &'static str = "config";
     const ATTR_TOKEN: &'static str = "token";
 
     #[pymodule]
@@ -24,7 +24,29 @@ mod fuzzydate {
 
         #[pyclass]
         pub(crate) struct Config {
+            #[pyo3(get)]
             pub(crate) tokens: HashMap<String, u32>,
+        }
+
+        #[pymethods]
+        impl Config {
+            /// Add custom tokens to use later in tokenizing the pattern
+            fn add_tokens(
+                &mut self,
+                tokens: HashMap<String, u32>) -> PyResult<()> {
+                for (keyword, gid) in tokens {
+                    if gid_into_token(gid).is_some() {
+                        self.tokens.insert(keyword.to_lowercase(), gid);
+                        continue;
+                    }
+
+                    return Err(PyValueError::new_err(format!(
+                        "Token \"{}\" has non-existing value of {}", keyword, gid,
+                    )));
+                }
+
+                Ok(())
+            }
         }
 
         #[pyclass]
@@ -59,32 +81,6 @@ mod fuzzydate {
 
             // @formatter:on
         }
-    }
-
-    /// Add custom tokens to use later in tokenizing the pattern
-    #[pyfunction]
-    #[pyo3(pass_module)]
-    fn add_tokens(
-        module: &Bound<'_, PyModule>,
-        tokens: HashMap<String, u32>) -> PyResult<()> {
-        let config = &mut module
-            .as_borrowed()
-            .getattr(ATTR_CONFIG)?
-            .downcast_into::<Config>()?
-            .borrow_mut();
-
-        for (keyword, gid) in tokens {
-            if gid_into_token(gid).is_some() {
-                config.tokens.insert(keyword.to_lowercase(), gid);
-                continue;
-            }
-
-            return Err(PyValueError::new_err(format!(
-                "Token \"{}\" has non-existing value of {}", keyword, gid,
-            )));
-        }
-
-        Ok(())
     }
 
     /// Turn time string into Python's datetime.date
