@@ -31,9 +31,34 @@ fd.to_datetime('next Summer')
 pip install fuzzy-date 
 ```
 
+## Syntax support
+
+### Special
+
+- Date `now`, `today`, `tomorrow`, `yesterday`
+- Time of day `midnight`
+
+### Relative
+
+- Adjustment `last`, `prev`, `this`, `next` or `+`, `-`
+- Units `next week`, `next month`, `next year`
+- Weekdays `next Mon`, `next Monday`
+- Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
+- Ranges `last/first day of`
+
+### Fixed
+
+- Unix timestamp `@1680307200`
+- Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
+- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
+- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+
 ## Methods
 
 ```python
+fuzzydate.add_tokens(
+    tokens=dict[str, int]) -> None
+
 fuzzydate.to_date(
     source: str,
     today: datetime.date = None,
@@ -45,27 +70,22 @@ fuzzydate.to_datetime(
     weekday_start_mon: bool = True) -> datetime.datetime
 ```
 
-## Syntax support
+## Localization
 
-### Special
+Add your own tokens to support additional locations.
 
-- Date `now`, `today`, `tomorrow`, `yesterday`
-- Time of day `midnight`
+```python
+import fuzzydate as fd
 
-### Relative
+fd.add_tokens({
+    'måndag': fd.token.WDAY_MON,
+})
 
-- Adjustment `last`, `prev`, `next` or `+`, `-`
-- Units `next week`, `next month`, `next year`
-- Weekdays `next Mon`, `next Monday`
-- Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
-- Ranges `last/first day of`
+a = fd.to_date('next Monday')
+b = fd.to_date('next Måndag')
 
-### Fixed
-
-- Unix timestamp `@1680307200` 
-- Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
-- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
-- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+assert a == b
+```
 
 ## Background
 

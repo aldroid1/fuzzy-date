@@ -13,43 +13,52 @@ use std::collections::HashMap;
 #[pymodule]
 mod fuzzydate {
     use super::*;
+    use crate::fuzzydate::__core__::Config;
 
-    const ATTR_TOKENS: &'static str = "__tokens__";
+    const ATTR_CONFIG: &'static str = "__config__";
+    const ATTR_TOKEN: &'static str = "token";
 
-    #[pyclass(name = "token")]
-    #[derive(Debug)]
-    struct Tokens {
-        custom: HashMap<String, u32>,
-    }
+    #[pymodule]
+    mod __core__ {
+        use super::*;
 
-    #[pymethods]
-    impl Tokens {
-        // @formatter:off
+        #[pyclass]
+        pub(crate) struct Config {
+            pub(crate) tokens: HashMap<String, u32>,
+        }
 
-        // Weekdays
-        #[classattr] const WDAY_MON: i16 = 101;
-        #[classattr] const WDAY_TUE: i16 = 102;
-        #[classattr] const WDAY_WED: i16 = 103;
-        #[classattr] const WDAY_THU: i16 = 104;
-        #[classattr] const WDAY_FRI: i16 = 105;
-        #[classattr] const WDAY_SAT: i16 = 106;
-        #[classattr] const WDAY_SUN: i16 = 107;
+        #[pyclass]
+        pub(crate) struct Tokens {}
 
-        // Months
-        #[classattr] const MONTH_JAN: i16 = 201;
-        #[classattr] const MONTH_FEB: i16 = 202;
-        #[classattr] const MONTH_MAR: i16 = 203;
-        #[classattr] const MONTH_APR: i16 = 204;
-        #[classattr] const MONTH_MAY: i16 = 205;
-        #[classattr] const MONTH_JUN: i16 = 206;
-        #[classattr] const MONTH_JUL: i16 = 207;
-        #[classattr] const MONTH_AUG: i16 = 208;
-        #[classattr] const MONTH_SEP: i16 = 209;
-        #[classattr] const MONTH_OCT: i16 = 210;
-        #[classattr] const MONTH_NOV: i16 = 211;
-        #[classattr] const MONTH_DEC: i16 = 212;
+        #[pymethods]
+        impl Tokens {
+            // @formatter:off
 
-        // @formatter:on
+            // Weekdays
+            #[classattr] const WDAY_MON: i16 = 101;
+            #[classattr] const WDAY_TUE: i16 = 102;
+            #[classattr] const WDAY_WED: i16 = 103;
+            #[classattr] const WDAY_THU: i16 = 104;
+            #[classattr] const WDAY_FRI: i16 = 105;
+            #[classattr] const WDAY_SAT: i16 = 106;
+            #[classattr] const WDAY_SUN: i16 = 107;
+
+            // Months
+            #[classattr] const MONTH_JAN: i16 = 201;
+            #[classattr] const MONTH_FEB: i16 = 202;
+            #[classattr] const MONTH_MAR: i16 = 203;
+            #[classattr] const MONTH_APR: i16 = 204;
+            #[classattr] const MONTH_MAY: i16 = 205;
+            #[classattr] const MONTH_JUN: i16 = 206;
+            #[classattr] const MONTH_JUL: i16 = 207;
+            #[classattr] const MONTH_AUG: i16 = 208;
+            #[classattr] const MONTH_SEP: i16 = 209;
+            #[classattr] const MONTH_OCT: i16 = 210;
+            #[classattr] const MONTH_NOV: i16 = 211;
+            #[classattr] const MONTH_DEC: i16 = 212;
+
+            // @formatter:on
+        }
     }
 
     /// Add custom tokens to use later in tokenizing the pattern
@@ -57,15 +66,23 @@ mod fuzzydate {
     #[pyo3(pass_module)]
     fn add_tokens(
         module: &Bound<'_, PyModule>,
-        keyword: String,
-        token: u32) -> PyResult<()> {
-        let tokens = &mut module
+        tokens: HashMap<String, u32>) -> PyResult<()> {
+        let config = &mut module
             .as_borrowed()
-            .getattr(ATTR_TOKENS)?
-            .downcast_into::<Tokens>()?
+            .getattr(ATTR_CONFIG)?
+            .downcast_into::<Config>()?
             .borrow_mut();
 
-        tokens.custom.insert(keyword, token);
+        for (keyword, gid) in tokens {
+            if gid_into_token(gid).is_some() {
+                config.tokens.insert(keyword.to_lowercase(), gid);
+                continue;
+            }
+
+            return Err(PyValueError::new_err(format!(
+                "Token \"{}\" has non-existing value of {}", keyword, gid,
+            )));
+        }
 
         Ok(())
     }
@@ -119,8 +136,9 @@ mod fuzzydate {
     }
 
     #[pymodule_init]
-    fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
-        m.add(ATTR_TOKENS, Tokens { custom: HashMap::new() })?;
+    fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
+        module.add(ATTR_CONFIG, Config { tokens: HashMap::new() })?;
+        module.add(ATTR_TOKEN, __core__::Tokens {})?;
         Ok(())
     }
 
@@ -128,15 +146,15 @@ mod fuzzydate {
     /// them as tokens the tokenization (currently) accepts
     fn read_tokens(
         m: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
-        let tokens = &m
+        let config = &m
             .as_borrowed()
-            .getattr(ATTR_TOKENS)?
-            .downcast_into::<Tokens>()?
+            .getattr(ATTR_CONFIG)?
+            .downcast_into::<Config>()?
             .borrow();
 
         let mut result = HashMap::new();
 
-        for (keyword, token_gid) in tokens.custom.to_owned() {
+        for (keyword, token_gid) in config.tokens.to_owned() {
             if let Some(token) = gid_into_token(token_gid) {
                 result.insert(keyword, token);
             }
