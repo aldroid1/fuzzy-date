@@ -112,7 +112,7 @@ const STANDARD_TOKENS: [(&'static str, Token); 93] = [
 ];
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
-enum TokenType {
+pub(crate) enum TokenType {
     Integer,
     LongUnit,
     Month,
@@ -142,7 +142,7 @@ impl TokenType {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token {
-    token: TokenType,
+    pub(crate) token: TokenType,
     pub(crate) value: i64,
 }
 
@@ -152,9 +152,21 @@ impl Token {
     }
 }
 
-struct TokenList {}
+struct TokenList {
+    tokens: HashMap<String, Token>,
+}
 
 impl TokenList {
+    fn new(custom: HashMap<String, Token>) -> Self {
+        let mut tokens = custom.to_owned();
+
+        for (keyword, token) in STANDARD_TOKENS {
+            tokens.insert(keyword.to_string(), token);
+        }
+
+        Self { tokens: tokens }
+    }
+
     fn is_boundary(value: &str) -> bool {
         let boundary_chars = HashSet::from(BOUNDARY_CHARS);
         boundary_chars.contains(value)
@@ -164,19 +176,20 @@ impl TokenList {
         HashSet::from(["@"]).contains(value)
     }
 
-    fn find_token(source: &str) -> Option<Token> {
-        let token_strings = HashMap::from(STANDARD_TOKENS);
+    fn find_token(&self, source: &str) -> Option<Token> {
         let lowercased: &str = &source.to_lowercase().to_string();
 
-        match token_strings.get(lowercased) {
-            Some(v) => Option::from(v.clone()),
+        match self.tokens.get(lowercased) {
+            Some(v) => Option::from(v.to_owned()),
             None => None,
         }
     }
 }
 
 /// Turn source string into a pattern, and list of extracted tokens
-pub(crate) fn tokenize(source: &str) -> (String, Vec<Token>) {
+pub(crate) fn tokenize(
+    source: &str,
+    custom: HashMap<String, Token>) -> (String, Vec<Token>) {
     let mut out_pattern: String = String::from("");
     let mut out_values = vec![];
 
@@ -184,6 +197,7 @@ pub(crate) fn tokenize(source: &str) -> (String, Vec<Token>) {
         return (out_pattern, out_values);
     }
 
+    let token_list = TokenList::new(custom);
     let last_index: usize = source.len() - 1;
     let mut part_start = 0;
 
@@ -209,7 +223,7 @@ pub(crate) fn tokenize(source: &str) -> (String, Vec<Token>) {
             continue;
         }
 
-        let string_token = TokenList::find_token(&part_chars);
+        let string_token = token_list.find_token(&part_chars);
 
         if string_token.is_some() {
             let string_value = string_token.unwrap();
@@ -250,7 +264,7 @@ pub(crate) fn tokenize(source: &str) -> (String, Vec<Token>) {
             combo_pattern.push_str(&curr_number);
         }
 
-        let string_value = TokenList::find_token(&curr_string);
+        let string_value = token_list.find_token(&curr_string);
 
         if string_value.is_some() {
             let string_token = string_value.unwrap();
@@ -351,7 +365,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(from_string), (
+            assert_eq!(tokenize_str(from_string), (
                 String::from("[wday]"),
                 vec![Token { token: TokenType::Weekday, value: expect_value }]
             ));
@@ -370,7 +384,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(from_string), (
+            assert_eq!(tokenize_str(from_string), (
                 String::from("[month]"),
                 vec![Token { token: TokenType::Month, value: expect_value }]
             ));
@@ -390,7 +404,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(from_string), (
+            assert_eq!(tokenize_str(from_string), (
                 String::from("[nth]"),
                 vec![Token { token: TokenType::Nth, value: expect_value }]
             ));
@@ -404,7 +418,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(format!("-2{}", from_string).as_str()), (
+            assert_eq!(tokenize_str(format!("-2{}", from_string).as_str()), (
                 String::from("-[int][unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -421,7 +435,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(format!("-2{}", from_string).as_str()), (
+            assert_eq!(tokenize_str(format!("-2{}", from_string).as_str()), (
                 String::from("-[int][short_unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -441,7 +455,7 @@ mod tests {
         ];
 
         for (from_string, expect_value) in expect {
-            assert_eq!(tokenize(format!("-2{}", from_string).as_str()), (
+            assert_eq!(tokenize_str(format!("-2{}", from_string).as_str()), (
                 String::from("-[int][long_unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -459,7 +473,7 @@ mod tests {
         ];
 
         for (from_string, expect_pattern, expect_values) in expect {
-            assert_eq!(tokenize(from_string), (
+            assert_eq!(tokenize_str(from_string), (
                 expect_pattern.to_string(),
                 vec![
                     Token { token: TokenType::Month, value: expect_values.0 },
@@ -473,7 +487,7 @@ mod tests {
     #[test]
     fn test_strings() {
         assert_eq!(
-            tokenize("@1705072948"), (
+            tokenize_str("@1705072948"), (
                 String::from("[timestamp]"),
                 vec![
                     Token { token: TokenType::Timestamp, value: 1705072948 },
@@ -482,7 +496,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("@1705072948.0"), (
+            tokenize_str("@1705072948.0"), (
                 String::from("[timestamp].[int]"),
                 vec![
                     Token { token: TokenType::Timestamp, value: 1705072948 },
@@ -492,7 +506,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("2023-07-01"), (
+            tokenize_str("2023-07-01"), (
                 String::from("[year]-[int]-[int]"),
                 vec![
                     Token { token: TokenType::Year, value: 2023 },
@@ -503,7 +517,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("2023-12-07 15:02"), (
+            tokenize_str("2023-12-07 15:02"), (
                 String::from("[year]-[int]-[int] [int]:[int]"),
                 vec![
                     Token { token: TokenType::Year, value: 2023 },
@@ -516,7 +530,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("2023-12-07 15:02:01"), (
+            tokenize_str("2023-12-07 15:02:01"), (
                 String::from("[year]-[int]-[int] [int]:[int]:[int]"),
                 vec![
                     Token { token: TokenType::Year, value: 2023 },
@@ -530,7 +544,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("01/07/2023"), (
+            tokenize_str("01/07/2023"), (
                 String::from("[int]/[int]/[year]"),
                 vec![
                     Token { token: TokenType::Integer, value: 1 },
@@ -541,7 +555,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("07.01.2023"), (
+            tokenize_str("07.01.2023"), (
                 String::from("[int].[int].[year]"),
                 vec![
                     Token { token: TokenType::Integer, value: 7 },
@@ -552,7 +566,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("February 7th 2023"), (
+            tokenize_str("February 7th 2023"), (
                 String::from("[month] [nth] [year]"),
                 vec![
                     Token { token: TokenType::Month, value: 2 },
@@ -563,7 +577,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("+1y 5m 2w 5d"), (
+            tokenize_str("+1y 5m 2w 5d"), (
                 String::from("+[int][short_unit] [int][short_unit] [int][short_unit] [int][short_unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 1 },
@@ -579,7 +593,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("+2h 8s"), (
+            tokenize_str("+2h 8s"), (
                 String::from("+[int][short_unit] [int][short_unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -591,7 +605,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("-2hr 5min 8sec"), (
+            tokenize_str("-2hr 5min 8sec"), (
                 String::from("-[int][unit] [int][unit] [int][unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -605,7 +619,7 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("-2hrs 5mins 8sec"), (
+            tokenize_str("-2hrs 5mins 8sec"), (
                 String::from("-[int][unit] [int][unit] [int][unit]"),
                 vec![
                     Token { token: TokenType::Integer, value: 2 },
@@ -619,12 +633,32 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("next Monday midnight"), (
+            tokenize_str("next Monday midnight"), (
                 String::from("next [wday] midnight"),
                 vec![
                     Token { token: TokenType::Weekday, value: 1 },
                 ]
             )
+        );
+    }
+
+    #[test]
+    fn test_custom_tokens() {
+        let weekdays_finnish = HashMap::from([
+            (String::from("maanantai"), Token { token: TokenType::Weekday, value: 1 }),
+            (String::from("tiistai"), Token { token: TokenType::Weekday, value: 2 }),
+            (String::from("keskiviikko"), Token { token: TokenType::Weekday, value: 3 }),
+            (String::from("torstai"), Token { token: TokenType::Weekday, value: 4 }),
+            (String::from("perjantai"), Token { token: TokenType::Weekday, value: 5 }),
+            (String::from("lauantai"), Token { token: TokenType::Weekday, value: 6 }),
+            (String::from("sunnuntai"), Token { token: TokenType::Weekday, value: 7 }),
+        ]);
+
+        assert_eq!(
+            tokenize("next maanantai", weekdays_finnish), (
+                String::from("next [wday]"),
+                vec![Token { token: TokenType::Weekday, value: 1 }],
+            ),
         );
     }
 
@@ -635,7 +669,11 @@ mod tests {
         ];
 
         for from_string in expect {
-            assert_eq!(tokenize(from_string), (from_string.to_string(), vec![]));
+            assert_eq!(tokenize_str(from_string), (from_string.to_string(), vec![]));
         }
+    }
+
+    fn tokenize_str(source: &str) -> (String, Vec<Token>) {
+        tokenize(source, HashMap::new())
     }
 }
