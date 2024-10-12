@@ -3,59 +3,177 @@ mod fuzzy;
 mod token;
 mod python;
 
+use crate::token::Token;
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
+use std::collections::HashMap;
 
-/// Turn time string into Python's datetime.date
-#[pyfunction]
-#[pyo3(signature = (source, today=None, weekday_start_mon=true))]
-fn to_date(
-    py: Python,
-    source: &str,
-    today: Option<Py<PyDate>>,
-    weekday_start_mon: bool) -> PyResult<NaiveDate> {
-    match convert_str(&source, &python::into_date(py, today)?, weekday_start_mon) {
-        Some(v) => Ok(v.date_naive()),
-        None => Err(PyValueError::new_err(format!(
-            "Unable to convert \"{}\" into datetime", source,
-        )))
-    }
-}
-
-/// Turn time string into Python's datetime.datetime
-#[pyfunction]
-#[pyo3(signature = (source, now=None, weekday_start_mon=true))]
-fn to_datetime(
-    py: Python,
-    source: &str,
-    now: Option<Py<PyDateTime>>,
-    weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
-    match convert_str(&source, &python::into_datetime(py, now)?, weekday_start_mon) {
-        Some(v) => Ok(v),
-        None => Err(PyValueError::new_err(format!(
-            "Unable to convert \"{}\" into datetime", source,
-        )))
-    }
-}
-
-/// Time string conversion module for Python
 #[pymodule]
-fn fuzzydate(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(to_date, m)?)?;
-    m.add_function(wrap_pyfunction!(to_datetime, m)?)?;
-    Ok(())
+mod fuzzydate {
+    use super::*;
+
+    const ATTR_TOKENS: &'static str = "__tokens__";
+
+    #[pyclass(name = "token")]
+    #[derive(Debug)]
+    struct Tokens {
+        custom: HashMap<String, u32>,
+    }
+
+    #[pymethods]
+    impl Tokens {
+        // @formatter:off
+
+        // Weekdays
+        #[classattr] const WDAY_MON: i16 = 101;
+        #[classattr] const WDAY_TUE: i16 = 102;
+        #[classattr] const WDAY_WED: i16 = 103;
+        #[classattr] const WDAY_THU: i16 = 104;
+        #[classattr] const WDAY_FRI: i16 = 105;
+        #[classattr] const WDAY_SAT: i16 = 106;
+        #[classattr] const WDAY_SUN: i16 = 107;
+
+        // Months
+        #[classattr] const MONTH_JAN: i16 = 201;
+        #[classattr] const MONTH_FEB: i16 = 202;
+        #[classattr] const MONTH_MAR: i16 = 203;
+        #[classattr] const MONTH_APR: i16 = 204;
+        #[classattr] const MONTH_MAY: i16 = 205;
+        #[classattr] const MONTH_JUN: i16 = 206;
+        #[classattr] const MONTH_JUL: i16 = 207;
+        #[classattr] const MONTH_AUG: i16 = 208;
+        #[classattr] const MONTH_SEP: i16 = 209;
+        #[classattr] const MONTH_OCT: i16 = 210;
+        #[classattr] const MONTH_NOV: i16 = 211;
+        #[classattr] const MONTH_DEC: i16 = 212;
+
+        // @formatter:on
+    }
+
+    /// Add custom tokens to use later in tokenizing the pattern
+    #[pyfunction]
+    #[pyo3(pass_module)]
+    fn add_tokens(
+        module: &Bound<'_, PyModule>,
+        keyword: String,
+        token: u32) -> PyResult<()> {
+        let tokens = &mut module
+            .as_borrowed()
+            .getattr(ATTR_TOKENS)?
+            .downcast_into::<Tokens>()?
+            .borrow_mut();
+
+        tokens.custom.insert(keyword, token);
+
+        Ok(())
+    }
+
+    /// Turn time string into Python's datetime.date
+    #[pyfunction]
+    #[pyo3(pass_module, signature = (source, today=None, weekday_start_mon=true))]
+    fn to_date(
+        module: &Bound<'_, PyModule>,
+        py: Python,
+        source: &str,
+        today: Option<Py<PyDate>>,
+        weekday_start_mon: bool) -> PyResult<NaiveDate> {
+        let result = convert_str(
+            &source,
+            &python::into_date(py, today)?,
+            weekday_start_mon,
+            read_tokens(module)?,
+        );
+
+        match result {
+            Some(v) => Ok(v.date_naive()),
+            None => Err(PyValueError::new_err(format!(
+                "Unable to convert \"{}\" into datetime", source,
+            )))
+        }
+    }
+
+    /// Turn time string into Python's datetime.datetime
+    #[pyfunction]
+    #[pyo3(pass_module, signature = (source, now=None, weekday_start_mon=true))]
+    fn to_datetime(
+        module: &Bound<'_, PyModule>,
+        py: Python,
+        source: &str,
+        now: Option<Py<PyDateTime>>,
+        weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
+        let result = convert_str(
+            &source,
+            &python::into_datetime(py, now)?,
+            weekday_start_mon,
+            read_tokens(module)?,
+        );
+
+        match result {
+            Some(v) => Ok(v),
+            None => Err(PyValueError::new_err(format!(
+                "Unable to convert \"{}\" into datetime", source,
+            )))
+        }
+    }
+
+    #[pymodule_init]
+    fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
+        m.add(ATTR_TOKENS, Tokens { custom: HashMap::new() })?;
+        Ok(())
+    }
+
+    /// Read custom tokens from registered to Python module, and return
+    /// them as tokens the tokenization (currently) accepts
+    fn read_tokens(
+        m: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
+        let tokens = &m
+            .as_borrowed()
+            .getattr(ATTR_TOKENS)?
+            .downcast_into::<Tokens>()?
+            .borrow();
+
+        let mut result = HashMap::new();
+
+        for (keyword, token_gid) in tokens.custom.to_owned() {
+            if let Some(token) = gid_into_token(token_gid) {
+                result.insert(keyword, token);
+            }
+        }
+
+        Ok(result)
+    }
 }
 
 /// Tokenize source string and then convert it into a datetime value
 fn convert_str(
     source: &str,
     current_time: &DateTime<FixedOffset>,
-    first_weekday_mon: bool) -> Option<DateTime<FixedOffset>> {
-    let (pattern, tokens) = token::tokenize(&source);
+    first_weekday_mon: bool,
+    custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
     let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon)
+}
+
+/// Turn global identifier into corresponding tokenization token
+fn gid_into_token(gid: u32) -> Option<Token> {
+    if gid.ge(&100) && gid.le(&107) {
+        return Option::from(Token {
+            token: token::TokenType::Weekday,
+            value: (gid - 100) as i64,
+        });
+    }
+
+    if gid.ge(&200) && gid.le(&212) {
+        return Option::from(Token {
+            token: token::TokenType::Month,
+            value: (gid - 200) as i64,
+        });
+    }
+
+    None
 }
 
 #[cfg(test)]
@@ -85,7 +203,7 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for (from_string, expect_time) in expect {
-            let result_time = convert_str(from_string, &current_time, true);
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -218,7 +336,7 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, true);
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -239,7 +357,7 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, false);
+            let result_time = convert_str(from_string, &current_time, false, HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -313,15 +431,34 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for from_string in expect {
-            let result_time = convert_str(from_string, &current_time, true);
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
             assert!(result_time.is_none());
         }
+    }
+
+    #[test]
+    fn test_gid_into_token() {
+        for value in 100..108 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::Weekday,
+                value: (value - 100) as i64,
+            });
+        }
+        assert!(gid_into_token(108).is_none());
+
+        for value in 200..213 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::Month,
+                value: (value - 200) as i64,
+            });
+        }
+        assert!(gid_into_token(213).is_none());
     }
 
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, false);
+            let result_time = convert_str(from_string, &current_time, false, HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
