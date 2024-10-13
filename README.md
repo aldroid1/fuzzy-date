@@ -92,7 +92,11 @@ fuzzydate.to_datetime(
 
 ```python
 # Read-only
+fuzzydate.config.patterns: dict[str, str]
 fuzzydate.config.tokens: dict[str, int]
+
+fuzzydate.config.add_patterns(
+    tokens: dict[str, str]) -> None
 
 fuzzydate.config.add_tokens(
     tokens: dict[str, int]) -> None
