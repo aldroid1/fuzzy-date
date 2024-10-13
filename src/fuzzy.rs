@@ -16,11 +16,11 @@ const FUZZY_PATTERNS: [(&'static str, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result
     ("this [long_unit]", |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 0, r)),
     ("this [wday]", |c, v, _| c.offset_weekday(v[0], convert::Change::None)),
     ("last [long_unit]", |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), -1, r)),
-    ("last [wday]", |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
+    (Pattern::value(Pattern::LastWday), |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
     ("prev [long_unit]", |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), -1, r)),
-    ("prev [wday]", |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
+    (Pattern::value(Pattern::PrevWday), |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
     ("next [long_unit]", |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 1, r)),
-    ("next [wday]", |c, v, _| c.offset_weekday(v[0], convert::Change::Next)),
+    (Pattern::value(Pattern::NextWday), |c, v, _| c.offset_weekday(v[0], convert::Change::Next)),
 
     // NUMERIC OFFSET
     ("-[int][unit]", |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
@@ -104,6 +104,34 @@ const FUZZY_PATTERNS: [(&'static str, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result
         .date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5])
     ),
 ];
+
+#[derive(PartialEq, Eq, Hash)]
+pub(crate) enum Pattern {
+    PrevWday,
+    LastWday,
+    NextWday,
+}
+
+impl Pattern {
+    fn values() -> HashMap<Pattern, &'static str> {
+        HashMap::from([
+            (Self::PrevWday, "prev [wday]"),
+            (Self::LastWday, "last [wday]"),
+            (Self::NextWday, "next [wday]"),
+        ])
+    }
+
+    fn value(key: Pattern) -> &'static str {
+        match Self::values().get(&key) {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub(crate) fn is_valid(value: &str) -> bool {
+        Self::values().values().find(|&&v| v == value).is_some()
+    }
+}
 
 #[derive(PartialEq)]
 enum TimeUnit {

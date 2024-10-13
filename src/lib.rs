@@ -9,6 +9,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
 use std::collections::HashMap;
+use crate::fuzzy::Pattern;
 
 #[pymodule]
 mod fuzzydate {
@@ -16,6 +17,7 @@ mod fuzzydate {
     use crate::fuzzydate::__core__::Config;
 
     const ATTR_CONFIG: &'static str = "config";
+    const ATTR_PATTERN: &'static str = "pattern";
     const ATTR_TOKEN: &'static str = "token";
 
     #[pymodule]
@@ -25,19 +27,48 @@ mod fuzzydate {
         #[pyclass]
         pub(crate) struct Config {
             #[pyo3(get)]
+            pub(crate) patterns: HashMap<String, String>,
+
+            #[pyo3(get)]
             pub(crate) tokens: HashMap<String, u32>,
         }
 
         #[pymethods]
         impl Config {
+            /// Add custom patterns that should replace default patterns, e.g.
+            /// in order to localize English wording
+            ///
+            /// All strings are lowercased by default and merged with any previously
+            /// added patterns. Colliding patterns will be replaced silently. Raises
+            /// a ValueError if an unsupported pattern value is used.
+            ///
+            /// See fuzzydate.pattern.* constants for accepted values.
+            #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
+            fn add_patterns(
+                &mut self,
+                patterns: HashMap<String, String>) -> PyResult<()> {
+                for (pattern, value) in patterns {
+                    if Pattern::is_valid(&value) {
+                        self.patterns.insert(pattern.to_lowercase(), value);
+                        continue;
+                    }
+
+                    return Err(PyValueError::new_err(format!(
+                        "Pattern \"{}\" has non-existing value of {}", pattern, value,
+                    )));
+                }
+
+                Ok(())
+            }
+
             /// Add text strings to identify as tokens
             ///
             /// All strings are lowercased by default and merged with any previously
             /// added tokens. Overlapping keys will be replaced. Raises a ValueError
             /// if an unsupported token value is used.
             ///
-            /// See fuzzydate.toke.* constants for accepted values.
-            #[pyo3(text_signature = "(tokens: dict[str, int])")]
+            /// See fuzzydate.token.* constants for accepted values.
+            #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
             fn add_tokens(
                 &mut self,
                 tokens: HashMap<String, u32>) -> PyResult<()> {
@@ -54,6 +85,21 @@ mod fuzzydate {
 
                 Ok(())
             }
+        }
+
+        #[pyclass]
+        pub(crate) struct Patterns {}
+
+        #[pymethods]
+        impl Tokens {
+            // @formatter:off
+
+            // KEYWORD OFFSETS
+            #[classattr] const PREV_WDAY: &'static str = "prev [wday]";
+            #[classattr] const LAST_WDAY: &'static str = "last [wday]";
+            #[classattr] const NEXT_WDAY: &'static str = "next [wday]";
+
+            // @formatter:on
         }
 
         #[pyclass]
@@ -99,7 +145,7 @@ mod fuzzydate {
     #[pyo3(
         pass_module,
         signature = (source, today=None, weekday_start_mon=true),
-        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
+        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True) -> datetime.date"
     )]
     fn to_date(
         module: &Bound<'_, PyModule>,
@@ -131,7 +177,7 @@ mod fuzzydate {
     #[pyo3(
         pass_module,
         signature = (source, now=None, weekday_start_mon=true),
-        text_signature = "(source: str, now: datetime.datetime = None, weekday_start_mon: bool = True)"
+        text_signature = "(source: str, now: datetime.datetime = None, weekday_start_mon: bool = True) -> datetime.datetime"
     )]
     fn to_datetime(
         module: &Bound<'_, PyModule>,
@@ -156,8 +202,14 @@ mod fuzzydate {
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        module.add(ATTR_CONFIG, Config { tokens: HashMap::new() })?;
+        module.add(ATTR_CONFIG, Config {
+            patterns: HashMap::new(),
+            tokens: HashMap::new(),
+        })?;
+
+        module.add(ATTR_PATTERN, __core__::Patterns {})?;
         module.add(ATTR_TOKEN, __core__::Tokens {})?;
+
         Ok(())
     }
 
