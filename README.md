@@ -30,8 +30,12 @@ fd.config.add_tokens({
     'måndag': fd.token.WDAY_MON,
 })
 
+fd.config.add_patterns({
+    'nästa [wday]': fd.pattern.NEXT_WDAY,
+})
+
 a = fd.to_date('next Monday')
-b = fd.to_date('next Måndag')
+b = fd.to_date('nästa Måndag')
 
 assert a == b
 ```
