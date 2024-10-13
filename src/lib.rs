@@ -91,7 +91,7 @@ mod fuzzydate {
         pub(crate) struct Patterns {}
 
         #[pymethods]
-        impl Tokens {
+        impl Patterns {
             // @formatter:off
 
             // KEYWORD OFFSETS
@@ -157,6 +157,7 @@ mod fuzzydate {
             &source,
             &python::into_date(py, today)?,
             weekday_start_mon,
+            read_patterns(module)?,
             read_tokens(module)?,
         );
 
@@ -189,6 +190,7 @@ mod fuzzydate {
             &source,
             &python::into_datetime(py, now)?,
             weekday_start_mon,
+            read_patterns(module)?,
             read_tokens(module)?,
         );
 
@@ -213,7 +215,19 @@ mod fuzzydate {
         Ok(())
     }
 
-    /// Read custom tokens from registered to Python module, and return
+    /// Read custom patterns registered to Python module
+    fn read_patterns(
+        m: &Bound<'_, PyModule>) -> Result<HashMap<String, String>, PyErr> {
+        let config = &m
+            .as_borrowed()
+            .getattr(ATTR_CONFIG)?
+            .downcast_into::<Config>()?
+            .borrow();
+
+        Ok(config.patterns.to_owned())
+    }
+
+    /// Read custom tokens registered to Python module, and return
     /// them as tokens the tokenization (currently) accepts
     fn read_tokens(
         m: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
@@ -240,10 +254,11 @@ fn convert_str(
     source: &str,
     current_time: &DateTime<FixedOffset>,
     first_weekday_mon: bool,
+    custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
-    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens,);
     let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
-    fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon)
+    fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
 }
 
 /// Turn global identifier into corresponding tokenization token
@@ -292,7 +307,13 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for (from_string, expect_time) in expect {
-            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -425,7 +446,13 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -446,7 +473,13 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, false, HashMap::new());
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                false,
+                HashMap::new(),
+                HashMap::new(),
+            );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -520,7 +553,13 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for from_string in expect {
-            let result_time = convert_str(from_string, &current_time, true, HashMap::new());
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
             assert!(result_time.is_none());
         }
     }
@@ -547,7 +586,13 @@ mod tests {
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, false, HashMap::new());
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                false,
+                HashMap::new(),
+                HashMap::new(),
+            );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
