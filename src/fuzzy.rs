@@ -3,6 +3,7 @@ use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::cmp;
+use crate::constants::Pattern;
 
 const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 41] = [
     // KEYWORDS
@@ -25,14 +26,14 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::NextLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 1, r)),
 
     // NUMERIC OFFSET, MINUS
-    (&Pattern::MinusUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusShortUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusLongUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
 
     // NUMERIC OFFSET, PLUS
-    (&Pattern::PlusUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusShortUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusLongUnits, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
 
     // NUMERIC OFFSET, PLUS
     (&Pattern::UnitAgo, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
@@ -104,122 +105,6 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::DateTimeYmdHm, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], 0)),
     (&Pattern::DateTimeYmdHms, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5])),
 ];
-
-#[derive(PartialEq, Eq, Hash)]
-pub(crate) enum Pattern {
-    Now,
-    Today,
-    Midnight,
-    Yesterday,
-    Tomorrow,
-
-    ThisWday,
-    PrevWday,
-    LastWday,
-    NextWday,
-
-    ThisLongUnit,
-    PrevLongUnit,
-    LastLongUnit,
-    NextLongUnit,
-
-    MinusUnits,
-    MinusShortUnits,
-    MinusLongUnits,
-
-    PlusUnits,
-    PlusShortUnits,
-    PlusLongUnits,
-
-    UnitAgo,
-    LongUnitAgo,
-
-    FirstLongUnitOfMonth,
-    LastLongUnitOfMonth,
-
-    FirstLongUnitOfThisLongUnit,
-    LastLongUnitOfThisLongUnit,
-
-    FirstLongUnitOfPrevLongUnit,
-    LastLongUnitOfPrevLongUnit,
-
-    FirstLongUnitOfLastLongUnit,
-    LastLongUnitOfLastLongUnit,
-
-    FirstLongUnitOfNextLongUnit,
-    LastLongUnitOfNextLongUnit,
-
-    Timestamp,
-    TimestampFloat,
-
-    DateYmd,
-    DateDmy,
-    DateMdy,
-    DateMonthDayYear,
-    DateMonthNthYear,
-    DateDayMonthYear,
-    DateTimeYmdHm,
-    DateTimeYmdHms,
-}
-
-impl Pattern {
-    fn values() -> HashMap<Pattern, &'static str> {
-        HashMap::from([
-            (Self::Now, "now"),
-            (Self::Today, "today"),
-            (Self::Midnight, "midnight"),
-            (Self::Yesterday, "yesterday"),
-            (Self::Tomorrow, "tomorrow"),
-            (Self::ThisWday, "this [wday]"),
-            (Self::PrevWday, "prev [wday]"),
-            (Self::LastWday, "last [wday]"),
-            (Self::NextWday, "next [wday]"),
-            (Self::ThisLongUnit, "this [long_unit]"),
-            (Self::PrevLongUnit, "prev [long_unit]"),
-            (Self::LastLongUnit, "last [long_unit]"),
-            (Self::NextLongUnit, "next [long_unit]"),
-            (Self::MinusUnits, "-[int][unit]"),
-            (Self::MinusShortUnits, "-[int][short_unit]"),
-            (Self::MinusLongUnits, "-[int] [long_unit]"),
-            (Self::PlusUnits, "+[int][unit]"),
-            (Self::PlusShortUnits, "+[int][short_unit]"),
-            (Self::PlusLongUnits, "+[int] [long_unit]"),
-            (Self::UnitAgo, "[int] [unit] ago"),
-            (Self::LongUnitAgo, "[int] [long_unit] ago"),
-            (Self::FirstLongUnitOfMonth, "first [long_unit] of [month]"),
-            (Self::LastLongUnitOfMonth, "last [long_unit] of [month]"),
-            (Self::FirstLongUnitOfThisLongUnit, "first [long_unit] of this [long_unit]"),
-            (Self::LastLongUnitOfThisLongUnit, "last [long_unit] of this [long_unit]"),
-            (Self::FirstLongUnitOfPrevLongUnit, "first [long_unit] of prev [long_unit]"),
-            (Self::LastLongUnitOfPrevLongUnit, "last [long_unit] of prev [long_unit]"),
-            (Self::FirstLongUnitOfLastLongUnit, "first [long_unit] of last [long_unit]"),
-            (Self::LastLongUnitOfLastLongUnit, "last [long_unit] of last [long_unit]"),
-            (Self::FirstLongUnitOfNextLongUnit, "first [long_unit] of next [long_unit]"),
-            (Self::LastLongUnitOfNextLongUnit, "last [long_unit] of next [long_unit]"),
-            (Self::Timestamp, "[timestamp]"),
-            (Self::TimestampFloat, "[timestamp].[int]"),
-            (Self::DateYmd, "[year]-[int]-[int]"),
-            (Self::DateDmy, "[int].[int].[year]"),
-            (Self::DateMdy, "[int]/[int]/[year]"),
-            (Self::DateMonthDayYear, "[month] [int] [year]"),
-            (Self::DateMonthNthYear, "[month] [nth] [year]"),
-            (Self::DateDayMonthYear, "[int] [month] [year]"),
-            (Self::DateTimeYmdHm, "[year]-[int]-[int] [int]:[int]"),
-            (Self::DateTimeYmdHms, "[year]-[int]-[int] [int]:[int]:[int]"),
-        ])
-    }
-
-    pub(crate) fn value(key: &Pattern) -> &'static str {
-        match Self::values().get(key) {
-            Some(v) => v,
-            None => "",
-        }
-    }
-
-    pub(crate) fn is_valid(value: &str) -> bool {
-        Self::values().values().find(|&&v| v == value).is_some()
-    }
-}
 
 #[derive(PartialEq)]
 enum TimeUnit {

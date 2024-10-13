@@ -2,6 +2,7 @@ mod convert;
 mod fuzzy;
 mod token;
 mod python;
+mod constants;
 
 use crate::token::Token;
 use chrono::{DateTime, FixedOffset, NaiveDate};
@@ -9,7 +10,6 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
 use std::collections::HashMap;
-use crate::fuzzy::Pattern;
 
 #[pymodule]
 mod fuzzydate {
@@ -49,7 +49,7 @@ mod fuzzydate {
                 &mut self,
                 patterns: HashMap<String, String>) -> PyResult<()> {
                 for (pattern, value) in patterns {
-                    if !Pattern::is_valid(&value) {
+                    if !constants::Pattern::is_valid(&value) {
                         return Err(PyValueError::new_err(format!(
                             "Pattern \"{}\" value \"{}\" does not exist",
                             pattern, value,
@@ -105,10 +105,56 @@ mod fuzzydate {
         impl Patterns {
             // @formatter:off
 
-            // KEYWORD OFFSETS
-            #[classattr] const PREV_WDAY: &'static str = "prev [wday]";
-            #[classattr] const LAST_WDAY: &'static str = "last [wday]";
-            #[classattr] const NEXT_WDAY: &'static str = "next [wday]";
+            #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
+            #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
+            #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
+            #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
+            #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
+
+            #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
+            #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
+            #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
+            #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
+
+            #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
+            #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
+            #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
+            #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
+
+            #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
+            #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
+            #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
+
+            #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
+            #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
+            #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
+            #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
+            #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
+
+            #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
+            #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
+            #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
+            #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
+            #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
+            #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
+            #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
+            #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
+            #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+            #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+
+            #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
+            #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
+
+            #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
+            #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
+            #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
+
+            #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
+            #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
+            #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+
+            #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
+            #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
             // @formatter:on
         }
@@ -267,7 +313,7 @@ fn convert_str(
     first_weekday_mon: bool,
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
-    let (pattern, tokens) = token::tokenize(&source, custom_tokens,);
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
     let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
 }
