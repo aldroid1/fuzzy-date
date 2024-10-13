@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+// PATTERNS
+
 pub(crate) const PATTERN_NOW: &'static str = "now";
 pub(crate) const PATTERN_TODAY: &'static str = "today";
 pub(crate) const PATTERN_MIDNIGHT: &'static str = "midnight";
@@ -50,6 +52,50 @@ pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [yea
 
 pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
+
+// TOKENS
+
+// Weekdays
+pub(crate) const TOKEN_WDAY_MON: i16 = 101;
+pub(crate) const TOKEN_WDAY_TUE: i16 = 102;
+pub(crate) const TOKEN_WDAY_WED: i16 = 103;
+pub(crate) const TOKEN_WDAY_THU: i16 = 104;
+pub(crate) const TOKEN_WDAY_FRI: i16 = 105;
+pub(crate) const TOKEN_WDAY_SAT: i16 = 106;
+pub(crate) const TOKEN_WDAY_SUN: i16 = 107;
+
+// Months
+pub(crate) const TOKEN_MONTH_JAN: i16 = 201;
+pub(crate) const TOKEN_MONTH_FEB: i16 = 202;
+pub(crate) const TOKEN_MONTH_MAR: i16 = 203;
+pub(crate) const TOKEN_MONTH_APR: i16 = 204;
+pub(crate) const TOKEN_MONTH_MAY: i16 = 205;
+pub(crate) const TOKEN_MONTH_JUN: i16 = 206;
+pub(crate) const TOKEN_MONTH_JUL: i16 = 207;
+pub(crate) const TOKEN_MONTH_AUG: i16 = 208;
+pub(crate) const TOKEN_MONTH_SEP: i16 = 209;
+pub(crate) const TOKEN_MONTH_OCT: i16 = 210;
+pub(crate) const TOKEN_MONTH_NOV: i16 = 211;
+pub(crate) const TOKEN_MONTH_DEC: i16 = 212;
+
+pub(crate) const TOKEN_UNIT_SEC: i16 = 301;
+pub(crate) const TOKEN_UNIT_MIN: i16 = 302;
+pub(crate) const TOKEN_UNIT_HRS: i16 = 303;
+
+pub(crate) const TOKEN_SHORT_UNIT_SEC: i16 = 401;
+pub(crate) const TOKEN_SHORT_UNIT_HRS: i16 = 403;
+pub(crate) const TOKEN_SHORT_UNIT_DAY: i16 = 404;
+pub(crate) const TOKEN_SHORT_UNIT_WEEK: i16 = 405;
+pub(crate) const TOKEN_SHORT_UNIT_MONTH: i16 = 406;
+pub(crate) const TOKEN_SHORT_UNIT_YEAR: i16 = 407;
+
+pub(crate) const TOKEN_LONG_UNIT_SEC: i16 = 501;
+pub(crate) const TOKEN_LONG_UNIT_MIN: i16 = 502;
+pub(crate) const TOKEN_LONG_UNIT_HRS: i16 = 503;
+pub(crate) const TOKEN_LONG_UNIT_DAY: i16 = 504;
+pub(crate) const TOKEN_LONG_UNIT_WEEK: i16 = 505;
+pub(crate) const TOKEN_LONG_UNIT_MONTH: i16 = 506;
+pub(crate) const TOKEN_LONG_UNIT_YEAR: i16 = 507;
 
 #[derive(PartialEq, Eq, Hash)]
 pub(crate) enum Pattern {

@@ -28,16 +28,15 @@ import fuzzydate as fd
 
 fd.config.add_tokens({
     'måndag': fd.token.WDAY_MON,
+    'dagar': fd.token.LONG_UNIT_DAY,
 })
 
 fd.config.add_patterns({
     'nästa [wday]': fd.pattern.NEXT_WDAY,
 })
 
-a = fd.to_date('next Monday')
-b = fd.to_date('nästa Måndag')
-
-assert a == b
+assert fd.to_date('next Monday') == fd.to_date('nästa Måndag')
+assert fd.to_date('+5 days') == fd.to_date('+5 dagar')
 ```
 
 ## Requirements

@@ -167,27 +167,46 @@ mod fuzzydate {
             // @formatter:off
 
             // Weekdays
-            #[classattr] const WDAY_MON: i16 = 101;
-            #[classattr] const WDAY_TUE: i16 = 102;
-            #[classattr] const WDAY_WED: i16 = 103;
-            #[classattr] const WDAY_THU: i16 = 104;
-            #[classattr] const WDAY_FRI: i16 = 105;
-            #[classattr] const WDAY_SAT: i16 = 106;
-            #[classattr] const WDAY_SUN: i16 = 107;
+            #[classattr] const WDAY_MON: i16 = constants::TOKEN_WDAY_MON;
+            #[classattr] const WDAY_TUE: i16 = constants::TOKEN_WDAY_TUE;
+            #[classattr] const WDAY_WED: i16 = constants::TOKEN_WDAY_WED;
+            #[classattr] const WDAY_THU: i16 = constants::TOKEN_WDAY_THU;
+            #[classattr] const WDAY_FRI: i16 = constants::TOKEN_WDAY_FRI;
+            #[classattr] const WDAY_SAT: i16 = constants::TOKEN_WDAY_SAT;
+            #[classattr] const WDAY_SUN: i16 = constants::TOKEN_WDAY_SUN;
 
             // Months
-            #[classattr] const MONTH_JAN: i16 = 201;
-            #[classattr] const MONTH_FEB: i16 = 202;
-            #[classattr] const MONTH_MAR: i16 = 203;
-            #[classattr] const MONTH_APR: i16 = 204;
-            #[classattr] const MONTH_MAY: i16 = 205;
-            #[classattr] const MONTH_JUN: i16 = 206;
-            #[classattr] const MONTH_JUL: i16 = 207;
-            #[classattr] const MONTH_AUG: i16 = 208;
-            #[classattr] const MONTH_SEP: i16 = 209;
-            #[classattr] const MONTH_OCT: i16 = 210;
-            #[classattr] const MONTH_NOV: i16 = 211;
-            #[classattr] const MONTH_DEC: i16 = 212;
+            #[classattr] const MONTH_JAN: i16 = constants::TOKEN_MONTH_JAN;
+            #[classattr] const MONTH_FEB: i16 = constants::TOKEN_MONTH_FEB;
+            #[classattr] const MONTH_MAR: i16 = constants::TOKEN_MONTH_MAR;
+            #[classattr] const MONTH_APR: i16 = constants::TOKEN_MONTH_APR;
+            #[classattr] const MONTH_MAY: i16 = constants::TOKEN_MONTH_MAY;
+            #[classattr] const MONTH_JUN: i16 = constants::TOKEN_MONTH_JUN;
+            #[classattr] const MONTH_JUL: i16 = constants::TOKEN_MONTH_JUL;
+            #[classattr] const MONTH_AUG: i16 = constants::TOKEN_MONTH_AUG;
+            #[classattr] const MONTH_SEP: i16 = constants::TOKEN_MONTH_SEP;
+            #[classattr] const MONTH_OCT: i16 = constants::TOKEN_MONTH_OCT;
+            #[classattr] const MONTH_NOV: i16 = constants::TOKEN_MONTH_NOV;
+            #[classattr] const MONTH_DEC: i16 = constants::TOKEN_MONTH_DEC;
+
+            #[classattr] const UNIT_SEC: i16 = constants::TOKEN_UNIT_SEC;
+            #[classattr] const UNIT_MIN: i16 = constants::TOKEN_UNIT_MIN;
+            #[classattr] const UNIT_HRS: i16 = constants::TOKEN_UNIT_HRS;
+
+            #[classattr] const SHORT_UNIT_SEC: i16 = constants::TOKEN_SHORT_UNIT_SEC;
+            #[classattr] const SHORT_UNIT_HRS: i16 = constants::TOKEN_SHORT_UNIT_HRS;
+            #[classattr] const SHORT_UNIT_DAY: i16 = constants::TOKEN_SHORT_UNIT_DAY;
+            #[classattr] const SHORT_UNIT_WEEK: i16 = constants::TOKEN_SHORT_UNIT_WEEK;
+            #[classattr] const SHORT_UNIT_MONTH: i16 = constants::TOKEN_SHORT_UNIT_MONTH;
+            #[classattr] const SHORT_UNIT_YEAR: i16 = constants::TOKEN_SHORT_UNIT_YEAR;
+
+            #[classattr] const LONG_UNIT_SEC: i16 = constants::TOKEN_LONG_UNIT_SEC;
+            #[classattr] const LONG_UNIT_MIN: i16 = constants::TOKEN_LONG_UNIT_MIN;
+            #[classattr] const LONG_UNIT_HRS: i16 = constants::TOKEN_LONG_UNIT_HRS;
+            #[classattr] const LONG_UNIT_DAY: i16 = constants::TOKEN_LONG_UNIT_DAY;
+            #[classattr] const LONG_UNIT_WEEK: i16 = constants::TOKEN_LONG_UNIT_WEEK;
+            #[classattr] const LONG_UNIT_MONTH: i16 = constants::TOKEN_LONG_UNIT_MONTH;
+            #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
 
             // @formatter:on
         }
@@ -320,17 +339,38 @@ fn convert_str(
 
 /// Turn global identifier into corresponding tokenization token
 fn gid_into_token(gid: u32) -> Option<Token> {
-    if gid.ge(&100) && gid.le(&107) {
+    if gid.ge(&101) && gid.le(&107) {
         return Option::from(Token {
             token: token::TokenType::Weekday,
             value: (gid - 100) as i64,
         });
     }
 
-    if gid.ge(&200) && gid.le(&212) {
+    if gid.ge(&201) && gid.le(&212) {
         return Option::from(Token {
             token: token::TokenType::Month,
             value: (gid - 200) as i64,
+        });
+    }
+
+    if gid.ge(&301) && gid.le(&303) {
+        return Option::from(Token {
+            token: token::TokenType::Unit,
+            value: (gid - 300) as i64,
+        });
+    }
+
+    if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
+        return Option::from(Token {
+            token: token::TokenType::ShortUnit,
+            value: (gid - 400) as i64,
+        });
+    }
+
+    if gid.ge(&501) && gid.le(&507) {
+        return Option::from(Token {
+            token: token::TokenType::LongUnit,
+            value: (gid - 500) as i64,
         });
     }
 
@@ -623,21 +663,52 @@ mod tests {
 
     #[test]
     fn test_gid_into_token() {
-        for value in 100..108 {
+        for value in 101..108 {
             assert_eq!(gid_into_token(value).unwrap(), Token {
                 token: token::TokenType::Weekday,
                 value: (value - 100) as i64,
             });
         }
+        assert!(gid_into_token(100).is_none());
         assert!(gid_into_token(108).is_none());
 
-        for value in 200..213 {
+        for value in 201..213 {
             assert_eq!(gid_into_token(value).unwrap(), Token {
                 token: token::TokenType::Month,
                 value: (value - 200) as i64,
             });
         }
+        assert!(gid_into_token(200).is_none());
         assert!(gid_into_token(213).is_none());
+
+        for value in 301..304 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::Unit,
+                value: (value - 300) as i64,
+            });
+        }
+        assert!(gid_into_token(300).is_none());
+        assert!(gid_into_token(304).is_none());
+
+        for value in 401..408 {
+            if !value.eq(&402) {
+                assert_eq!(gid_into_token(value).unwrap(), Token {
+                    token: token::TokenType::ShortUnit,
+                    value: (value - 400) as i64,
+                });
+            }
+        }
+        assert!(gid_into_token(400).is_none());
+        assert!(gid_into_token(408).is_none());
+
+        for value in 501..508 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::LongUnit,
+                value: (value - 500) as i64,
+            });
+        }
+        assert!(gid_into_token(500).is_none());
+        assert!(gid_into_token(508).is_none());
     }
 
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
