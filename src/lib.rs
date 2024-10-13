@@ -30,7 +30,14 @@ mod fuzzydate {
 
         #[pymethods]
         impl Config {
-            /// Add custom tokens to use later in tokenizing the pattern
+            /// Add text strings to identify as tokens
+            ///
+            /// All strings are lowercased by default and merged with any previously
+            /// added tokens. Overlapping keys will be replaced. Raises a ValueError
+            /// if an unsupported token value is used.
+            ///
+            /// See fuzzydate.toke.* constants for accepted values.
+            #[pyo3(text_signature = "(tokens: dict[str, int])")]
             fn add_tokens(
                 &mut self,
                 tokens: HashMap<String, u32>) -> PyResult<()> {
@@ -83,9 +90,17 @@ mod fuzzydate {
         }
     }
 
-    /// Turn time string into Python's datetime.date
+    /// Turn time string into datetime.date object
+    ///
+    /// Current date (`today`) defaults to system date in UTC. Time of day
+    /// is assumed to be midnight in case of any time adjustments. Raises
+    /// a ValueError if the conversion fails.
     #[pyfunction]
-    #[pyo3(pass_module, signature = (source, today=None, weekday_start_mon=true))]
+    #[pyo3(
+        pass_module,
+        signature = (source, today=None, weekday_start_mon=true),
+        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
+    )]
     fn to_date(
         module: &Bound<'_, PyModule>,
         py: Python,
@@ -107,9 +122,17 @@ mod fuzzydate {
         }
     }
 
-    /// Turn time string into Python's datetime.datetime
+    /// Turn time string into datetime.datetime object
+    ///
+    /// Current time (`now`) defaults to system time in UTC. If custom `now`
+    /// does not contain a timezone, UTC timezone will be used. Raises a
+    /// ValueError if the conversion fails.
     #[pyfunction]
-    #[pyo3(pass_module, signature = (source, now=None, weekday_start_mon=true))]
+    #[pyo3(
+        pass_module,
+        signature = (source, now=None, weekday_start_mon=true),
+        text_signature = "(source: str, now: datetime.datetime = None, weekday_start_mon: bool = True)"
+    )]
     fn to_datetime(
         module: &Bound<'_, PyModule>,
         py: Python,
