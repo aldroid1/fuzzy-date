@@ -40,7 +40,8 @@ mod fuzzydate {
             ///
             /// All strings are lowercased by default and merged with any previously
             /// added patterns. Colliding patterns will be replaced silently. Raises
-            /// a ValueError if an unsupported pattern value is used.
+            /// a ValueError if an unsupported pattern value is used, or if different
+            /// amount of variables are used in the custom pattern.
             ///
             /// See fuzzydate.pattern.* constants for accepted values.
             #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
@@ -48,14 +49,24 @@ mod fuzzydate {
                 &mut self,
                 patterns: HashMap<String, String>) -> PyResult<()> {
                 for (pattern, value) in patterns {
-                    if Pattern::is_valid(&value) {
-                        self.patterns.insert(pattern.to_lowercase(), value);
-                        continue;
+                    if !Pattern::is_valid(&value) {
+                        return Err(PyValueError::new_err(format!(
+                            "Pattern \"{}\" value \"{}\" does not exist",
+                            pattern, value,
+                        )));
                     }
 
-                    return Err(PyValueError::new_err(format!(
-                        "Pattern \"{}\" has non-existing value of {}", pattern, value,
-                    )));
+                    let vars_in_custom: usize = pattern.split("[").count() - 1;
+                    let vars_in_value: usize = value.split("[").count() - 1;
+
+                    if vars_in_custom != vars_in_value {
+                        return Err(PyValueError::new_err(format!(
+                            "Pattern \"{}\" and \"{}\" have different variables",
+                            pattern, value,
+                        )));
+                    }
+
+                    self.patterns.insert(pattern.to_lowercase(), value);
                 }
 
                 Ok(())
@@ -79,7 +90,7 @@ mod fuzzydate {
                     }
 
                     return Err(PyValueError::new_err(format!(
-                        "Token \"{}\" has non-existing value of {}", keyword, gid,
+                        "Token \"{}\" value {} does not exist", keyword, gid,
                     )));
                 }
 
