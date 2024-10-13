@@ -1,8 +1,8 @@
+use crate::convert;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
-use std::{cmp};
 use std::cmp::PartialEq;
 use std::collections::HashMap;
-use crate::convert;
+use std::cmp;
 
 const FUZZY_PATTERNS: [(&'static str, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 41] = [
     // KEYWORDS
@@ -104,6 +104,34 @@ const FUZZY_PATTERNS: [(&'static str, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result
         .date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5])
     ),
 ];
+
+#[derive(PartialEq, Eq, Hash)]
+pub(crate) enum Pattern {
+    PrevWday,
+    LastWday,
+    NextWday,
+}
+
+impl Pattern {
+    fn values() -> HashMap<Pattern, &'static str> {
+        HashMap::from([
+            (Self::PrevWday, "prev [wday]"),
+            (Self::LastWday, "last [wday]"),
+            (Self::NextWday, "next [wday]"),
+        ])
+    }
+
+    pub(crate) fn value(key: &Pattern) -> &'static str {
+        match Self::values().get(key) {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub(crate) fn is_valid(value: &str) -> bool {
+        Self::values().values().find(|&&v| v == value).is_some()
+    }
+}
 
 #[derive(PartialEq)]
 enum TimeUnit {
@@ -223,8 +251,13 @@ impl Rules {
 
 /// Perform conversion against pattern and corresponding token values,
 /// relative to given datetime
-pub(crate) fn convert(pattern: &str, values: &Vec<i64>, current_time: &DateTime<FixedOffset>, week_start_mon: bool) -> Option<DateTime<FixedOffset>> {
-    let call_list = find_pattern_calls(&pattern);
+pub(crate) fn convert(
+    pattern: &str,
+    values: &Vec<i64>,
+    current_time: &DateTime<FixedOffset>,
+    week_start_mon: bool,
+    custom_patterns: HashMap<String, String>) -> Option<DateTime<FixedOffset>> {
+    let call_list = find_pattern_calls(&pattern, custom_patterns);
 
     if call_list.len().eq(&0) {
         return None;
@@ -247,11 +280,21 @@ pub(crate) fn convert(pattern: &str, values: &Vec<i64>, current_time: &DateTime<
 }
 
 /// Find closure calls that match the pattern exactly, or partially
-fn find_pattern_calls(pattern: &str) -> Vec<(&str, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>)> {
-    let closure_map = HashMap::from(FUZZY_PATTERNS);
+fn find_pattern_calls(
+    pattern: &str,
+    custom: HashMap<String, String>) -> Vec<(String, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>)> {
+    let mut closure_map = HashMap::new();
+
+    for (pattern_key, closure_function) in FUZZY_PATTERNS {
+        closure_map.insert(pattern_key.to_string(), closure_function);
+    }
+
+    for (custom_pattern, closure_pattern) in custom {
+        closure_map.insert(custom_pattern, *closure_map.get(closure_pattern.as_str()).unwrap());
+    }
 
     if closure_map.contains_key(pattern) {
-        return vec![(pattern, *closure_map.get(pattern).unwrap())];
+        return vec![(pattern.to_string(), *closure_map.get(pattern).unwrap())];
     }
 
     let mut result = vec![];
@@ -270,7 +313,7 @@ fn find_pattern_calls(pattern: &str) -> Vec<(&str, fn(FuzzyDate, &Vec<i64>, &Rul
         for map_pattern in closure_map.keys() {
             if search.starts_with(map_pattern)
                 || format!("{}{}", prefix, search).starts_with(map_pattern) {
-                calls.push(*map_pattern);
+                calls.push(map_pattern);
             }
         }
 
@@ -279,10 +322,10 @@ fn find_pattern_calls(pattern: &str) -> Vec<(&str, fn(FuzzyDate, &Vec<i64>, &Rul
         }
 
         calls.sort_by(|a, b| b.cmp(a));
-        let best_match: &str = calls.first().unwrap();
+        let best_match: String = calls.first().unwrap().to_string();
 
         search = &search[cmp::min(best_match.len(), search.len())..].trim_start();
-        result.push((best_match, *closure_map.get(*&best_match).unwrap()));
+        result.push((best_match.to_owned(), *closure_map.get(&best_match).unwrap()));
     }
 
     result
@@ -290,4 +333,62 @@ fn find_pattern_calls(pattern: &str) -> Vec<(&str, fn(FuzzyDate, &Vec<i64>, &Rul
 
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_custom_patterns() {
+        let custom_finnish = vec![
+            ("viime [wday]", &Pattern::LastWday),
+            ("edellinen [wday]", &Pattern::PrevWday),
+            ("ensi [wday]", &Pattern::NextWday),
+            ("seuraava [wday]", &Pattern::NextWday),
+        ];
+
+        let result_value = convert_custom(
+            "viime [wday]", vec![1],
+            "2024-01-19T15:22:28+02:00", &custom_finnish,
+        );
+        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+
+        let result_value = convert_custom(
+            "edellinen [wday]", vec![1],
+            "2024-01-19T15:22:28+02:00", &custom_finnish,
+        );
+        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+
+        let result_value = convert_custom(
+            "ensi [wday]", vec![1],
+            "2024-01-19T15:22:28+02:00", &custom_finnish,
+        );
+        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+
+        let result_value = convert_custom(
+            "seuraava [wday]", vec![1],
+            "2024-01-19T15:22:28+02:00", &custom_finnish,
+        );
+        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+    }
+
+    fn convert_custom(
+        pattern: &str,
+        values: Vec<i64>,
+        current_time: &str,
+        custom: &Vec<(&str, &Pattern)>) -> String {
+        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+        let mut custom_patterns: HashMap<String, String> = HashMap::new();
+
+        for (key, value) in custom {
+            custom_patterns.insert(key.to_string(), Pattern::value(value).to_string());
+        }
+
+        let result_time = convert(
+            pattern,
+            &values,
+            &current_time,
+            false,
+            custom_patterns,
+        );
+        result_time.unwrap().to_string()
+    }
+}

@@ -21,6 +21,25 @@ fd.to_datetime('next Summer')
 # ValueError: Unable to convert "next Summer" into datetime
 ```
 
+## Localization
+
+```python
+import fuzzydate as fd
+
+fd.config.add_tokens({
+    'måndag': fd.token.WDAY_MON,
+})
+
+fd.config.add_patterns({
+    'nästa [wday]': fd.pattern.NEXT_WDAY,
+})
+
+a = fd.to_date('next Monday')
+b = fd.to_date('nästa Måndag')
+
+assert a == b
+```
+
 ## Requirements
 
 - Python >= 3.8
@@ -31,7 +50,31 @@ fd.to_datetime('next Summer')
 pip install fuzzy-date 
 ```
 
+## Syntax support
+
+### Special
+
+- Date `now`, `today`, `tomorrow`, `yesterday`
+- Time of day `midnight`
+
+### Relative
+
+- Adjustment `last`, `prev`, `this`, `next` or `+`, `-`
+- Units `next week`, `next month`, `next year`
+- Weekdays `next Mon`, `next Monday`
+- Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
+- Ranges `last/first day of`
+
+### Fixed
+
+- Unix timestamp `@1680307200`
+- Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
+- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
+- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+
 ## Methods
+
+### Conversion
 
 ```python
 fuzzydate.to_date(
@@ -45,27 +88,19 @@ fuzzydate.to_datetime(
     weekday_start_mon: bool = True) -> datetime.datetime
 ```
 
-## Syntax support
+### Configuration
 
-### Special
+```python
+# Read-only
+fuzzydate.config.patterns: dict[str, str]
+fuzzydate.config.tokens: dict[str, int]
 
-- Date `now`, `today`, `tomorrow`, `yesterday`
-- Time of day `midnight`
+fuzzydate.config.add_patterns(
+    tokens: dict[str, str]) -> None
 
-### Relative
-
-- Adjustment `last`, `prev`, `next` or `+`, `-`
-- Units `next week`, `next month`, `next year`
-- Weekdays `next Mon`, `next Monday`
-- Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
-- Ranges `last/first day of`
-
-### Fixed
-
-- Unix timestamp `@1680307200` 
-- Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
-- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
-- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+fuzzydate.config.add_tokens(
+    tokens: dict[str, int]) -> None
+```
 
 ## Background
 
