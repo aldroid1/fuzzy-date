@@ -298,10 +298,11 @@ mod fuzzydate {
         }
     }
 
-    /// Turn time duration string into number of seconds
+    /// Turn time duration string into seconds
     ///
-    /// Raises a ValueError if anything else than an exact length of time
-    /// is provided.
+    /// Only accepts exact time duration strings, such as "1h" rather than
+    /// "1 hour ago". Raises a ValueError if anything else than an exact
+    /// length of time is provided.
     ///
     /// :param source: Source string
     /// :type str
