@@ -303,7 +303,7 @@ pub(crate) fn tokenize(
         out_pattern.push_str(&part_letter);
     }
 
-    (out_pattern.trim_end().to_string(), out_values)
+    (out_pattern.trim().to_string(), out_values)
 }
 
 /// Parse a string that consists of a number+string parts, such as "1d"
@@ -508,20 +508,15 @@ mod tests {
 
     #[test]
     fn test_whitespace() {
-        let expect: Vec<(&str, &str, (i64, i64, i64))> = vec![
-            ("Feb  7th  2023", "[month] [nth] [year]", (2, 7, 2023)),
-            ("Feb 7th 2023 ", "[month] [nth] [year]", (2, 7, 2023)),
+        let expect: Vec<(&str, &str)> = vec![
+            ("Feb  7th  2023", "[month] [nth] [year]"),
+            ("Feb 7th 2023 ", "[month] [nth] [year]"),
+            (" 1d  2h 3s", "[int][short_unit] [int][short_unit] [int][short_unit]"),
+            ("+1d  -2h 3s", "+[int][short_unit] -[int][short_unit] [int][short_unit]")
         ];
 
-        for (from_string, expect_pattern, expect_values) in expect {
-            assert_eq!(tokenize_str(from_string), (
-                expect_pattern.to_string(),
-                vec![
-                    Token { token: TokenType::Month, value: expect_values.0 },
-                    Token { token: TokenType::Nth, value: expect_values.1 },
-                    Token { token: TokenType::Year, value: expect_values.2 },
-                ]
-            ));
+        for (from_string, expect_pattern) in expect {
+            assert_eq!(tokenize_str(from_string).0, expect_pattern);
         }
     }
 
