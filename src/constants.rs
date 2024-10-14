@@ -163,8 +163,7 @@ impl Pattern {
     }
 
     pub(crate) fn is_offset_minus(&self) -> bool {
-        let english_pattern = Self::value(&self);
-        english_pattern.starts_with("-")
+        Self::value(&self).starts_with("-")
     }
 
     pub(crate) fn is_valid(value: &str) -> bool {
