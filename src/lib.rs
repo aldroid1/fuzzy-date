@@ -43,7 +43,13 @@ mod fuzzydate {
             /// a ValueError if an unsupported pattern value is used, or if different
             /// amount of variables are used in the custom pattern.
             ///
-            /// See fuzzydate.pattern.* constants for accepted values.
+            /// :param patterns: Map of patterns where keys are new patterns to identify and values
+            ///                  are existing patterns to interpret them as. See
+            ///                  fuzzydate.pattern.* constants for accepted values.
+            /// :type source: dict[str, str]
+            /// :raises ValueError
+            /// :rtype None
+            ///
             #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
             fn add_patterns(
                 &mut self,
@@ -78,7 +84,13 @@ mod fuzzydate {
             /// added tokens. Overlapping keys will be replaced. Raises a ValueError
             /// if an unsupported token value is used.
             ///
-            /// See fuzzydate.token.* constants for accepted values.
+            /// :param tokens: Map of tokens where keys are new strings to identify and values are
+            ///                token values to classify them as. See fuzzydate.token.* constants
+            ///                for accepted values.
+            /// :type source: dict[str, int]
+            /// :raises ValueError
+            /// :rtype None
+            /// 
             #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
             fn add_tokens(
                 &mut self,
