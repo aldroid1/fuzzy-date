@@ -126,8 +126,8 @@ fuzzydate.config.add_tokens(
 
 This library was born out of the need to accept various user inputs for date range start and end
 times, to convert user time tracking entries into exact durations etc. All very much akin to what 
-[timelib](https://github.com/derickr/timelib) does. Other implementations do exist, they did not quite work for me - usually 
-missing support for some key wording or having issues with timezone handling. 
+[timelib](https://github.com/derickr/timelib) does. Other implementations do exist, but they did not quite work for me - usually 
+missing support for some key wording I needed, or having issues with timezone handling. 
 
 Also, I kinda wanted to learn Rust via some example project as well.
 
