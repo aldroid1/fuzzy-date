@@ -406,7 +406,7 @@ fn convert_seconds(
     custom_tokens: HashMap<String, Token>) -> Option<f64> {
     let (pattern, values) = tokenize_str(&source, custom_tokens);
 
-    if !token::is_duration(&pattern) {
+    if !token::is_time_duration(&pattern) {
         return None;
     }
 
@@ -414,7 +414,7 @@ fn convert_seconds(
 
     if let Some(from_time) = fuzzy::convert(&pattern, &values, &current_time, true, custom_patterns) {
         let duration: Duration = from_time - current_time;
-        return Option::from((duration.num_milliseconds() / 1_0000) as f64);
+        return Option::from((duration.num_milliseconds() / 1_000) as f64);
     }
 
     None
@@ -741,6 +741,32 @@ mod tests {
                 HashMap::new(),
             );
             assert!(result_time.is_none());
+        }
+    }
+
+    #[test]
+    fn test_to_seconds_some() {
+        let expect: Vec<(&str, f64)> = vec![
+            ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
+            ("1 hour", 3600.0), ("1h", 3600.0), ("-1 hour", -3600.0),
+            ("+1d 1h 1min 2s", 90062.0), ("-1d 1h 1min 2s", -90062.0),
+        ];
+
+        for (from_string, expect_value) in expect {
+            let result_value = convert_seconds(from_string, HashMap::new(), HashMap::new());
+            assert_eq!(result_value.unwrap(), expect_value);
+        }
+    }
+
+    #[test]
+    fn test_to_seconds_none() {
+        let expect: Vec<&str> = vec![
+            "", "7", "2020-01-07", "last week", "1 hour ago",
+        ];
+
+        for from_string in expect {
+            let result_value = convert_seconds(from_string, HashMap::new(), HashMap::new());
+            assert!(result_value.is_none());
         }
     }
 

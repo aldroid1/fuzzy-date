@@ -188,22 +188,24 @@ impl TokenList {
     }
 }
 
-pub(crate) fn is_duration(pattern: &str) -> bool {
-    let has_units: bool = pattern.contains("unit]");
-    let has_numbers: bool = pattern.contains(TokenType::Integer.as_name());
-    let has_wdays: bool = pattern.contains(TokenType::Weekday.as_name());
-    let has_months: bool = pattern.contains(TokenType::Month.as_name());
-    let has_nths: bool = pattern.contains(TokenType::Nth.as_name());
-    let has_timestamps: bool = pattern.contains(TokenType::Timestamp.as_name());
-    let has_years: bool = pattern.contains(TokenType::Year.as_name());
+pub(crate) fn is_time_duration(pattern: &str) -> bool {
+    let without_integers: String = pattern
+        .replace(TokenType::Integer.as_name(), "");
 
-    has_units
-        && has_numbers
-        && !has_wdays
-        && !has_months
-        && !has_nths
-        && !has_timestamps
-        && !has_years
+    if without_integers == pattern {
+        return false;
+    }
+
+    let without_patterns: String = without_integers
+        .replace(TokenType::Unit.as_name(), "")
+        .replace(TokenType::ShortUnit.as_name(), "")
+        .replace(TokenType::LongUnit.as_name(), "");
+
+    if without_patterns == pattern {
+        return false;
+    }
+
+    without_patterns.trim().len() == 0
 }
 
 /// Turn source string into a pattern, and list of extracted tokens
