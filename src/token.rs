@@ -241,7 +241,7 @@ pub(crate) fn tokenize(
         }
 
         if part_chars.eq("") {
-            if out_values.len() == 0 {
+            if out_values.len() == 0 || !&part_letter.eq(" ") {
                 out_pattern.push_str(&part_letter);
             }
 
@@ -526,6 +526,81 @@ mod tests {
     }
 
     #[test]
+    fn test_unit_prefixes() {
+        assert_eq!(
+            tokenize_str("+1y 5m 2w 5d"), (
+                String::from("+[int][short_unit] [int][short_unit] [int][short_unit] [int][short_unit]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 1 },
+                    Token { token: TokenType::ShortUnit, value: 7 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::ShortUnit, value: 6 },
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::ShortUnit, value: 5 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::ShortUnit, value: 4 },
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("+1y +5m -2w +5d"), (
+                String::from("+[int][short_unit] +[int][short_unit] -[int][short_unit] +[int][short_unit]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 1 },
+                    Token { token: TokenType::ShortUnit, value: 7 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::ShortUnit, value: 6 },
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::ShortUnit, value: 5 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::ShortUnit, value: 4 },
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("+2h 8s"), (
+                String::from("+[int][short_unit] [int][short_unit]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::ShortUnit, value: 3 },
+                    Token { token: TokenType::Integer, value: 8 },
+                    Token { token: TokenType::ShortUnit, value: 1 },
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("-2hr 5min 8sec"), (
+                String::from("-[int][unit] [int][unit] [int][unit]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::Unit, value: 3 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::Unit, value: 2 },
+                    Token { token: TokenType::Integer, value: 8 },
+                    Token { token: TokenType::Unit, value: 1 },
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("-2hrs 5mins 8sec"), (
+                String::from("-[int][unit] [int][unit] [int][unit]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::Unit, value: 3 },
+                    Token { token: TokenType::Integer, value: 5 },
+                    Token { token: TokenType::Unit, value: 2 },
+                    Token { token: TokenType::Integer, value: 8 },
+                    Token { token: TokenType::Unit, value: 1 },
+                ]
+            )
+        );
+    }
+
+    #[test]
     fn test_strings() {
         assert_eq!(
             tokenize_str("@1705072948"), (
@@ -613,62 +688,6 @@ mod tests {
                     Token { token: TokenType::Month, value: 2 },
                     Token { token: TokenType::Nth, value: 7 },
                     Token { token: TokenType::Year, value: 2023 },
-                ]
-            )
-        );
-
-        assert_eq!(
-            tokenize_str("+1y 5m 2w 5d"), (
-                String::from("+[int][short_unit] [int][short_unit] [int][short_unit] [int][short_unit]"),
-                vec![
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::ShortUnit, value: 7 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 6 },
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::ShortUnit, value: 5 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 4 },
-                ]
-            )
-        );
-
-        assert_eq!(
-            tokenize_str("+2h 8s"), (
-                String::from("+[int][short_unit] [int][short_unit]"),
-                vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::ShortUnit, value: 3 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::ShortUnit, value: 1 },
-                ]
-            )
-        );
-
-        assert_eq!(
-            tokenize_str("-2hr 5min 8sec"), (
-                String::from("-[int][unit] [int][unit] [int][unit]"),
-                vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Unit, value: 3 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::Unit, value: 2 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::Unit, value: 1 },
-                ]
-            )
-        );
-
-        assert_eq!(
-            tokenize_str("-2hrs 5mins 8sec"), (
-                String::from("-[int][unit] [int][unit] [int][unit]"),
-                vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Unit, value: 3 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::Unit, value: 2 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::Unit, value: 1 },
                 ]
             )
         );
