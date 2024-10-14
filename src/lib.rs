@@ -17,8 +17,6 @@ mod fuzzydate {
     use crate::fuzzydate::__core__::Config;
 
     const ATTR_CONFIG: &'static str = "config";
-    const ATTR_PATTERN: &'static str = "pattern";
-    const ATTR_TOKEN: &'static str = "token";
 
     #[pymodule]
     mod __core__ {
@@ -90,7 +88,7 @@ mod fuzzydate {
             /// :type source: dict[str, int]
             /// :raises ValueError
             /// :rtype None
-            /// 
+            ///
             #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
             fn add_tokens(
                 &mut self,
@@ -109,74 +107,75 @@ mod fuzzydate {
                 Ok(())
             }
         }
+    }
 
-        #[pyclass]
-        pub(crate) struct Patterns {}
+    #[pyclass(name = "pattern")]
+    pub(crate) struct Patterns {}
 
-        #[pymethods]
-        impl Patterns {
-            // @formatter:off
+    #[pymethods]
+    impl Patterns {
+        // @formatter:off
 
-            #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
-            #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
-            #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
-            #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
-            #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
+        #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
+        #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
+        #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
+        #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
+        #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
 
-            #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
-            #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
-            #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
-            #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
+        #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
+        #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
+        #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
+        #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
 
-            #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
-            #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
-            #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
+        #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
+        #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
+        #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
 
-            #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
-            #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
-            #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
+        #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
+        #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
+        #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
 
-            #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
-            #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
-            #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
-            #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
-            #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
+        #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
+        #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
+        #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
+        #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
+        #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
 
-            #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
-            #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
-            #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
+        #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
+        #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
 
-            #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
-            #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
+        #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
+        #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
 
-            #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
-            #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
-            #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
+        #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
+        #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
+        #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
 
-            #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
-            #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
-            #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+        #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
+        #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
+        #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
 
-            #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
-            #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
+        #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
+        #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
-            // @formatter:on
-        }
+        // @formatter:on
+    }
 
-        #[pyclass]
-        pub(crate) struct Tokens {}
+    #[pyclass(name = "token")]
+    pub(crate) struct Tokens {}
 
-        #[pymethods]
-        impl Tokens {
-            // @formatter:off
+    #[pymethods]
+    impl Tokens {
+        // @formatter:off
 
             // Weekdays
             #[classattr] const WDAY_MON: i16 = constants::TOKEN_WDAY_MON;
@@ -221,7 +220,6 @@ mod fuzzydate {
             #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
 
             // @formatter:on
-        }
     }
 
     /// Turn time string into datetime.date object
@@ -350,9 +348,6 @@ mod fuzzydate {
             patterns: HashMap::new(),
             tokens: HashMap::new(),
         })?;
-
-        module.add(ATTR_PATTERN, __core__::Patterns {})?;
-        module.add(ATTR_TOKEN, __core__::Tokens {})?;
 
         Ok(())
     }
