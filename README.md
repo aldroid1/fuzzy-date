@@ -2,6 +2,8 @@
 
 Python module to convert various time strings into datetime objects, written in Rust.
 
+## Date conversion
+
 ```python
 import fuzzydate as fd
 
@@ -21,6 +23,21 @@ fd.to_datetime('next Summer')
 # ValueError: Unable to convert "next Summer" into datetime
 ```
 
+## Time duration
+
+```python
+import fuzzydate as fd
+
+fd.to_seconds('1h 4min')  # 3840.0
+fd.to_seconds('+2 days') # -172800.0
+fd.to_seconds('-1 hour')  # -3600.0
+
+# Anything other than an exact length of time raises a ValueError
+
+fd.to_seconds('last week')
+# ValueError: Unable to convert "last week" into seconds
+```
+
 ## Localization
 
 ```python
@@ -37,6 +54,7 @@ fd.config.add_patterns({
 
 assert fd.to_date('next Monday') == fd.to_date('nästa Måndag')
 assert fd.to_date('+5 days') == fd.to_date('+5 dagar')
+assert fd.to_seconds('+5 days') == fd.to_seconds('+5 dagar')
 ```
 
 ## Requirements
@@ -85,6 +103,9 @@ fuzzydate.to_datetime(
     source: str,
     now: datetime.datetime = None,
     weekday_start_mon: bool = True) -> datetime.datetime
+    
+fuzzydate.to_seconds(
+    source: str) -> float
 ```
 
 ### Configuration

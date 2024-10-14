@@ -188,6 +188,24 @@ impl TokenList {
     }
 }
 
+pub(crate) fn is_duration(pattern: &str) -> bool {
+    let has_units: bool = pattern.contains("unit]");
+    let has_numbers: bool = pattern.contains(TokenType::Integer.as_name());
+    let has_wdays: bool = pattern.contains(TokenType::Weekday.as_name());
+    let has_months: bool = pattern.contains(TokenType::Month.as_name());
+    let has_nths: bool = pattern.contains(TokenType::Nth.as_name());
+    let has_timestamps: bool = pattern.contains(TokenType::Timestamp.as_name());
+    let has_years: bool = pattern.contains(TokenType::Year.as_name());
+
+    has_units
+        && has_numbers
+        && !has_wdays
+        && !has_months
+        && !has_nths
+        && !has_timestamps
+        && !has_years
+}
+
 /// Turn source string into a pattern, and list of extracted tokens
 pub(crate) fn tokenize(
     source: &str,

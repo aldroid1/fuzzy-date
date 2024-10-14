@@ -5,7 +5,7 @@ mod python;
 mod constants;
 
 use crate::token::Token;
-use chrono::{DateTime, FixedOffset, NaiveDate};
+use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
@@ -217,6 +217,16 @@ mod fuzzydate {
     /// Current date (`today`) defaults to system date in UTC. Time of day
     /// is assumed to be midnight in case of any time adjustments. Raises
     /// a ValueError if the conversion fails.
+    ///
+    /// :param source: Source string
+    /// :type source: str
+    /// :param today: Current date. Defaults to system date in UTC.
+    /// :type today: datetime.date, optional
+    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :type bool, optional
+    /// :raises ValueError
+    /// :rtype datetime.date
+    ///
     #[pyfunction]
     #[pyo3(
         pass_module,
@@ -250,6 +260,16 @@ mod fuzzydate {
     /// Current time (`now`) defaults to system time in UTC. If custom `now`
     /// does not contain a timezone, UTC timezone will be used. Raises a
     /// ValueError if the conversion fails.
+    ///
+    /// :param source: Source string
+    /// :type source: str
+    /// :param now: Current time. Defaults to system time in UTC.
+    /// :type now: datetime.datetime, optional
+    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :type bool, optional
+    /// :raises ValueError
+    /// :rtype datetime.datetime
+    ///
     #[pyfunction]
     #[pyo3(
         pass_module,
@@ -274,6 +294,39 @@ mod fuzzydate {
             Some(v) => Ok(v),
             None => Err(PyValueError::new_err(format!(
                 "Unable to convert \"{}\" into datetime", source,
+            )))
+        }
+    }
+
+    /// Turn time duration string into number of seconds
+    ///
+    /// Raises a ValueError if anything else than an exact length of time
+    /// is provided.
+    ///
+    /// :param source: Source string
+    /// :type str
+    /// :raises ValueError
+    /// :rtype float
+    ///
+    #[pyfunction]
+    #[pyo3(
+        pass_module,
+        signature = (source),
+        text_signature = "(source: str)"
+    )]
+    fn to_seconds(
+        module: &Bound<'_, PyModule>,
+        source: &str) -> PyResult<f64> {
+        let result = convert_seconds(
+            &source,
+            read_patterns(module)?,
+            read_tokens(module)?,
+        );
+
+        match result {
+            Some(v) => Ok(v),
+            None => Err(PyValueError::new_err(format!(
+                "Unable to convert \"{}\" into seconds", source,
             )))
         }
     }
@@ -325,6 +378,16 @@ mod fuzzydate {
     }
 }
 
+/// Tokenize source string
+fn tokenize_str(
+    source: &str,
+    custom_tokens: HashMap<String, Token>) -> (String, Vec<i64>) {
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
+    let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
+    (pattern, values)
+}
+
+
 /// Tokenize source string and then convert it into a datetime value
 fn convert_str(
     source: &str,
@@ -332,9 +395,29 @@ fn convert_str(
     first_weekday_mon: bool,
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
-    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
-    let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
+    let (pattern, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
+}
+
+/// Tokenize source string and then convert it seconds, reflecting exact duration
+fn convert_seconds(
+    source: &str,
+    custom_patterns: HashMap<String, String>,
+    custom_tokens: HashMap<String, Token>) -> Option<f64> {
+    let (pattern, values) = tokenize_str(&source, custom_tokens);
+
+    if !token::is_duration(&pattern) {
+        return None;
+    }
+
+    let current_time = Utc::now().fixed_offset();
+
+    if let Some(from_time) = fuzzy::convert(&pattern, &values, &current_time, true, custom_patterns) {
+        let duration: Duration = from_time - current_time;
+        return Option::from((duration.num_milliseconds() / 1_0000) as f64);
+    }
+
+    None
 }
 
 /// Turn global identifier into corresponding tokenization token
