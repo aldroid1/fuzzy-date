@@ -1,9 +1,9 @@
+use crate::constants::Pattern;
 use crate::convert;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
+use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
-use std::cmp;
-use crate::constants::Pattern;
 
 const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 41] = [
     // KEYWORDS
@@ -257,36 +257,39 @@ fn find_pattern_calls(
     pattern: &str,
     custom: HashMap<String, String>) -> Vec<(String, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>)> {
     let mut closure_map = HashMap::new();
+    let mut pattern_map = HashMap::new();
 
     for (pattern_type, closure_function) in FUZZY_PATTERNS {
-        closure_map.insert(Pattern::value(pattern_type).to_string(), closure_function);
+        closure_map.insert(pattern_type, closure_function);
+        pattern_map.insert(Pattern::value(pattern_type).to_string(), pattern_type.to_owned());
     }
 
     for (custom_pattern, closure_pattern) in custom {
-        closure_map.insert(custom_pattern, *closure_map.get(closure_pattern.as_str()).unwrap());
+        if pattern_map.contains_key(&closure_pattern) {
+            pattern_map.insert(custom_pattern.to_owned(), pattern_map.get(&closure_pattern).unwrap());
+        }
     }
 
-    if closure_map.contains_key(pattern) {
-        return vec![(pattern.to_string(), *closure_map.get(pattern).unwrap())];
+    for prefix in vec!["", "+"] {
+        let try_pattern = format!("{}{}", prefix, pattern);
+
+        if pattern_map.contains_key(&try_pattern) {
+            let pattern_type = pattern_map.get(&try_pattern).unwrap();
+            return vec![(try_pattern.to_string(), *closure_map.get(pattern_type).unwrap())];
+        }
     }
 
     let mut result = vec![];
     let mut search = pattern;
-    let mut prefix = "+";
-
-    if pattern.starts_with("-")
-        || pattern.starts_with("prev")
-        || pattern.starts_with("last") {
-        prefix = "-";
-    }
+    let prefix = if pattern.starts_with("-") { "-" } else { "+" };
 
     while search.len().gt(&0) {
-        let mut calls = vec![];
+        let mut calls: Vec<(&str, &Pattern)> = vec![];
 
-        for map_pattern in closure_map.keys() {
-            if search.starts_with(map_pattern)
-                || format!("{}{}", prefix, search).starts_with(map_pattern) {
-                calls.push(map_pattern);
+        for (map_pattern, map_type) in &pattern_map {
+            if search.starts_with(&map_pattern.as_str())
+                || format!("{}{}", prefix, search).starts_with(&map_pattern.as_str()) {
+                calls.push((&map_pattern, map_type));
             }
         }
 
@@ -294,11 +297,11 @@ fn find_pattern_calls(
             return vec![];
         }
 
-        calls.sort_by(|a, b| b.cmp(a));
-        let best_match: String = calls.first().unwrap().to_string();
+        calls.sort_by(|a, b| b.0.cmp(a.0));
+        let (best_match, best_type) = calls.first().unwrap();
 
         search = &search[cmp::min(best_match.len(), search.len())..].trim_start();
-        result.push((best_match.to_owned(), *closure_map.get(&best_match).unwrap()));
+        result.push((best_match.to_string(), *closure_map.get(best_type).unwrap()));
     }
 
     result

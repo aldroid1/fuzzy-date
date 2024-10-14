@@ -757,7 +757,8 @@ mod tests {
         let expect: Vec<(&str, f64)> = vec![
             ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
             ("1 hour", 3600.0), ("1h", 3600.0), ("-1 hour", -3600.0),
-            ("+1d 1h 1min 2s", 90062.0), ("-1d 1h 1min 2s", -90062.0),
+            ("1d 1h 1min 2s", 90062.0), ("+1d 1h 1min 2s", 90062.0), ("-1d 1h 1min 2s", -90062.0),
+            ("1d 1h 1min -2s", 90058.0), ("-1d 1h 1min +2s", -90058.0), ("-1d +1h -1min", -82860.0),
         ];
 
         for (from_string, expect_value) in expect {
