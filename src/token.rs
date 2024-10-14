@@ -381,6 +381,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_is_time_duration() {
+        let expect: Vec<(&str, bool)> = vec![
+            ("[int][short_unit] ", true),
+            ("++[int][short_unit]", true),
+            ("-[int] [unit]", true),
+            ("+[int] [long_unit]", true),
+            ("[int] [long_unit] ago", false),
+            ("next [long_unit]", false),
+        ];
+
+        for (pattern, expect_value) in expect {
+            assert_eq!(is_time_duration(pattern), expect_value);
+        }
+    }
+
+    #[test]
     fn test_weekdays() {
         let expect: Vec<(&str, i64)> = vec![
             ("Monday", 1), ("Mon", 1), ("Tuesday", 2), ("Tue", 2),
