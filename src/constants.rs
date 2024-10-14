@@ -162,10 +162,6 @@ impl Pattern {
         }
     }
 
-    pub(crate) fn is_offset_minus(&self) -> bool {
-        Self::value(&self).starts_with("-")
-    }
-
     pub(crate) fn is_valid(value: &str) -> bool {
         patterns().values().find(|&&v| v == value).is_some()
     }

@@ -281,7 +281,7 @@ fn find_pattern_calls(
 
     let mut result = vec![];
     let mut search = pattern;
-    let mut prefix = "";
+    let prefix = if pattern.starts_with("-") { "-" } else { "+" };
 
     while search.len().gt(&0) {
         let mut calls: Vec<(&str, &Pattern)> = vec![];
@@ -302,10 +302,6 @@ fn find_pattern_calls(
 
         search = &search[cmp::min(best_match.len(), search.len())..].trim_start();
         result.push((best_match.to_string(), *closure_map.get(best_type).unwrap()));
-
-        if prefix.eq("") {
-            prefix = if best_type.is_offset_minus() { "-" } else { "+" };
-        }
     }
 
     result
