@@ -5,7 +5,7 @@ mod python;
 mod constants;
 
 use crate::token::Token;
-use chrono::{DateTime, FixedOffset, NaiveDate};
+use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
@@ -17,8 +17,6 @@ mod fuzzydate {
     use crate::fuzzydate::__core__::Config;
 
     const ATTR_CONFIG: &'static str = "config";
-    const ATTR_PATTERN: &'static str = "pattern";
-    const ATTR_TOKEN: &'static str = "token";
 
     #[pymodule]
     mod __core__ {
@@ -43,7 +41,13 @@ mod fuzzydate {
             /// a ValueError if an unsupported pattern value is used, or if different
             /// amount of variables are used in the custom pattern.
             ///
-            /// See fuzzydate.pattern.* constants for accepted values.
+            /// :param patterns: Map of patterns where keys are new patterns to identify and values
+            ///                  are existing patterns to interpret them as. See
+            ///                  fuzzydate.pattern.* constants for accepted values.
+            /// :type source: dict[str, str]
+            /// :raises ValueError
+            /// :rtype None
+            ///
             #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
             fn add_patterns(
                 &mut self,
@@ -78,7 +82,13 @@ mod fuzzydate {
             /// added tokens. Overlapping keys will be replaced. Raises a ValueError
             /// if an unsupported token value is used.
             ///
-            /// See fuzzydate.token.* constants for accepted values.
+            /// :param tokens: Map of tokens where keys are new strings to identify and values are
+            ///                token values to classify them as. See fuzzydate.token.* constants
+            ///                for accepted values.
+            /// :type source: dict[str, int]
+            /// :raises ValueError
+            /// :rtype None
+            ///
             #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
             fn add_tokens(
                 &mut self,
@@ -97,74 +107,75 @@ mod fuzzydate {
                 Ok(())
             }
         }
+    }
 
-        #[pyclass]
-        pub(crate) struct Patterns {}
+    #[pyclass(name = "pattern")]
+    pub(crate) struct Patterns {}
 
-        #[pymethods]
-        impl Patterns {
-            // @formatter:off
+    #[pymethods]
+    impl Patterns {
+        // @formatter:off
 
-            #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
-            #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
-            #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
-            #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
-            #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
+        #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
+        #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
+        #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
+        #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
+        #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
 
-            #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
-            #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
-            #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
-            #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
+        #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
+        #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
+        #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
+        #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
 
-            #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
-            #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
-            #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
+        #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
+        #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
+        #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
 
-            #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
-            #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
-            #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
+        #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
+        #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
+        #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
 
-            #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
-            #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
-            #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
-            #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
-            #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
+        #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
+        #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
+        #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
+        #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
+        #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
 
-            #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
-            #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
-            #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
-            #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
-            #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
+        #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
+        #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
 
-            #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
-            #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
+        #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
+        #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
 
-            #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
-            #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
-            #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
+        #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
+        #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
+        #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
 
-            #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
-            #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
-            #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+        #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
+        #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
+        #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
 
-            #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
-            #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
+        #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
+        #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
-            // @formatter:on
-        }
+        // @formatter:on
+    }
 
-        #[pyclass]
-        pub(crate) struct Tokens {}
+    #[pyclass(name = "token")]
+    pub(crate) struct Tokens {}
 
-        #[pymethods]
-        impl Tokens {
-            // @formatter:off
+    #[pymethods]
+    impl Tokens {
+        // @formatter:off
 
             // Weekdays
             #[classattr] const WDAY_MON: i16 = constants::TOKEN_WDAY_MON;
@@ -209,7 +220,6 @@ mod fuzzydate {
             #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
 
             // @formatter:on
-        }
     }
 
     /// Turn time string into datetime.date object
@@ -217,6 +227,16 @@ mod fuzzydate {
     /// Current date (`today`) defaults to system date in UTC. Time of day
     /// is assumed to be midnight in case of any time adjustments. Raises
     /// a ValueError if the conversion fails.
+    ///
+    /// :param source: Source string
+    /// :type source: str
+    /// :param today: Current date. Defaults to system date in UTC.
+    /// :type today: datetime.date, optional
+    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :type bool, optional
+    /// :raises ValueError
+    /// :rtype datetime.date
+    ///
     #[pyfunction]
     #[pyo3(
         pass_module,
@@ -250,6 +270,16 @@ mod fuzzydate {
     /// Current time (`now`) defaults to system time in UTC. If custom `now`
     /// does not contain a timezone, UTC timezone will be used. Raises a
     /// ValueError if the conversion fails.
+    ///
+    /// :param source: Source string
+    /// :type source: str
+    /// :param now: Current time. Defaults to system time in UTC.
+    /// :type now: datetime.datetime, optional
+    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :type bool, optional
+    /// :raises ValueError
+    /// :rtype datetime.datetime
+    ///
     #[pyfunction]
     #[pyo3(
         pass_module,
@@ -278,15 +308,46 @@ mod fuzzydate {
         }
     }
 
+    /// Turn time duration string into seconds
+    ///
+    /// Only accepts exact time duration strings, such as "1h" rather than
+    /// "1 hour ago". Raises a ValueError if anything else than an exact
+    /// length of time is provided.
+    ///
+    /// :param source: Source string
+    /// :type str
+    /// :raises ValueError
+    /// :rtype float
+    ///
+    #[pyfunction]
+    #[pyo3(
+        pass_module,
+        signature = (source),
+        text_signature = "(source: str)"
+    )]
+    fn to_seconds(
+        module: &Bound<'_, PyModule>,
+        source: &str) -> PyResult<f64> {
+        let result = convert_seconds(
+            &source,
+            read_patterns(module)?,
+            read_tokens(module)?,
+        );
+
+        match result {
+            Some(v) => Ok(v),
+            None => Err(PyValueError::new_err(format!(
+                "Unable to convert \"{}\" into seconds", source,
+            )))
+        }
+    }
+
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
         module.add(ATTR_CONFIG, Config {
             patterns: HashMap::new(),
             tokens: HashMap::new(),
         })?;
-
-        module.add(ATTR_PATTERN, __core__::Patterns {})?;
-        module.add(ATTR_TOKEN, __core__::Tokens {})?;
 
         Ok(())
     }
@@ -325,6 +386,16 @@ mod fuzzydate {
     }
 }
 
+/// Tokenize source string
+fn tokenize_str(
+    source: &str,
+    custom_tokens: HashMap<String, Token>) -> (String, Vec<i64>) {
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
+    let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
+    (pattern, values)
+}
+
+
 /// Tokenize source string and then convert it into a datetime value
 fn convert_str(
     source: &str,
@@ -332,9 +403,29 @@ fn convert_str(
     first_weekday_mon: bool,
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
-    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
-    let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
+    let (pattern, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
+}
+
+/// Tokenize source string and then convert it seconds, reflecting exact duration
+fn convert_seconds(
+    source: &str,
+    custom_patterns: HashMap<String, String>,
+    custom_tokens: HashMap<String, Token>) -> Option<f64> {
+    let (pattern, values) = tokenize_str(&source, custom_tokens);
+
+    if !token::is_time_duration(&pattern) {
+        return None;
+    }
+
+    let current_time = Utc::now().fixed_offset();
+
+    if let Some(from_time) = fuzzy::convert(&pattern, &values, &current_time, true, custom_patterns) {
+        let duration: Duration = from_time - current_time;
+        return Option::from((duration.num_milliseconds() / 1_000) as f64);
+    }
+
+    None
 }
 
 /// Turn global identifier into corresponding tokenization token
@@ -658,6 +749,32 @@ mod tests {
                 HashMap::new(),
             );
             assert!(result_time.is_none());
+        }
+    }
+
+    #[test]
+    fn test_to_seconds_some() {
+        let expect: Vec<(&str, f64)> = vec![
+            ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
+            ("1 hour", 3600.0), ("1h", 3600.0), ("-1 hour", -3600.0),
+            ("+1d 1h 1min 2s", 90062.0), ("-1d 1h 1min 2s", -90062.0),
+        ];
+
+        for (from_string, expect_value) in expect {
+            let result_value = convert_seconds(from_string, HashMap::new(), HashMap::new());
+            assert_eq!(result_value.unwrap(), expect_value);
+        }
+    }
+
+    #[test]
+    fn test_to_seconds_none() {
+        let expect: Vec<&str> = vec![
+            "", "7", "2020-01-07", "last week", "1 hour ago",
+        ];
+
+        for from_string in expect {
+            let result_value = convert_seconds(from_string, HashMap::new(), HashMap::new());
+            assert!(result_value.is_none());
         }
     }
 

@@ -138,18 +138,16 @@ impl TokenType {
             TokenType::Year => "year",
         }
     }
+
+    fn as_pattern(&self) -> String {
+        format!("[{}]", self.as_name())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token {
     pub(crate) token: TokenType,
     pub(crate) value: i64,
-}
-
-impl Token {
-    fn name(&self) -> String {
-        format!("[{}]", self.token.as_name())
-    }
 }
 
 struct TokenList {
@@ -186,6 +184,31 @@ impl TokenList {
             None => None,
         }
     }
+}
+
+pub(crate) fn is_time_duration(pattern: &str) -> bool {
+    let without_integers: String = pattern
+        .replace(TokenType::Integer.as_pattern().as_str(), "");
+
+    if without_integers.eq(&pattern) {
+        return false;
+    }
+
+    let without_units: String = without_integers
+        .replace(TokenType::Unit.as_pattern().as_str(), "")
+        .replace(TokenType::ShortUnit.as_pattern().as_str(), "")
+        .replace(TokenType::LongUnit.as_pattern().as_str(), "");
+
+    if without_units.eq(&without_integers) {
+        return false;
+    }
+
+    let without_extra: String = without_units
+        .replace("+", "")
+        .replace("-", "")
+        .replace(" ", "");
+
+    without_extra.len().eq(&0)
 }
 
 /// Turn source string into a pattern, and list of extracted tokens
@@ -230,7 +253,7 @@ pub(crate) fn tokenize(
         if string_token.is_some() {
             let string_value = string_token.unwrap();
             out_values.push(string_value.clone());
-            out_pattern.push_str(&string_value.name());
+            out_pattern.push_str(&string_value.token.as_pattern());
             out_pattern.push_str(&part_letter);
             continue;
         }
@@ -243,7 +266,7 @@ pub(crate) fn tokenize(
             if number_value.is_some() {
                 let number_token = number_value.unwrap();
                 out_values.push(number_token.clone());
-                out_pattern.push_str(&number_token.name());
+                out_pattern.push_str(&number_token.token.as_pattern());
                 out_pattern.push_str(&part_letter);
             }
             continue;
@@ -261,7 +284,7 @@ pub(crate) fn tokenize(
         if number_value.is_some() {
             let number_token = number_value.unwrap();
             out_values.push(number_token.clone());
-            combo_pattern.push_str(&number_token.name());
+            combo_pattern.push_str(&number_token.token.as_pattern());
         } else {
             combo_pattern.push_str(&curr_number);
         }
@@ -271,7 +294,7 @@ pub(crate) fn tokenize(
         if string_value.is_some() {
             let string_token = string_value.unwrap();
             out_values.push(string_token.clone());
-            combo_pattern.push_str(&string_token.name());
+            combo_pattern.push_str(&string_token.token.as_pattern());
         } else {
             combo_pattern.push_str(&curr_string);
         }
@@ -356,6 +379,22 @@ fn parse_number(source: &str) -> Option<Token> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_is_time_duration() {
+        let expect: Vec<(&str, bool)> = vec![
+            ("[int][short_unit] ", true),
+            ("++[int][short_unit]", true),
+            ("-[int] [unit]", true),
+            ("+[int] [long_unit]", true),
+            ("[int] [long_unit] ago", false),
+            ("next [long_unit]", false),
+        ];
+
+        for (pattern, expect_value) in expect {
+            assert_eq!(is_time_duration(pattern), expect_value);
+        }
+    }
 
     #[test]
     fn test_weekdays() {
