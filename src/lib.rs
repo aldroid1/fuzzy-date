@@ -235,7 +235,7 @@ mod fuzzydate {
     /// :type source: str
     /// :param today: Current date. Defaults to system date in UTC.
     /// :type today: datetime.date, optional
-    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
     /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.date
@@ -278,7 +278,7 @@ mod fuzzydate {
     /// :type source: str
     /// :param now: Current time. Defaults to system time in UTC.
     /// :type now: datetime.datetime, optional
-    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
+    /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
     /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.datetime
@@ -682,17 +682,23 @@ mod tests {
     }
 
     #[test]
+    fn test_offset_weeks_exact() {
+        assert_convert_from(vec![
+            ("-1w", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
+            ("-2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
+            ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-21 14:22:28 +02:00"),
+            ("+2 weeks", "2024-01-08T15:22:28+02:00", "2024-01-22 15:22:28 +02:00"),
+            ("1 week ago", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
+        ]);
+    }
+
+    #[test]
     fn test_offset_weeks_monday() {
         let expect: Vec<(&str, &str, &str)> = vec![
             ("this week", "2024-01-25T15:22:28+02:00", "2024-01-22 15:22:28 +02:00"),
             ("prev week", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
             ("last week", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
             ("next week", "2024-01-13 15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
-            ("-1w", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
-            ("-2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-08 15:22:28 +02:00"),
-            ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-15 14:22:28 +02:00"),
-            ("+2 weeks", "2024-01-08T15:22:28+02:00", "2024-01-22 15:22:28 +02:00"),
-            ("1 week ago", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {
@@ -715,11 +721,6 @@ mod tests {
             ("prev week", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
             ("last week", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
             ("next week", "2024-01-13 15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
-            ("-1w", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
-            ("-2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-07 15:22:28 +02:00"),
-            ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-21 14:22:28 +02:00"),
-            ("+2 weeks", "2024-01-08T15:22:28+02:00", "2024-01-21 15:22:28 +02:00"),
-            ("1 week ago", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {

@@ -11,6 +11,7 @@ import fuzzydate as fd
 
 fd.to_datetime('1 hour ago')             # 2023-04-01 11:00:00+00:00
 fd.to_datetime('last week')              # 2023-03-20 12:00:00+00:00
+fd.to_datetime('-1 week')                # 2023-03-25 12:00:00+00:00
 fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
 fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
 fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
@@ -31,7 +32,7 @@ import fuzzydate as fd
 fd.to_seconds('1h 4min') # 3840.0
 fd.to_seconds('+2 days') # 172800.0
 fd.to_seconds('-1 hour') # -3600.0
-fd.to_seconds('1 week')  # 432000.0
+fd.to_seconds('1 week')  # 604800.0
 
 # Anything other than an exact length of time raises a ValueError
 
