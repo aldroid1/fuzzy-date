@@ -267,22 +267,6 @@ pub(crate) fn to_duration(seconds: f64) -> String {
     let mut seconds = seconds;
     let mut result: String = String::from("");
 
-    let year_seconds = 86400.0 * 365.0;
-    let years = (seconds / year_seconds).floor() as i32;
-
-    if years.gt(&0) {
-        result.push_str(&format!(" {} {}", years, "years"));
-        seconds -= years as f64 * year_seconds;
-    }
-
-    let month_seconds = 86400.0 * 30.0;
-    let months = (seconds / month_seconds).floor() as i32;
-
-    if months.gt(&0) {
-        result.push_str(&format!(" {} {}", months, "months"));
-        seconds -= months as f64 * month_seconds;
-    }
-
     let weeks = (seconds / 604800.0).floor() as i32;
 
     if weeks.gt(&0) {
