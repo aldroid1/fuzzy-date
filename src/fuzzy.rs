@@ -10,8 +10,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
     (&Pattern::Midnight, |c, _, _| c.time_reset()),
-    (&Pattern::Yesterday, |c, _, r| c.offset_unit(TimeUnit::Days, -1, r)),
-    (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)),
+    (&Pattern::Yesterday, |c, _, r| c.offset_unit(TimeUnit::Days, -1, r)?.time_reset()),
+    (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)?.time_reset()),
 
     // WEEKDAY OFFSETS
     (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)),
