@@ -1,7 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
-const BOUNDARY_CHARS: [&'static str; 6] = [
-    " ", "-", "/", "+", ":", ".",
+const BOUNDARY_CHARS: [&'static str; 7] = [
+    " ", "-", "/", "+", ":", ".", ",",
+];
+
+const IGNORED_CHARS: [&'static str; 1] = [
+    ","
 ];
 
 const STANDARD_TOKENS: [(&'static str, Token); 93] = [
@@ -167,11 +171,6 @@ impl TokenList {
         Self { tokens: tokens }
     }
 
-    fn is_boundary(value: &str) -> bool {
-        let boundary_chars = HashSet::from(BOUNDARY_CHARS);
-        boundary_chars.contains(value)
-    }
-
     fn is_prefixed(value: &str) -> bool {
         HashSet::from(["@"]).contains(value)
     }
@@ -232,12 +231,16 @@ pub(crate) fn tokenize(
 
         let char_str: &str = &part_char.to_string();
 
-        if TokenList::is_boundary(&char_str) {
+        if BOUNDARY_CHARS.contains(&char_str) {
             part_chars = &source[part_start..part_index];
             part_letter.push_str(&char_str);
             part_start = part_index + 1;
         } else if part_index.eq(&last_index) {
             part_chars = &source[part_start..part_index + 1];
+        }
+
+        if IGNORED_CHARS.contains(&part_letter.as_str()) {
+            part_letter = String::from(" ");
         }
 
         if part_chars.eq("") {
@@ -507,12 +510,14 @@ mod tests {
     }
 
     #[test]
-    fn test_whitespace() {
+    fn test_whitespace_ignored() {
         let expect: Vec<(&str, &str)> = vec![
             ("Feb  7th  2023", "[month] [nth] [year]"),
             ("Feb 7th 2023 ", "[month] [nth] [year]"),
             (" 1d  2h 3s", "[int][short_unit] [int][short_unit] [int][short_unit]"),
-            ("+1d  -2h 3s", "+[int][short_unit] -[int][short_unit] [int][short_unit]")
+            ("+1d  -2h 3s", "+[int][short_unit] -[int][short_unit] [int][short_unit]"),
+            ("Feb 7th, 2023", "[month] [nth] [year]"),
+            (" Feb 7th,  2023", "[month] [nth] [year]"),
         ];
 
         for (from_string, expect_pattern) in expect {
