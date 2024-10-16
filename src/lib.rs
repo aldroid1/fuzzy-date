@@ -315,7 +315,7 @@ mod fuzzydate {
     ///
     /// Only accepts exact time duration strings, such as "1h" rather than
     /// "1 hour ago". Raises a ValueError if anything else than an exact
-    /// length of time is provided.
+    /// length of time is provided, or if years or months have been included.
     ///
     /// :param source: Source string
     /// :type str
@@ -338,10 +338,8 @@ mod fuzzydate {
         );
 
         match result {
-            Some(v) => Ok(v),
-            None => Err(PyValueError::new_err(format!(
-                "Unable to convert \"{}\" into seconds", source,
-            )))
+            Ok(v) => Ok(v),
+            Err(e) => Err(PyValueError::new_err(e)),
         }
     }
 
@@ -392,10 +390,10 @@ mod fuzzydate {
 /// Tokenize source string
 fn tokenize_str(
     source: &str,
-    custom_tokens: HashMap<String, Token>) -> (String, Vec<i64>) {
+    custom_tokens: HashMap<String, Token>) -> (String, Vec<Token>, Vec<i64>) {
     let (pattern, tokens) = token::tokenize(&source, custom_tokens);
-    let values: Vec<i64> = tokens.into_iter().map(|p| p.value).collect();
-    (pattern, values)
+    let values: Vec<i64> = tokens.iter().map(|p| p.value).collect();
+    (pattern, tokens, values)
 }
 
 
@@ -406,7 +404,7 @@ fn convert_str(
     first_weekday_mon: bool,
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
-    let (pattern, values) = tokenize_str(&source, custom_tokens);
+    let (pattern, _, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
 }
 
@@ -414,21 +412,31 @@ fn convert_str(
 fn convert_seconds(
     source: &str,
     custom_patterns: HashMap<String, String>,
-    custom_tokens: HashMap<String, Token>) -> Option<f64> {
-    let (pattern, values) = tokenize_str(&source, custom_tokens);
+    custom_tokens: HashMap<String, Token>) -> Result<f64, String> {
+    let (pattern, tokens, values) = tokenize_str(&source, custom_tokens);
 
     if !token::is_time_duration(&pattern) {
-        return None;
+        return Err(format!("Unable to convert \"{}\" into seconds", source));
+    }
+
+    for token in tokens {
+        if token.token.is_unit() &&  token.value.eq(&7) {
+            return Err(String::from("Converting years into seconds is not supported"))
+        }
+
+        if token.token.is_unit() &&  token.value.eq(&6) {
+            return Err(String::from("Converting months into seconds is not supported"))
+        }
     }
 
     let current_time = Utc::now().fixed_offset();
 
     if let Some(from_time) = fuzzy::convert(&pattern, &values, &current_time, true, custom_patterns) {
         let duration: Duration = from_time - current_time;
-        return Option::from((duration.num_milliseconds() / 1_000) as f64);
+        return Ok((duration.num_milliseconds() / 1_000) as f64);
     }
 
-    None
+    Err(format!("Unable to convert \"{}\" into seconds", source))
 }
 
 /// Turn global identifier into corresponding tokenization token
@@ -796,11 +804,12 @@ mod tests {
     fn test_to_seconds_none() {
         let expect: Vec<&str> = vec![
             "", "7", "2020-01-07", "last week", "1 hour ago",
+            "1y", "+1 year", "-2 years", "1m", "+1 month", "-2 months",
         ];
 
         for from_string in expect {
             let result_value = convert_seconds(from_string, HashMap::new(), HashMap::new());
-            assert!(result_value.is_none());
+            assert!(result_value.is_err());
         }
     }
 

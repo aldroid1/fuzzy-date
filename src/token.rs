@@ -146,6 +146,12 @@ impl TokenType {
     fn as_pattern(&self) -> String {
         format!("[{}]", self.as_name())
     }
+
+    pub(crate) fn is_unit(&self) -> bool {
+        self.eq(&Self::Unit)
+            || self.eq(&Self::ShortUnit)
+            || self.eq(&Self::LongUnit)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

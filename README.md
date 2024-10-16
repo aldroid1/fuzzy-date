@@ -31,11 +31,18 @@ import fuzzydate as fd
 fd.to_seconds('1h 4min') # 3840.0
 fd.to_seconds('+2 days') # 172800.0
 fd.to_seconds('-1 hour') # -3600.0
+fd.to_seconds('1 week')  # 432000.0
 
 # Anything other than an exact length of time raises a ValueError
 
 fd.to_seconds('last week')
 # ValueError: Unable to convert "last week" into seconds
+
+# Because years and months have varying amount of seconds, using 
+# them raises a ValueError
+
+fd.to_seconds('1m 2w 30min')
+# ValueError: Converting months into seconds is not supported
 ```
 
 ## Localization
