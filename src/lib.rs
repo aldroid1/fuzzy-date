@@ -235,8 +235,8 @@ mod fuzzydate {
     /// :type source: str
     /// :param today: Current date. Defaults to system date in UTC.
     /// :type today: datetime.date, optional
-    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
-    /// :type bool, optional
+    /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
+    /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.date
     ///
@@ -278,8 +278,8 @@ mod fuzzydate {
     /// :type source: str
     /// :param now: Current time. Defaults to system time in UTC.
     /// :type now: datetime.datetime, optional
-    /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
-    /// :type bool, optional
+    /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
+    /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.datetime
     ///
