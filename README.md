@@ -13,8 +13,8 @@ fd.to_datetime('1 hour ago')             # 2023-04-01 11:00:00+00:00
 fd.to_datetime('last week')              # 2023-03-20 12:00:00+00:00
 fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
 fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
-fd.to_datetime('tomorrow midnight')      # 2023-04-02 00:00:00+00:00
-fd.to_datetime('prev Monday')            # 2023-03-27 12:00:00+00:00
+fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
+fd.to_datetime('prev Monday')            # 2023-03-27 00:00:00+00:00
 fd.to_datetime('last day of this month') # 2023-04-30 00:00:00+00:00
 
 # Anything invalid raises a ValueError
@@ -29,7 +29,7 @@ fd.to_datetime('next Summer')
 import fuzzydate as fd
 
 fd.to_seconds('1h 4min') # 3840.0
-fd.to_seconds('+2 days') # -172800.0
+fd.to_seconds('+2 days') # 172800.0
 fd.to_seconds('-1 hour') # -3600.0
 
 # Anything other than an exact length of time raises a ValueError
@@ -87,6 +87,7 @@ pip install fuzzy-date
 - Unix timestamp `@1680307200`
 - Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
 - Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
+- Day and month `April 1st`, `April 1`, `1 April`
 - Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
 
 ## Methods

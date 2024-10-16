@@ -5,19 +5,19 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 41] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 44] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
     (&Pattern::Midnight, |c, _, _| c.time_reset()),
-    (&Pattern::Yesterday, |c, _, r| c.offset_unit(TimeUnit::Days, -1, r)),
-    (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)),
+    (&Pattern::Yesterday, |c, _, r| c.offset_unit(TimeUnit::Days, -1, r)?.time_reset()),
+    (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)?.time_reset()),
 
     // WEEKDAY OFFSETS
-    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)),
-    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
-    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
-    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)),
+    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)?.time_reset()),
+    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)?.time_reset()),
 
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 0, r)),
@@ -95,6 +95,11 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::DateYmd, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_reset()),
     (&Pattern::DateDmy, |c, v, _| c.date_ymd(v[2], v[1], v[0])?.time_reset()),
     (&Pattern::DateMdy, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
+
+    // Dec 7, Dec 7th, 7 Dec
+    (&Pattern::DateMonthDay, |c, v, _| c.date_ymd(c.year(), v[0], v[1])?.time_reset()),
+    (&Pattern::DateMonthNth, |c, v, _| c.date_ymd(c.year(), v[0], v[1])?.time_reset()),
+    (&Pattern::DateDayMonth, |c, v, _| c.date_ymd(c.year(), v[1], v[0])?.time_reset()),
 
     // Dec 7 2023, Dec 7th 2023, 7 Dec 2023
     (&Pattern::DateMonthDayYear, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
@@ -205,6 +210,11 @@ impl FuzzyDate {
     /// Reset time to midnight
     fn time_reset(&self) -> Result<Self, ()> {
         self.time_hms(0, 0, 0)
+    }
+
+    /// Current year
+    fn year(&self) -> i64 {
+        self.time.year() as i64
     }
 }
 
@@ -325,25 +335,25 @@ mod tests {
             "viime [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-15 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "edellinen [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-15 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "ensi [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-22 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "seuraava [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-22 00:00:00 +02:00");
     }
 
     fn convert_custom(

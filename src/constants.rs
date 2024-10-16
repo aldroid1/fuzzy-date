@@ -46,8 +46,11 @@ pub(crate) const PATTERN_DATE_YMD: &'static str = "[year]-[int]-[int]";
 pub(crate) const PATTERN_DATE_DMY: &'static str = "[int].[int].[year]";
 pub(crate) const PATTERN_DATE_MDY: &'static str = "[int]/[int]/[year]";
 
+pub(crate) const PATTERN_DATE_MONTH_DAY: &'static str = "[month] [int]";
 pub(crate) const PATTERN_DATE_MONTH_DAY_YEAR: &'static str = "[month] [int] [year]";
+pub(crate) const PATTERN_DATE_MONTH_NTH: &'static str = "[month] [nth]";
 pub(crate) const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [year]";
+pub(crate) const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
 
 pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
@@ -148,7 +151,10 @@ pub(crate) enum Pattern {
     DateDmy,
     DateMdy,
     DateMonthDayYear,
+    DateMonthDay,
+    DateMonthNth,
     DateMonthNthYear,
+    DateDayMonth,
     DateDayMonthYear,
     DateTimeYmdHm,
     DateTimeYmdHms,
@@ -205,8 +211,11 @@ fn patterns() -> HashMap<Pattern, &'static str> {
         (Pattern::DateYmd, PATTERN_DATE_YMD),
         (Pattern::DateDmy, PATTERN_DATE_DMY),
         (Pattern::DateMdy, PATTERN_DATE_MDY),
+        (Pattern::DateMonthDay, PATTERN_DATE_MONTH_DAY),
         (Pattern::DateMonthDayYear, PATTERN_DATE_MONTH_DAY_YEAR),
+        (Pattern::DateMonthNth, PATTERN_DATE_MONTH_NTH),
         (Pattern::DateMonthNthYear, PATTERN_DATE_MONTH_NTH_YEAR),
+        (Pattern::DateDayMonth, PATTERN_DATE_DAY_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_DAY_MONTH_YEAR),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
