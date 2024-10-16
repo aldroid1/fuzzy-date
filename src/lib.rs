@@ -236,7 +236,7 @@ mod fuzzydate {
     /// :param today: Current date. Defaults to system date in UTC.
     /// :type today: datetime.date, optional
     /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
-    /// :type bool, optional
+    /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.date
     ///
@@ -279,7 +279,7 @@ mod fuzzydate {
     /// :param now: Current time. Defaults to system time in UTC.
     /// :type now: datetime.datetime, optional
     /// :param weekday_start_mon: Should start weekdays from Monday. Defaults to True.
-    /// :type bool, optional
+    /// :type weekday_start_mon: bool, optional
     /// :raises ValueError
     /// :rtype datetime.datetime
     ///
@@ -311,6 +311,36 @@ mod fuzzydate {
         }
     }
 
+    /// Format number of seconds as time duration string
+    ///
+    /// :param source: Number of seconds
+    /// :type source: float
+    /// :param unit: Unit type to show, long (e.g. seconds) short, (e.g. s) or None (e.g. sec).
+    ///              Defaults to None.
+    /// :type unit: str, optional
+    /// :param max: Maximum unit to render, defaults 'y' for years
+    /// :type max: str, optional
+    /// :param max: Minimum unit to render, defaults 's' for seconds
+    /// :type max: str, optional
+    /// :rtype str
+    ///
+    #[pyfunction]
+    #[pyo3(
+        pass_module,
+        signature = (seconds, unit=None, max="y", min="s"),
+        text_signature = "(seconds: float, unit: str = None, max: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 'y', min: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 's') -> str"
+    )]
+    fn to_duration_exact(
+        _module: &Bound<'_, PyModule>,
+        _py: Python,
+        seconds: f64,
+        unit: Option<&str>,
+        max: &str,
+        min: &str) -> PyResult<String> {
+
+        Ok(fuzzy::to_duration(seconds))
+    }
+
     /// Turn time duration string into seconds
     ///
     /// Only accepts exact time duration strings, such as "1h" rather than
@@ -318,7 +348,7 @@ mod fuzzydate {
     /// length of time is provided.
     ///
     /// :param source: Source string
-    /// :type str
+    /// :type source: str
     /// :raises ValueError
     /// :rtype float
     ///

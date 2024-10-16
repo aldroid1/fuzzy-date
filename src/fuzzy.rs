@@ -262,6 +262,62 @@ pub(crate) fn convert(
     Option::from(ctx_time.time)
 }
 
+/// Turn seconds into a duration string
+pub(crate) fn to_duration(seconds: f64) -> String {
+    let mut seconds = seconds;
+    let mut result: String = String::from("");
+
+    let year_seconds = 86400.0 * 365.0;
+    let years = (seconds / year_seconds).floor() as i32;
+
+    if years.gt(&0) {
+        result.push_str(&format!(" {} {}", years, "years"));
+        seconds -= years as f64 * year_seconds;
+    }
+
+    let month_seconds = 86400.0 * 30.0;
+    let months = (seconds / month_seconds).floor() as i32;
+
+    if months.gt(&0) {
+        result.push_str(&format!(" {} {}", months, "months"));
+        seconds -= months as f64 * month_seconds;
+    }
+
+    let weeks = (seconds / 604800.0).floor() as i32;
+
+    if weeks.gt(&0) {
+        result.push_str(&format!(" {} {}", weeks, "weeks"));
+        seconds -= (weeks * 604800) as f64;
+    }
+
+    let days = (seconds / 86400.0).floor() as i32;
+
+    if days.gt(&0) {
+        result.push_str(&format!(" {} {}", days, "days"));
+        seconds -= (days * 86400) as f64;
+    }
+
+    let hours = (seconds / 3600.0).floor() as i32;
+
+    if hours.gt(&0) {
+        result.push_str(&format!(" {} {}", hours, "hours"));
+        seconds -= (hours * 3600) as f64;
+    }
+
+    let minutes = (seconds / 60.0).floor() as i32;
+
+    if minutes.gt(&0) {
+        result.push_str(&format!(" {} {}", minutes, "minutes"));
+        seconds -= (minutes * 60) as f64;
+    }
+
+    if seconds.gt(&0.0) {
+        result.push_str(&format!(" {} {}", seconds.floor(), "seconds"));
+    }
+
+    result.trim().to_string()
+}
+
 /// Find closure calls that match the pattern exactly, or partially
 fn find_pattern_calls(
     pattern: &str,

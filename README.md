@@ -36,6 +36,10 @@ fd.to_seconds('-1 hour') # -3600.0
 
 fd.to_seconds('last week')
 # ValueError: Unable to convert "last week" into seconds
+
+fd.to_duration_exact(3840.0)             # 1h 4min 
+fd.to_duration_exact(90060.0, long=True) # 1 day 1 hour 1 minute
+fd.to_duration_exact(90060.0, max='h', min='h') # 25h
 ```
 
 ## Localization
@@ -104,6 +108,12 @@ fuzzydate.to_datetime(
     source: str,
     now: datetime.datetime = None,
     weekday_start_mon: bool = True) -> datetime.datetime
+    
+fuzzydate.to_duration_exact(
+    seconds: float,
+    long: bool = False,
+    max: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 'y',
+    min: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 's') -> str
     
 fuzzydate.to_seconds(
     source: str) -> float
