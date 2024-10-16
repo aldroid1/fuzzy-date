@@ -10,8 +10,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
     (&Pattern::Midnight, |c, _, _| c.time_reset()),
-    (&Pattern::Yesterday, |c, _, r| c.offset_unit(TimeUnit::Days, -1, r)?.time_reset()),
-    (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)?.time_reset()),
+    (&Pattern::Yesterday, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, -1, r)?.time_reset()),
+    (&Pattern::Tomorrow, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, 1, r)?.time_reset()),
 
     // WEEKDAY OFFSETS
     (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)?.time_reset()),
@@ -20,24 +20,24 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)?.time_reset()),
 
     // KEYWORD OFFSETS
-    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 0, r)),
-    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), -1, r)),
-    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), -1, r)),
-    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 1, r)),
+    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), 0, r)),
+    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), -1, r)),
+    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), -1, r)),
+    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), 1, r)),
 
     // NUMERIC OFFSET, MINUS
-    (&Pattern::MinusUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
 
     // NUMERIC OFFSET, PLUS
-    (&Pattern::PlusUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
 
     // NUMERIC OFFSET, PLUS
-    (&Pattern::UnitAgo, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
 
     // FIRST/LAST OFFSETS
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| c
@@ -57,32 +57,32 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
         .time_reset(),
     ),
     (&Pattern::FirstLongUnitOfPrevLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), -1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
         .time_reset(),
     ),
     (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), -1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
         .time_reset(),
     ),
     (&Pattern::FirstLongUnitOfLastLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), -1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
         .time_reset(),
     ),
     (&Pattern::LastLongUnitOfLastLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), -1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
         .time_reset(),
     ),
     (&Pattern::FirstLongUnitOfNextLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), 1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), 1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
         .time_reset(),
     ),
     (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| c
-        .offset_unit(TimeUnit::from_int(v[1]), 1, r)?
+        .offset_unit_keyword(TimeUnit::from_int(v[1]), 1, r)?
         .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
         .time_reset(),
     ),
@@ -186,17 +186,28 @@ impl FuzzyDate {
         Ok(Self { time: self.time.with_day(new_day).unwrap() })
     }
 
-    /// Move time by specific unit
-    fn offset_unit(&self, target: TimeUnit, amount: i64, rules: &Rules) -> Result<FuzzyDate, ()> {
+    /// Move time exactly by specified number of units
+    fn offset_unit_exact(&self, target: TimeUnit, amount: i64, _rules: &Rules) -> Result<FuzzyDate, ()> {
         let new_time = match target {
             TimeUnit::Seconds => self.time + Duration::seconds(amount),
             TimeUnit::Minutes => self.time + Duration::minutes(amount),
             TimeUnit::Hours => self.time + Duration::hours(amount),
             TimeUnit::Days => self.time + Duration::days(amount),
-            TimeUnit::Weeks => convert::offset_weeks(self.time, amount, rules.week_start_day()),
+            TimeUnit::Weeks => self.time + Duration::days(amount * 7),
             TimeUnit::Months => convert::offset_months(self.time, amount),
             TimeUnit::Years => convert::offset_years(self.time, amount),
             _ => self.time,
+        };
+
+        Ok(Self { time: new_time })
+    }
+
+    /// Move time by specific unit, but apply keyword rules where
+    /// e.g. moving by weeks will land on to first day of week
+    fn offset_unit_keyword(&self, target: TimeUnit, amount: i64, rules: &Rules) -> Result<FuzzyDate, ()> {
+        let new_time = match target {
+            TimeUnit::Weeks => convert::offset_weeks(self.time, amount, rules.week_start_day()),
+            _ => return self.offset_unit_exact(target, amount, rules)
         };
 
         Ok(Self { time: new_time })
