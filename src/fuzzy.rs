@@ -14,10 +14,10 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::Tomorrow, |c, _, r| c.offset_unit(TimeUnit::Days, 1, r)?.time_reset()),
 
     // WEEKDAY OFFSETS
-    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)),
-    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
-    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)),
-    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)),
+    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)?.time_reset()),
+    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)?.time_reset()),
 
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit(TimeUnit::from_int(v[0]), 0, r)),
@@ -335,25 +335,25 @@ mod tests {
             "viime [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-15 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "edellinen [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-15 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-15 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "ensi [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-22 00:00:00 +02:00");
 
         let result_value = convert_custom(
             "seuraava [wday]", vec![1],
             "2024-01-19T15:22:28+02:00", &custom_finnish,
         );
-        assert_eq!(result_value, "2024-01-22 15:22:28 +02:00");
+        assert_eq!(result_value, "2024-01-22 00:00:00 +02:00");
     }
 
     fn convert_custom(
