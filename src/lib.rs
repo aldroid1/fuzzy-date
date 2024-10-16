@@ -315,7 +315,7 @@ mod fuzzydate {
     ///
     /// Only accepts exact time duration strings, such as "1h" rather than
     /// "1 hour ago". Raises a ValueError if anything else than an exact
-    /// length of time is provided.
+    /// length of time is provided, or if years or months have been included.
     ///
     /// :param source: Source string
     /// :type str
