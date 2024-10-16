@@ -160,8 +160,11 @@ mod fuzzydate {
         #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
         #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
 
+        #[classattr] const DATE_MONTH_DAY: &'static str = constants::PATTERN_DATE_MONTH_DAY;
         #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
+        #[classattr] const DATE_MONTH_NTH: &'static str = constants::PATTERN_DATE_MONTH_NTH;
         #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
+        #[classattr] const DATE_DAY_MONTH: &'static str = constants::PATTERN_DATE_DAY_MONTH;
         #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
 
         #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
@@ -485,6 +488,7 @@ mod tests {
             ("2/7/2023", "2023-02-07 00:00:00 +00:00"),
             ("Dec 7 2023", "2023-12-07 00:00:00 +00:00"),
             ("Dec 7th 2023", "2023-12-07 00:00:00 +00:00"),
+            ("Dec 7th, 2023", "2023-12-07 00:00:00 +00:00"),
             ("December 7th 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 Dec 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 December 2023", "2023-12-07 00:00:00 +00:00"),
@@ -495,6 +499,27 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for (from_string, expect_time) in expect {
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    #[test]
+    fn test_fixed_day_month() {
+        let expect: Vec<(&str, &str, &str)> = vec![
+            ("Dec 7", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("December 7th", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("7 Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+        ];
+
+        for (from_string, current_time, expect_time) in expect {
+            let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
             let result_time = convert_str(
                 from_string,
                 &current_time,
