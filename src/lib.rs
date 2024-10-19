@@ -312,33 +312,38 @@ mod fuzzydate {
         }
     }
 
-    /// Format number of seconds as time duration string
+    /// Convert number of seconds into a time duration string
+    ///
+    /// Build a a time duration strings from number of seconds seconds,
+    /// e.g. 93600.0 into "1d 2h". Maximum supported unit is weeks, minimum
+    /// supported unit is seconds. Units with 0 value are not shown.
+    ///
+    /// Returns n empty string if duration is less than lowest shown unit.
     ///
     /// :param source: Number of seconds
     /// :type source: float
-    /// :param unit: Unit type to show, long (e.g. seconds) short, (e.g. s) or None (e.g. sec).
-    ///              Defaults to None.
+    /// :param unit: Unit type to show, long (seconds) short, (s) or None (sec). Defaults to None.
     /// :type unit: str, optional
-    /// :param max: Maximum unit to render, defaults 'y' for years
+    /// :param max: Maximum unit to show, defaults 'w' for weeks
     /// :type max: str, optional
-    /// :param max: Minimum unit to render, defaults 's' for seconds
-    /// :type max: str, optional
+    /// :param min: Minimum unit to show, defaults 's' for seconds
+    /// :type min: str, optional
     /// :rtype str
     ///
     #[pyfunction]
     #[pyo3(
         pass_module,
-        signature = (seconds, unit=None, max="y", min="s"),
-        text_signature = "(seconds: float, unit: str = None, max: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 'y', min: Literal['y', 'm', 'w', 'd', 'h', 'min', 's'] = 's') -> str"
+        signature = (seconds, units=None, max="w", min="s"),
+        text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
     )]
-    fn to_duration_exact(
+    fn to_duration(
         _module: &Bound<'_, PyModule>,
         _py: Python,
         seconds: f64,
-        unit: Option<&str>,
+        units: Option<&str>,
         max: &str,
         min: &str) -> PyResult<String> {
-        Ok(convert_duration(seconds, &units_locale(unit.unwrap_or("")), max, min))
+        Ok(convert_duration(seconds, &units_locale(units.unwrap_or("")), max, min))
     }
 
     /// Turn time duration string into seconds
@@ -866,8 +871,8 @@ mod tests {
     }
 
     #[test]
-    fn test_to_duration_str_all() {
-        assert_to_duration_str("", "", vec![
+    fn test_to_duration_all() {
+        assert_to_duration("", "", vec![
             // Short
             (0.0, "short", ""), (604800.0, "short", "1w"), (1209600.0, "short", "2w"),
             (0.0, "short", ""), (86400.0, "short", "1d"), (172800.0, "short", "2d"),
@@ -900,15 +905,15 @@ mod tests {
     }
 
     #[test]
-    fn test_to_duration_str_min_max() {
-        assert_to_duration_str("w", "d", vec![(694800.0, "short", "1w 1d")]);
-        assert_to_duration_str("d", "d", vec![(694800.0, "short", "8d")]);
-        assert_to_duration_str("d", "h", vec![(694800.0, "short", "8d 1h")]);
-        assert_to_duration_str("d", "s", vec![(694800.0, "short", "8d 1h")]);
-        assert_to_duration_str("h", "h", vec![(694800.0, "short", "193h")]);
-        assert_to_duration_str("min", "s", vec![(695165.0, "short", "11586min 5s")]);
-        assert_to_duration_str("h", "s", vec![(695165.0, "short", "193h 6min 5s")]);
-        assert_to_duration_str("s", "s", vec![(695165.0, "short", "695165s")]);
+    fn test_to_duration_min_max() {
+        assert_to_duration("w", "d", vec![(694800.0, "short", "1w 1d")]);
+        assert_to_duration("d", "d", vec![(694800.0, "short", "8d")]);
+        assert_to_duration("d", "h", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration("d", "s", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration("h", "h", vec![(694800.0, "short", "193h")]);
+        assert_to_duration("min", "s", vec![(695165.0, "short", "11586min 5s")]);
+        assert_to_duration("h", "s", vec![(695165.0, "short", "193h 6min 5s")]);
+        assert_to_duration("s", "s", vec![(695165.0, "short", "695165s")]);
     }
 
     #[test]
@@ -1003,7 +1008,7 @@ mod tests {
         }
     }
 
-    fn assert_to_duration_str(max: &str, min: &str, expect: Vec<(f64, &str, &str)>) {
+    fn assert_to_duration(max: &str, min: &str, expect: Vec<(f64, &str, &str)>) {
         for (from_seconds, unit_types, expect_str) in expect {
             let into_duration = convert_duration(from_seconds, &units_locale(unit_types), max, min);
             assert_eq!(into_duration, expect_str);

@@ -26,6 +26,8 @@ fd.to_datetime('next Summer')
 
 ## Time duration
 
+### Duration seconds
+
 ```python
 import fuzzydate as fd
 
@@ -44,6 +46,17 @@ fd.to_seconds('last week')
 
 fd.to_seconds('1m 2w 30min')
 # ValueError: Converting months into seconds is not supported
+```
+
+### Duration string
+
+```python
+import fuzzydate as fd
+
+fd.to_duration(3840.0)                       # 1hr 4min
+fd.to_duration(3840.0, units='long')         # 1 hour 4 minutes
+fd.to_duration(3840.0, units='short')        # 1h 4min
+fd.to_duration(3840.0, max'min', min='min')  # 64min
 ```
 
 ## Localization
@@ -112,6 +125,12 @@ fuzzydate.to_datetime(
     source: str,
     now: datetime.datetime = None,
     weekday_start_mon: bool = True) -> datetime.datetime
+    
+fuzzydate.to_duration(
+    seconds: float, 
+    units: str = None, 
+    max: str = 'w', 
+    min: str = 's') -> str
     
 fuzzydate.to_seconds(
     source: str) -> float
