@@ -4,6 +4,7 @@ mod token;
 mod python;
 mod constants;
 
+use crate::fuzzy::Units;
 use crate::token::Token;
 use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 use pyo3::exceptions::PyValueError;
@@ -337,8 +338,7 @@ mod fuzzydate {
         unit: Option<&str>,
         max: &str,
         min: &str) -> PyResult<String> {
-
-        Ok(fuzzy::to_duration(seconds))
+        Ok(convert_duration(seconds, &units_locale(unit.unwrap_or("")), max, min))
     }
 
     /// Turn time duration string into seconds
@@ -427,6 +427,46 @@ fn tokenize_str(
 }
 
 
+fn units_locale(name: &str) -> Units {
+    match name {
+        "long" => Units::from_map(HashMap::from([
+            (String::from("second"), String::from("second")),
+            (String::from("seconds"), String::from("seconds")),
+            (String::from("minute"), String::from("minute")),
+            (String::from("minutes"), String::from("minutes")),
+            (String::from("hour"), String::from("hour")),
+            (String::from("hours"), String::from("hours")),
+            (String::from("day"), String::from("day")),
+            (String::from("days"), String::from("days")),
+            (String::from("week"), String::from("week")),
+            (String::from("weeks"), String::from("weeks")),
+        ])),
+        "short" => Units::from_map(HashMap::from([
+            (String::from("second"), String::from("s")),
+            (String::from("seconds"), String::from("s")),
+            (String::from("minute"), String::from("min")),
+            (String::from("minutes"), String::from("min")),
+            (String::from("hour"), String::from("h")),
+            (String::from("hours"), String::from("h")),
+            (String::from("day"), String::from("d")),
+            (String::from("days"), String::from("d")),
+            (String::from("week"), String::from("w")),
+            (String::from("weeks"), String::from("w")),
+        ])),
+        _ => Units::from_map(HashMap::from([
+            (String::from("second"), String::from("sec")),
+            (String::from("seconds"), String::from("sec")),
+            (String::from("minute"), String::from("min")),
+            (String::from("minutes"), String::from("min")),
+            (String::from("hour"), String::from("hr")),
+            (String::from("hours"), String::from("hrs")),
+            (String::from("day"), String::from("d")),
+            (String::from("days"), String::from("d")),
+            (String::from("week"), String::from("w")),
+            (String::from("weeks"), String::from("w")),
+        ])),
+    }
+}
 /// Tokenize source string and then convert it into a datetime value
 fn convert_str(
     source: &str,
@@ -436,6 +476,15 @@ fn convert_str(
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
     let (pattern, _, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
+}
+
+/// Convert number of seconds into a time duration string
+fn convert_duration(
+    seconds: f64,
+    units: &Units,
+    max: &str,
+    min: &str) -> String {
+    fuzzy::to_duration(seconds, &units, max, min)
 }
 
 /// Tokenize source string and then convert it seconds, reflecting exact duration
@@ -450,11 +499,11 @@ fn convert_seconds(
     }
 
     for token in tokens {
-        if token.token.is_unit() &&  token.value.eq(&7) {
+        if token.token.is_unit() && token.value.eq(&7) {
             return Err(String::from("Converting years into seconds is not supported"))
         }
 
-        if token.token.is_unit() &&  token.value.eq(&6) {
+        if token.token.is_unit() && token.value.eq(&6) {
             return Err(String::from("Converting months into seconds is not supported"))
         }
     }
@@ -817,6 +866,52 @@ mod tests {
     }
 
     #[test]
+    fn test_to_duration_str_all() {
+        assert_to_duration_str("", "", vec![
+            // Short
+            (0.0, "short", ""), (604800.0, "short", "1w"), (1209600.0, "short", "2w"),
+            (0.0, "short", ""), (86400.0, "short", "1d"), (172800.0, "short", "2d"),
+            (0.0, "short", ""), (3600.0, "short", "1h"), (7200.0, "short", "2h"),
+            (0.0, "short", ""), (60.0, "short", "1min"), (120.0, "short", "2min"),
+            (0.0, "short", ""), (1.0, "short", "1s"), (2.0, "short", "2s"),
+
+            // Long
+            (0.0, "long", ""), (604800.0, "long", "1 week"), (1209600.0, "long", "2 weeks"),
+            (0.0, "long", ""), (86400.0, "long", "1 day"), (172800.0, "long", "2 days"),
+            (0.0, "long", ""), (3600.0, "long", "1 hour"), (7200.0, "long", "2 hours"),
+            (0.0, "long", ""), (60.0, "long", "1 minute"), (120.0, "long", "2 minutes"),
+            (0.0, "long", ""), (1.0, "long", "1 second"), (2.0, "long", "2 seconds"),
+
+            // Default
+            (0.0, "", ""), (604800.0, "", "1w"), (1209600.0, "", "2w"),
+            (0.0, "", ""), (86400.0, "", "1d"), (172800.0, "", "2d"),
+            (0.0, "", ""), (3600.0, "", "1hr"), (7200.0, "", "2hrs"),
+            (0.0, "", ""), (60.0, "", "1min"), (120.0, "", "2min"),
+            (0.0, "", ""), (1.0, "", "1sec"), (2.0, "", "2sec"),
+
+            // Combinations
+            (694861.0, "", "1w 1d 1hr 1min 1sec"),
+            (1389722.0, "", "2w 2d 2hrs 2min 2sec"),
+            (1389720.0, "", "2w 2d 2hrs 2min"),
+            (1389600.0, "", "2w 2d 2hrs"),
+            (1382400.0, "", "2w 2d"),
+            (1209600.0, "", "2w"),
+        ])
+    }
+
+    #[test]
+    fn test_to_duration_str_min_max() {
+        assert_to_duration_str("w", "d", vec![(694800.0, "short", "1w 1d")]);
+        assert_to_duration_str("d", "d", vec![(694800.0, "short", "8d")]);
+        assert_to_duration_str("d", "h", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration_str("d", "s", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration_str("h", "h", vec![(694800.0, "short", "193h")]);
+        assert_to_duration_str("min", "s", vec![(695165.0, "short", "11586min 5s")]);
+        assert_to_duration_str("h", "s", vec![(695165.0, "short", "193h 6min 5s")]);
+        assert_to_duration_str("s", "s", vec![(695165.0, "short", "695165s")]);
+    }
+
+    #[test]
     fn test_to_seconds_some() {
         let expect: Vec<(&str, f64)> = vec![
             ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
@@ -905,6 +1000,18 @@ mod tests {
                 HashMap::new(),
             );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    fn assert_to_duration_str(max: &str, min: &str, expect: Vec<(f64, &str, &str)>) {
+        for (from_seconds, unit_types, expect_str) in expect {
+            let into_duration = convert_duration(from_seconds, &units_locale(unit_types), max, min);
+            assert_eq!(into_duration, expect_str);
+
+            if max.eq("") && min.eq("") && expect_str.len().gt(&0) {
+                let into_seconds = convert_seconds(expect_str, HashMap::new(), HashMap::new());
+                assert_eq!(into_seconds.unwrap(), from_seconds);
+            }
         }
     }
 }
