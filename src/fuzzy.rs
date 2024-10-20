@@ -243,6 +243,78 @@ impl Rules {
     }
 }
 
+pub(crate) struct UnitLocale {
+    day: String,
+    days: String,
+    hour: String,
+    hours: String,
+    minute: String,
+    minutes: String,
+    second: String,
+    seconds: String,
+    week: String,
+    weeks: String,
+    separator: String,
+}
+
+impl UnitLocale {
+    pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
+        let mut mapping: HashMap<String, String> = HashMap::from([
+            (String::from("second"), String::from("")),
+            (String::from("seconds"), String::from("")),
+            (String::from("minute"), String::from("")),
+            (String::from("minutes"), String::from("")),
+            (String::from("hour"), String::from("")),
+            (String::from("hours"), String::from("")),
+            (String::from("day"), String::from("")),
+            (String::from("days"), String::from("")),
+            (String::from("week"), String::from("")),
+            (String::from("weeks"), String::from("")),
+        ]);
+
+        mapping.extend(names);
+
+        Self {
+            day: mapping.get("day").unwrap().to_owned(),
+            days: mapping.get("days").unwrap().to_owned(),
+            hour: mapping.get("hour").unwrap().to_owned(),
+            hours: mapping.get("hours").unwrap().to_owned(),
+            minute: mapping.get("minute").unwrap().to_owned(),
+            minutes: mapping.get("minutes").unwrap().to_owned(),
+            second: mapping.get("second").unwrap().to_owned(),
+            seconds: mapping.get("seconds").unwrap().to_owned(),
+            week: mapping.get("week").unwrap().to_owned(),
+            weeks: mapping.get("weeks").unwrap().to_owned(),
+            separator: if mapping.get("day").unwrap().len() > 1 { " " } else { "" }.to_owned(),
+        }
+    }
+
+    fn format_days(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.day } else { &self.days };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    fn format_hours(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.hour } else { &self.hours };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    fn format_minutes(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.minute } else { &self.minutes };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    fn format_seconds(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.second } else { &self.seconds };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    fn format_weeks(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.week } else { &self.weeks };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+}
+
 /// Perform conversion against pattern and corresponding token values,
 /// relative to given datetime
 pub(crate) fn convert(
@@ -271,6 +343,71 @@ pub(crate) fn convert(
     }
 
     Option::from(ctx_time.time)
+}
+
+/// Turn seconds into a duration string
+pub(crate) fn to_duration(
+    seconds: f64,
+    units: &UnitLocale,
+    max_unit: &str,
+    min_unit: &str) -> String {
+    let mut seconds = seconds;
+    let mut result: String = String::from("");
+
+    let naming: HashMap<&str, i8> = HashMap::from([
+        ("s", 1), ("sec", 1),
+        ("min", 2), ("mins", 2),
+        ("h", 3), ("hr", 3), ("hrs", 3),
+        ("d", 4), ("day", 4), ("days", 4),
+        ("w", 5), ("week", 5), ("weeks", 5),
+    ]);
+
+    let max_u: &i8 = naming.get(max_unit).unwrap_or(&5);
+    let min_u: &i8 = naming.get(min_unit).unwrap_or(&1);
+
+    if max_u.ge(&5) && min_u.le(&5) {
+        let weeks = (seconds / 604800.0).floor() as i32;
+
+        if weeks.gt(&0) {
+            result.push_str(&units.format_weeks(weeks));
+            seconds -= (weeks * 604800) as f64;
+        }
+    }
+
+    if max_u.ge(&4) && min_u.le(&4) {
+        let days = (seconds / 86400.0).floor() as i32;
+
+        if days.gt(&0) {
+            result.push_str(&units.format_days(days));
+            seconds -= (days * 86400) as f64;
+        }
+    }
+
+    if max_u.ge(&3) && min_u.le(&3) {
+        let hours = (seconds / 3600.0).floor() as i32;
+
+        if hours.gt(&0) {
+            result.push_str(&units.format_hours(hours));
+            seconds -= (hours * 3600) as f64;
+        }
+    }
+
+    if max_u.ge(&2) && min_u.le(&2) {
+        let minutes = (seconds / 60.0).floor() as i32;
+
+        if minutes.gt(&0) {
+            result.push_str(&units.format_minutes(minutes));
+            seconds -= (minutes * 60) as f64;
+        }
+    }
+
+    if max_u.ge(&1) && min_u.le(&1) {
+        if seconds.gt(&0.0) {
+            result.push_str(&units.format_seconds(seconds as i32));
+        }
+    }
+
+    result.trim().to_string()
 }
 
 /// Find closure calls that match the pattern exactly, or partially

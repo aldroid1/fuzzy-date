@@ -4,6 +4,7 @@ mod token;
 mod python;
 mod constants;
 
+use crate::fuzzy::UnitLocale;
 use crate::token::Token;
 use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 use pyo3::exceptions::PyValueError;
@@ -29,6 +30,15 @@ mod fuzzydate {
 
             #[pyo3(get)]
             pub(crate) tokens: HashMap<String, u32>,
+
+            #[pyo3(get, set)]
+            pub(crate) units: HashMap<String, String>,
+
+            #[pyo3(get, set)]
+            pub(crate) units_long: HashMap<String, String>,
+
+            #[pyo3(get, set)]
+            pub(crate) units_short: HashMap<String, String>,
         }
 
         #[pymethods]
@@ -225,6 +235,27 @@ mod fuzzydate {
             // @formatter:on
     }
 
+    #[pyclass(name = "unit")]
+    pub(crate) struct Units {}
+
+    #[pymethods]
+    impl Units {
+        // @formatter:off
+
+        #[classattr] const DAY: &'static str = constants::UNIT_DAY;
+        #[classattr] const DAYS: &'static str = constants::UNIT_DAYS;
+        #[classattr] const HOUR: &'static str = constants::UNIT_HOUR;
+        #[classattr] const HOURS: &'static str = constants::UNIT_HOURS;
+        #[classattr] const MINUTE: &'static str = constants::UNIT_MINUTE;
+        #[classattr] const MINUTES: &'static str = constants::UNIT_MINUTES;
+        #[classattr] const SECOND: &'static str = constants::UNIT_SECOND;
+        #[classattr] const SECONDS: &'static str = constants::UNIT_SECONDS;
+        #[classattr] const WEEK: &'static str = constants::UNIT_WEEK;
+        #[classattr] const WEEKS: &'static str = constants::UNIT_WEEKS;
+
+        // @formatter:on
+    }
+
     /// Turn time string into datetime.date object
     ///
     /// Current date (`today`) defaults to system date in UTC. Time of day
@@ -256,7 +287,7 @@ mod fuzzydate {
             &source,
             &python::into_date(py, today)?,
             weekday_start_mon,
-            read_patterns(module)?,
+            read_config(module)?.patterns,
             read_tokens(module)?,
         );
 
@@ -299,7 +330,7 @@ mod fuzzydate {
             &source,
             &python::into_datetime(py, now)?,
             weekday_start_mon,
-            read_patterns(module)?,
+            read_config(module)?.patterns,
             read_tokens(module)?,
         );
 
@@ -311,6 +342,48 @@ mod fuzzydate {
         }
     }
 
+    /// Convert number of seconds into a time duration string
+    ///
+    /// Build a a time duration strings from number of seconds seconds,
+    /// e.g. 93600.0 into "1d 2h". Maximum supported unit is weeks, minimum
+    /// supported unit is seconds. Units with 0 value are not shown.
+    ///
+    /// Returns n empty string if duration is less than lowest shown unit.
+    ///
+    /// :param source: Number of seconds
+    /// :type source: float
+    /// :param unit: Unit type to show, long (seconds) short, (s) or None (sec). Defaults to None.
+    /// :type unit: str, optional
+    /// :param max: Maximum unit to show, defaults 'w' for weeks
+    /// :type max: str, optional
+    /// :param min: Minimum unit to show, defaults 's' for seconds
+    /// :type min: str, optional
+    /// :rtype str
+    ///
+    #[pyfunction]
+    #[pyo3(
+        pass_module,
+        signature = (seconds, units=None, max="w", min="s"),
+        text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
+    )]
+    fn to_duration(
+        module: &Bound<'_, PyModule>,
+        seconds: f64,
+        units: Option<&str>,
+        max: &str,
+        min: &str) -> PyResult<String> {
+        let mut unit_map = units_locale(units.unwrap_or(""));
+
+        match units {
+            Some("short") => unit_map.extend(read_config(module)?.units_short),
+            Some("long") => unit_map.extend(read_config(module)?.units_long),
+            _ => unit_map.extend(read_config(module)?.units),
+        }
+
+        let unit_locale = UnitLocale::from_map(unit_map);
+        Ok(convert_duration(seconds, &unit_locale, max, min))
+    }
+
     /// Turn time duration string into seconds
     ///
     /// Only accepts exact time duration strings, such as "1h" rather than
@@ -318,7 +391,7 @@ mod fuzzydate {
     /// length of time is provided, or if years or months have been included.
     ///
     /// :param source: Source string
-    /// :type str
+    /// :type source: str
     /// :raises ValueError
     /// :rtype float
     ///
@@ -333,7 +406,7 @@ mod fuzzydate {
         source: &str) -> PyResult<f64> {
         let result = convert_seconds(
             &source,
-            read_patterns(module)?,
+            read_config(module)?.patterns,
             read_tokens(module)?,
         );
 
@@ -348,33 +421,37 @@ mod fuzzydate {
         module.add(ATTR_CONFIG, Config {
             patterns: HashMap::new(),
             tokens: HashMap::new(),
+            units: units_locale(""),
+            units_long: units_locale("long"),
+            units_short: units_locale("short"),
         })?;
 
         Ok(())
     }
 
-    /// Read custom patterns registered to Python module
-    fn read_patterns(
-        m: &Bound<'_, PyModule>) -> Result<HashMap<String, String>, PyErr> {
-        let config = &m
+    /// Read config registered to Python module
+    fn read_config(
+        module: &Bound<'_, PyModule>) -> Result<Config, PyErr> {
+        let config = &module
             .as_borrowed()
             .getattr(ATTR_CONFIG)?
             .downcast_into::<Config>()?
             .borrow();
 
-        Ok(config.patterns.to_owned())
+        Ok(Config {
+            patterns: config.patterns.clone(),
+            tokens: config.tokens.clone(),
+            units: config.units.clone(),
+            units_long: config.units_long.clone(),
+            units_short: config.units_short.clone(),
+        })
     }
 
     /// Read custom tokens registered to Python module, and return
     /// them as tokens the tokenization (currently) accepts
     fn read_tokens(
-        m: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
-        let config = &m
-            .as_borrowed()
-            .getattr(ATTR_CONFIG)?
-            .downcast_into::<Config>()?
-            .borrow();
-
+        module: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
+        let config = read_config(module)?;
         let mut result = HashMap::new();
 
         for (keyword, token_gid) in config.tokens.to_owned() {
@@ -397,6 +474,46 @@ fn tokenize_str(
 }
 
 
+fn units_locale(name: &str) -> HashMap<String, String> {
+    match name {
+        "long" => HashMap::from([
+            (String::from(constants::UNIT_SECOND), String::from("second")),
+            (String::from(constants::UNIT_SECONDS), String::from("seconds")),
+            (String::from(constants::UNIT_MINUTE), String::from("minute")),
+            (String::from(constants::UNIT_MINUTES), String::from("minutes")),
+            (String::from(constants::UNIT_HOUR), String::from("hour")),
+            (String::from(constants::UNIT_HOURS), String::from("hours")),
+            (String::from(constants::UNIT_DAY), String::from("day")),
+            (String::from(constants::UNIT_DAYS), String::from("days")),
+            (String::from(constants::UNIT_WEEK), String::from("week")),
+            (String::from(constants::UNIT_WEEKS), String::from("weeks")),
+        ]),
+        "short" => HashMap::from([
+            (String::from(constants::UNIT_SECOND), String::from("s")),
+            (String::from(constants::UNIT_SECONDS), String::from("s")),
+            (String::from(constants::UNIT_MINUTE), String::from("min")),
+            (String::from(constants::UNIT_MINUTES), String::from("min")),
+            (String::from(constants::UNIT_HOUR), String::from("h")),
+            (String::from(constants::UNIT_HOURS), String::from("h")),
+            (String::from(constants::UNIT_DAY), String::from("d")),
+            (String::from(constants::UNIT_DAYS), String::from("d")),
+            (String::from(constants::UNIT_WEEK), String::from("w")),
+            (String::from(constants::UNIT_WEEKS), String::from("w")),
+        ]),
+        _ => HashMap::from([
+            (String::from(constants::UNIT_SECOND), String::from("sec")),
+            (String::from(constants::UNIT_SECONDS), String::from("sec")),
+            (String::from(constants::UNIT_MINUTE), String::from("min")),
+            (String::from(constants::UNIT_MINUTES), String::from("min")),
+            (String::from(constants::UNIT_HOUR), String::from("hr")),
+            (String::from(constants::UNIT_HOURS), String::from("hrs")),
+            (String::from(constants::UNIT_DAY), String::from("d")),
+            (String::from(constants::UNIT_DAYS), String::from("d")),
+            (String::from(constants::UNIT_WEEK), String::from("w")),
+            (String::from(constants::UNIT_WEEKS), String::from("w")),
+        ]),
+    }
+}
 /// Tokenize source string and then convert it into a datetime value
 fn convert_str(
     source: &str,
@@ -406,6 +523,15 @@ fn convert_str(
     custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
     let (pattern, _, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
+}
+
+/// Convert number of seconds into a time duration string
+fn convert_duration(
+    seconds: f64,
+    units: &UnitLocale,
+    max: &str,
+    min: &str) -> String {
+    fuzzy::to_duration(seconds, &units, max, min)
 }
 
 /// Tokenize source string and then convert it seconds, reflecting exact duration
@@ -787,6 +913,52 @@ mod tests {
     }
 
     #[test]
+    fn test_to_duration_all() {
+        assert_to_duration("", "", vec![
+            // Short
+            (0.0, "short", ""), (604800.0, "short", "1w"), (1209600.0, "short", "2w"),
+            (0.0, "short", ""), (86400.0, "short", "1d"), (172800.0, "short", "2d"),
+            (0.0, "short", ""), (3600.0, "short", "1h"), (7200.0, "short", "2h"),
+            (0.0, "short", ""), (60.0, "short", "1min"), (120.0, "short", "2min"),
+            (0.0, "short", ""), (1.0, "short", "1s"), (2.0, "short", "2s"),
+
+            // Long
+            (0.0, "long", ""), (604800.0, "long", "1 week"), (1209600.0, "long", "2 weeks"),
+            (0.0, "long", ""), (86400.0, "long", "1 day"), (172800.0, "long", "2 days"),
+            (0.0, "long", ""), (3600.0, "long", "1 hour"), (7200.0, "long", "2 hours"),
+            (0.0, "long", ""), (60.0, "long", "1 minute"), (120.0, "long", "2 minutes"),
+            (0.0, "long", ""), (1.0, "long", "1 second"), (2.0, "long", "2 seconds"),
+
+            // Default
+            (0.0, "", ""), (604800.0, "", "1w"), (1209600.0, "", "2w"),
+            (0.0, "", ""), (86400.0, "", "1d"), (172800.0, "", "2d"),
+            (0.0, "", ""), (3600.0, "", "1hr"), (7200.0, "", "2hrs"),
+            (0.0, "", ""), (60.0, "", "1min"), (120.0, "", "2min"),
+            (0.0, "", ""), (1.0, "", "1sec"), (2.0, "", "2sec"),
+
+            // Combinations
+            (694861.0, "", "1w 1d 1hr 1min 1sec"),
+            (1389722.0, "", "2w 2d 2hrs 2min 2sec"),
+            (1389720.0, "", "2w 2d 2hrs 2min"),
+            (1389600.0, "", "2w 2d 2hrs"),
+            (1382400.0, "", "2w 2d"),
+            (1209600.0, "", "2w"),
+        ])
+    }
+
+    #[test]
+    fn test_to_duration_min_max() {
+        assert_to_duration("w", "d", vec![(694800.0, "short", "1w 1d")]);
+        assert_to_duration("d", "d", vec![(694800.0, "short", "8d")]);
+        assert_to_duration("d", "h", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration("d", "s", vec![(694800.0, "short", "8d 1h")]);
+        assert_to_duration("h", "h", vec![(694800.0, "short", "193h")]);
+        assert_to_duration("min", "s", vec![(695165.0, "short", "11586min 5s")]);
+        assert_to_duration("h", "s", vec![(695165.0, "short", "193h 6min 5s")]);
+        assert_to_duration("s", "s", vec![(695165.0, "short", "695165s")]);
+    }
+
+    #[test]
     fn test_to_seconds_some() {
         let expect: Vec<(&str, f64)> = vec![
             ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
@@ -875,6 +1047,19 @@ mod tests {
                 HashMap::new(),
             );
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    fn assert_to_duration(max: &str, min: &str, expect: Vec<(f64, &str, &str)>) {
+        for (from_seconds, unit_types, expect_str) in expect {
+            let unit_locale = UnitLocale::from_map(units_locale(unit_types));
+            let into_duration = convert_duration(from_seconds, &unit_locale, max, min);
+            assert_eq!(into_duration, expect_str);
+
+            if max.eq("") && min.eq("") && expect_str.len().gt(&0) {
+                let into_seconds = convert_seconds(expect_str, HashMap::new(), HashMap::new());
+                assert_eq!(into_seconds.unwrap(), from_seconds);
+            }
         }
     }
 }

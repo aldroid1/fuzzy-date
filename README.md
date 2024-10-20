@@ -26,6 +26,8 @@ fd.to_datetime('next Summer')
 
 ## Time duration
 
+### Duration seconds
+
 ```python
 import fuzzydate as fd
 
@@ -46,6 +48,17 @@ fd.to_seconds('1m 2w 30min')
 # ValueError: Converting months into seconds is not supported
 ```
 
+### Duration string
+
+```python
+import fuzzydate as fd
+
+fd.to_duration(3840.0)                       # 1hr 4min
+fd.to_duration(3840.0, units='long')         # 1 hour 4 minutes
+fd.to_duration(3840.0, units='short')        # 1h 4min
+fd.to_duration(3840.0, max'min', min='min')  # 64min
+```
+
 ## Localization
 
 ```python
@@ -63,6 +76,13 @@ fd.config.add_patterns({
 assert fd.to_date('next Monday') == fd.to_date('nästa Måndag')
 assert fd.to_date('+5 days') == fd.to_date('+5 dagar')
 assert fd.to_seconds('+5 days') == fd.to_seconds('+5 dagar')
+
+fd.config.units = {
+    fd.unit.DAY: 'dag',
+    fd.unit.DAYS: 'dagar',
+}
+
+assert fd.to_duration(86400.0) == '1 dag'
 ```
 
 ## Requirements
@@ -113,6 +133,12 @@ fuzzydate.to_datetime(
     now: datetime.datetime = None,
     weekday_start_mon: bool = True) -> datetime.datetime
     
+fuzzydate.to_duration(
+    seconds: float, 
+    units: str = None, 
+    max: str = 'w', 
+    min: str = 's') -> str
+    
 fuzzydate.to_seconds(
     source: str) -> float
 ```
@@ -123,6 +149,11 @@ fuzzydate.to_seconds(
 # Read-only
 fuzzydate.config.patterns: dict[str, str]
 fuzzydate.config.tokens: dict[str, int]
+
+# Read-write
+fuzzydate.config.units: dict[str, str]
+fuzzydate.config.units_long: dict[str, str]
+fuzzydate.config.units_short: dict[str, str]
 
 fuzzydate.config.add_patterns(
     tokens: dict[str, str]) -> None
