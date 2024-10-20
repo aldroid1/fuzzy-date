@@ -143,6 +143,11 @@ fuzzydate.to_seconds(
 fuzzydate.config.patterns: dict[str, str]
 fuzzydate.config.tokens: dict[str, int]
 
+# Read-write
+fuzzydate.config.units: dict[str, str]
+fuzzydate.config.units_long: dict[str, str]
+fuzzydate.config.units_short: dict[str, str]
+
 fuzzydate.config.add_patterns(
     tokens: dict[str, str]) -> None
 

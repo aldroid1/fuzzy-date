@@ -243,37 +243,7 @@ impl Rules {
     }
 }
 
-/// Perform conversion against pattern and corresponding token values,
-/// relative to given datetime
-pub(crate) fn convert(
-    pattern: &str,
-    values: &Vec<i64>,
-    current_time: &DateTime<FixedOffset>,
-    week_start_mon: bool,
-    custom_patterns: HashMap<String, String>) -> Option<DateTime<FixedOffset>> {
-    let call_list = find_pattern_calls(&pattern, custom_patterns);
-
-    if call_list.len().eq(&0) {
-        return None;
-    }
-
-    let rules = Rules { week_start_mon: week_start_mon };
-    let mut ctx_time = FuzzyDate::new(current_time.to_owned());
-    let mut values: Vec<i64> = values.to_owned();
-
-    for (pattern_match, pattern_call) in call_list {
-        ctx_time = match pattern_call(ctx_time, &values, &rules) {
-            Ok(value) => value,
-            Err(()) => return None,
-        };
-        let used_vars: usize = pattern_match.split("[").count() - 1;
-        values = values[used_vars..].to_owned();
-    }
-
-    Option::from(ctx_time.time)
-}
-
-pub(crate) struct Units {
+pub(crate) struct UnitLocale {
     day: String,
     days: String,
     hour: String,
@@ -287,7 +257,7 @@ pub(crate) struct Units {
     separator: String,
 }
 
-impl Units {
+impl UnitLocale {
     pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
         let mut mapping: HashMap<String, String> = HashMap::from([
             (String::from("second"), String::from("s")),
@@ -345,10 +315,40 @@ impl Units {
     }
 }
 
+/// Perform conversion against pattern and corresponding token values,
+/// relative to given datetime
+pub(crate) fn convert(
+    pattern: &str,
+    values: &Vec<i64>,
+    current_time: &DateTime<FixedOffset>,
+    week_start_mon: bool,
+    custom_patterns: HashMap<String, String>) -> Option<DateTime<FixedOffset>> {
+    let call_list = find_pattern_calls(&pattern, custom_patterns);
+
+    if call_list.len().eq(&0) {
+        return None;
+    }
+
+    let rules = Rules { week_start_mon: week_start_mon };
+    let mut ctx_time = FuzzyDate::new(current_time.to_owned());
+    let mut values: Vec<i64> = values.to_owned();
+
+    for (pattern_match, pattern_call) in call_list {
+        ctx_time = match pattern_call(ctx_time, &values, &rules) {
+            Ok(value) => value,
+            Err(()) => return None,
+        };
+        let used_vars: usize = pattern_match.split("[").count() - 1;
+        values = values[used_vars..].to_owned();
+    }
+
+    Option::from(ctx_time.time)
+}
+
 /// Turn seconds into a duration string
 pub(crate) fn to_duration(
     seconds: f64,
-    units: &Units,
+    units: &UnitLocale,
     max_unit: &str,
     min_unit: &str) -> String {
     let mut seconds = seconds;

@@ -100,6 +100,17 @@ pub(crate) const TOKEN_LONG_UNIT_WEEK: i16 = 505;
 pub(crate) const TOKEN_LONG_UNIT_MONTH: i16 = 506;
 pub(crate) const TOKEN_LONG_UNIT_YEAR: i16 = 507;
 
+pub(crate) const UNIT_DAY: &'static str = "day";
+pub(crate) const UNIT_DAYS: &'static str = "days";
+pub(crate) const UNIT_HOUR: &'static str = "hour";
+pub(crate) const UNIT_HOURS: &'static str = "hours";
+pub(crate) const UNIT_MINUTE: &'static str = "minute";
+pub(crate) const UNIT_MINUTES: &'static str = "minutes";
+pub(crate) const UNIT_SECOND: &'static str = "second";
+pub(crate) const UNIT_SECONDS: &'static str = "seconds";
+pub(crate) const UNIT_WEEK: &'static str = "week";
+pub(crate) const UNIT_WEEKS: &'static str = "weeks";
+
 #[derive(PartialEq, Eq, Hash)]
 pub(crate) enum Pattern {
     Now,
