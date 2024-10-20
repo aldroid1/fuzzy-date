@@ -260,16 +260,16 @@ pub(crate) struct UnitLocale {
 impl UnitLocale {
     pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
         let mut mapping: HashMap<String, String> = HashMap::from([
-            (String::from("second"), String::from("s")),
-            (String::from("seconds"), String::from("s")),
-            (String::from("minute"), String::from("min")),
-            (String::from("minutes"), String::from("min")),
-            (String::from("hour"), String::from("h")),
-            (String::from("hours"), String::from("h")),
-            (String::from("day"), String::from("d")),
-            (String::from("days"), String::from("d")),
-            (String::from("week"), String::from("w")),
-            (String::from("weeks"), String::from("w")),
+            (String::from("second"), String::from("")),
+            (String::from("seconds"), String::from("")),
+            (String::from("minute"), String::from("")),
+            (String::from("minutes"), String::from("")),
+            (String::from("hour"), String::from("")),
+            (String::from("hours"), String::from("")),
+            (String::from("day"), String::from("")),
+            (String::from("days"), String::from("")),
+            (String::from("week"), String::from("")),
+            (String::from("weeks"), String::from("")),
         ]);
 
         mapping.extend(names);
