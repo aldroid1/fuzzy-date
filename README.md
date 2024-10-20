@@ -76,6 +76,13 @@ fd.config.add_patterns({
 assert fd.to_date('next Monday') == fd.to_date('nästa Måndag')
 assert fd.to_date('+5 days') == fd.to_date('+5 dagar')
 assert fd.to_seconds('+5 days') == fd.to_seconds('+5 dagar')
+
+fd.config.units = {
+    fd.unit.DAY: 'dag',
+    fd.unit.DAYS: 'dagar',
+}
+
+assert fd.to_duration(86400.0) == '1 dag'
 ```
 
 ## Requirements
