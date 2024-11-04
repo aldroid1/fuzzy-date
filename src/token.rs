@@ -576,8 +576,8 @@ mod tests {
             ("+1d  -2h 3s", "+[int][short_unit] -[int][short_unit] [int][short_unit]"),
             ("Feb 7th, 2023", "[month] [nth] [year]"),
             (" Feb 7th,  2023", "[month] [nth] [year]"),
-            (" Feb 7th,  2023, 12am", "[month] [nth] [year] [int][meridiem]"),
-            (" Feb 7th,  2023, 12 am", "[month] [nth] [year] [int] [meridiem]"),
+            (" Feb 7th,  2023, 12a.m. ", "[month] [nth] [year] [int][meridiem]"),
+            (" Feb 7th,  2023, 12  a.m.", "[month] [nth] [year] [int] [meridiem]"),
         ];
 
         for (from_string, expect_pattern) in expect {
