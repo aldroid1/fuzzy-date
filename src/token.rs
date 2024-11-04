@@ -1,14 +1,23 @@
 use std::collections::{HashMap, HashSet};
 
-const BOUNDARY_CHARS: [&'static str; 7] = [
-    " ", "-", "/", "+", ":", ".", ",",
+// Boundary characters that always trigger treating
+// parsing collected characters into token(s)
+const BOUNDARY_CHARS: [&'static str; 6] = [
+    " ", "-", "/", "+", ":", ",",
 ];
 
+// Conditional boundary characters, that are boundaries
+// when between numbers, but not between characters
+const CONDITIONAL_CHARS: [&'static str; 1] = [
+    ".",
+];
+
+// Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [
     ","
 ];
 
-const STANDARD_TOKENS: [(&'static str, Token); 95] = [
+const STANDARD_TOKENS: [(&'static str, Token); 97] = [
     // Months
     ("jan", Token { token: TokenType::Month, value: 1 }),
     ("january", Token { token: TokenType::Month, value: 1 }),
@@ -114,9 +123,11 @@ const STANDARD_TOKENS: [(&'static str, Token); 95] = [
     ("year", Token { token: TokenType::LongUnit, value: 7 }),
     ("years", Token { token: TokenType::LongUnit, value: 7 }),
 
-    // Meridmiems
+    // Meridiems
     ("am", Token { token: TokenType::Meridiem, value: 1 }),
+    ("a.m.", Token { token: TokenType::Meridiem, value: 1 }),
     ("pm", Token { token: TokenType::Meridiem, value: 2 }),
+    ("p.m.", Token { token: TokenType::Meridiem, value: 2 }),
 ];
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
@@ -235,6 +246,7 @@ pub(crate) fn tokenize(
 
     let token_list = TokenList::new(custom);
     let last_index: usize = source.len() - 1;
+    let mut prev_char = String::from("");
     let mut part_start = 0;
 
     for (part_index, part_char) in source.char_indices() {
@@ -243,13 +255,16 @@ pub(crate) fn tokenize(
 
         let char_str: &str = &part_char.to_string();
 
-        if BOUNDARY_CHARS.contains(&char_str) {
+        if BOUNDARY_CHARS.contains(&char_str)
+            || (CONDITIONAL_CHARS.contains(&char_str) && is_value_boundary(&prev_char)) {
             part_chars = &source[part_start..part_index];
             part_letter.push_str(&char_str);
             part_start = part_index + 1;
         } else if part_index.eq(&last_index) {
             part_chars = &source[part_start..part_index + 1];
         }
+
+        prev_char = char_str.to_owned();
 
         if IGNORED_CHARS.contains(&part_letter.as_str()) {
             part_letter = String::from(" ");
@@ -319,6 +334,11 @@ pub(crate) fn tokenize(
     }
 
     (out_pattern.trim().to_string(), out_values)
+}
+
+/// Check that character is a boundary for value
+fn is_value_boundary(prev_char: &String) -> bool {
+    prev_char.len() == 0 || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
 }
 
 /// Parse a string that consists of a number+string parts, such as "1d"
@@ -524,8 +544,8 @@ mod tests {
     #[test]
     fn test_meridiem() {
         let expect: Vec<(&str, i64)> = vec![
-            ("am", 1),
-            ("pm", 2),
+            ("am", 1), ("a.m.", 1),
+            ("pm", 2), ("p.m.", 2),
         ];
 
         for (from_string, expect_value) in expect {
@@ -556,6 +576,8 @@ mod tests {
             ("+1d  -2h 3s", "+[int][short_unit] -[int][short_unit] [int][short_unit]"),
             ("Feb 7th, 2023", "[month] [nth] [year]"),
             (" Feb 7th,  2023", "[month] [nth] [year]"),
+            (" Feb 7th,  2023, 12am", "[month] [nth] [year] [int][meridiem]"),
+            (" Feb 7th,  2023, 12 am", "[month] [nth] [year] [int] [meridiem]"),
         ];
 
         for (from_string, expect_pattern) in expect {
