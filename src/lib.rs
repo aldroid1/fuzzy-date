@@ -232,6 +232,9 @@ mod fuzzydate {
             #[classattr] const LONG_UNIT_MONTH: i16 = constants::TOKEN_LONG_UNIT_MONTH;
             #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
 
+            #[classattr] const MERIDIEM_AM: i16 = constants::TOKEN_MERIDIEM_AM;
+            #[classattr] const MERIDIEM_PM: i16 = constants::TOKEN_MERIDIEM_PM;
+
             // @formatter:on
     }
 
@@ -599,6 +602,13 @@ fn gid_into_token(gid: u32) -> Option<Token> {
         return Option::from(Token {
             token: token::TokenType::LongUnit,
             value: (gid - 500) as i64,
+        });
+    }
+
+    if gid.ge(&601) && gid.le(&602) {
+        return Option::from(Token {
+            token: token::TokenType::Meridiem,
+            value: (gid - 600) as i64,
         });
     }
 
@@ -1034,6 +1044,15 @@ mod tests {
         }
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
+
+        for value in 601..603 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::Meridiem,
+                value: (value - 600) as i64,
+            });
+        }
+        assert!(gid_into_token(600).is_none());
+        assert!(gid_into_token(603).is_none());
     }
 
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {

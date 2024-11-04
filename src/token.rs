@@ -115,8 +115,8 @@ const STANDARD_TOKENS: [(&'static str, Token); 95] = [
     ("years", Token { token: TokenType::LongUnit, value: 7 }),
 
     // Meridmiems
-    ("am", Token { token: TokenType::Meridiem, value: -1 }),
-    ("pm", Token { token: TokenType::Meridiem, value: 1 }),
+    ("am", Token { token: TokenType::Meridiem, value: 1 }),
+    ("pm", Token { token: TokenType::Meridiem, value: 2 }),
 ];
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
@@ -524,8 +524,8 @@ mod tests {
     #[test]
     fn test_meridiem() {
         let expect: Vec<(&str, i64)> = vec![
-            ("am", -1),
-            ("pm", 1),
+            ("am", 1),
+            ("pm", 2),
         ];
 
         for (from_string, expect_value) in expect {

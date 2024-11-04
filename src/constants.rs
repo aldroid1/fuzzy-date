@@ -100,6 +100,9 @@ pub(crate) const TOKEN_LONG_UNIT_WEEK: i16 = 505;
 pub(crate) const TOKEN_LONG_UNIT_MONTH: i16 = 506;
 pub(crate) const TOKEN_LONG_UNIT_YEAR: i16 = 507;
 
+pub(crate) const TOKEN_MERIDIEM_AM: i16 = 601;
+pub(crate) const TOKEN_MERIDIEM_PM: i16 = 602;
+
 pub(crate) const UNIT_DAY: &'static str = "day";
 pub(crate) const UNIT_DAYS: &'static str = "days";
 pub(crate) const UNIT_HOUR: &'static str = "hour";
