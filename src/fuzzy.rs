@@ -428,7 +428,9 @@ fn find_pattern_calls(
 
     for (pattern_type, closure_function) in FUZZY_PATTERNS {
         closure_map.insert(pattern_type, closure_function);
-        pattern_map.insert(Pattern::value(pattern_type).to_string(), pattern_type.to_owned());
+        for pattern_value in Pattern::values(pattern_type) {
+            pattern_map.insert(pattern_value.to_string(), pattern_type.to_owned());
+        }
     }
 
     for (custom_pattern, closure_pattern) in custom {
@@ -522,7 +524,9 @@ mod tests {
         let mut custom_patterns: HashMap<String, String> = HashMap::new();
 
         for (key, value) in custom {
-            custom_patterns.insert(key.to_string(), Pattern::value(value).to_string());
+            for pattern_value in Pattern::values(value) {
+                custom_patterns.insert(key.to_string(), pattern_value.to_string());
+            }
         }
 
         let result_time = convert(

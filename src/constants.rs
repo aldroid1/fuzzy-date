@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 // PATTERNS
 
 pub(crate) const PATTERN_NOW: &'static str = "now";
@@ -58,6 +56,7 @@ pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [i
 
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
+pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
 
 // TOKENS
 
@@ -181,20 +180,17 @@ pub(crate) enum Pattern {
 }
 
 impl Pattern {
-    pub(crate) fn value(key: &Pattern) -> &'static str {
-        match patterns().get(key) {
-            Some(v) => v,
-            None => "",
-        }
+    pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
+        patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1 ).collect()
     }
 
     pub(crate) fn is_valid(value: &str) -> bool {
-        patterns().values().find(|&&v| v == value).is_some()
+        patterns().iter().find(|&v| v.1 == value).is_some()
     }
 }
 
-fn patterns() -> HashMap<Pattern, &'static str> {
-    HashMap::from([
+fn patterns() -> Vec<(Pattern, &'static str)> {
+    vec![
         (Pattern::Now, PATTERN_NOW),
         (Pattern::Today, PATTERN_TODAY),
         (Pattern::Midnight, PATTERN_MIDNIGHT),
@@ -239,7 +235,8 @@ fn patterns() -> HashMap<Pattern, &'static str> {
         (Pattern::DateDayMonthYear, PATTERN_DATE_DAY_MONTH_YEAR),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
+        (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
-    ])
+    ]
 }

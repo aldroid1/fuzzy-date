@@ -182,6 +182,7 @@ mod fuzzydate {
 
         #[classattr] const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
         #[classattr] const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
+        #[classattr] const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
 
         // @formatter:on
     }
@@ -684,11 +685,15 @@ mod tests {
         let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
 
         let expect: Vec<(&str, &str)> = vec![
+            ("12am", "2024-01-12 00:00:00 +02:00"),
             ("12 am", "2024-01-12 00:00:00 +02:00"),
             ("12:01 am", "2024-01-12 00:01:00 +02:00"),
+            ("12pm", "2024-01-12 12:00:00 +02:00"),
             ("12 pm", "2024-01-12 12:00:00 +02:00"),
             ("12:01 pm", "2024-01-12 12:01:00 +02:00"),
+            ("1pm", "2024-01-12 13:00:00 +02:00"),
             ("1 pm", "2024-01-12 13:00:00 +02:00"),
+            ("8pm", "2024-01-12 20:00:00 +02:00"),
             ("8 pm", "2024-01-12 20:00:00 +02:00"),
             ("8:01 pm", "2024-01-12 20:01:00 +02:00"),
         ];
@@ -916,6 +921,8 @@ mod tests {
     #[test]
     fn test_combinations() {
         assert_convert_from(vec![
+            ("yesterday 1pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
+            ("yesterday 1:00 pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
             ("yesterday midnight", "2024-01-12T15:22:28+02:00", "2024-01-11 00:00:00 +02:00"),
             ("-2d 1h", "2024-05-12T15:22:28+02:00", "2024-05-10 14:22:28 +02:00"),
             ("-2d 1h midnight", "2024-05-12T15:22:28+02:00", "2024-05-10 00:00:00 +02:00"),
