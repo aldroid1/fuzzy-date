@@ -8,7 +8,7 @@ const IGNORED_CHARS: [&'static str; 1] = [
     ","
 ];
 
-const STANDARD_TOKENS: [(&'static str, Token); 93] = [
+const STANDARD_TOKENS: [(&'static str, Token); 95] = [
     // Months
     ("jan", Token { token: TokenType::Month, value: 1 }),
     ("january", Token { token: TokenType::Month, value: 1 }),
@@ -113,12 +113,17 @@ const STANDARD_TOKENS: [(&'static str, Token); 93] = [
     ("months", Token { token: TokenType::LongUnit, value: 6 }),
     ("year", Token { token: TokenType::LongUnit, value: 7 }),
     ("years", Token { token: TokenType::LongUnit, value: 7 }),
+
+    // Meridmiems
+    ("am", Token { token: TokenType::Meridiem, value: -1 }),
+    ("pm", Token { token: TokenType::Meridiem, value: 1 }),
 ];
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub(crate) enum TokenType {
     Integer,
     LongUnit,
+    Meridiem,
     Month,
     Nth,
     ShortUnit,
@@ -133,6 +138,7 @@ impl TokenType {
         match self {
             TokenType::Integer => "int",
             TokenType::LongUnit => "long_unit",
+            TokenType::Meridiem => "meridiem",
             TokenType::Month => "month",
             TokenType::ShortUnit => "short_unit",
             TokenType::Nth => "nth",
@@ -511,6 +517,32 @@ mod tests {
                     Token { token: TokenType::Integer, value: 2 },
                     Token { token: TokenType::LongUnit, value: expect_value }
                 ]
+            ));
+        }
+    }
+
+    #[test]
+    fn test_meridiem() {
+        let expect: Vec<(&str, i64)> = vec![
+            ("am", -1),
+            ("pm", 1),
+        ];
+
+        for (from_string, expect_value) in expect {
+            assert_eq!(tokenize_str(format!("2 {}", from_string).as_str()), (
+                String::from("[int] [meridiem]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::Meridiem, value: expect_value },
+                ],
+            ));
+
+            assert_eq!(tokenize_str(format!("2{}", from_string).as_str()), (
+                String::from("[int][meridiem]"),
+                vec![
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::Meridiem, value: expect_value },
+                ],
             ));
         }
     }
