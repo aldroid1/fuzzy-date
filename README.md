@@ -117,6 +117,7 @@ pip install fuzzy-date
 - Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
 - Day and month `April 1st`, `April 1`, `1 April`
 - Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+- Time of day `2pm`, `2:00 pm`
 
 ## Methods
 
@@ -165,9 +166,12 @@ fuzzydate.config.add_tokens(
 ## Background
 
 This library was born out of the need to accept various user inputs for date range start and end
-times, to convert user time tracking entries into exact durations etc. All very much akin to what 
-[timelib](https://github.com/derickr/timelib) does. Other implementations do exist, but they did not quite work for me - usually 
-missing support for some key wording I needed, or having issues with timezone handling. 
+times, to convert user time tracking entries into exact durations etc. All very much alike to what
+[timelib](https://github.com/derickr/timelib) does.
+
+Other implementations are available, but I did find one that would have worked for me - usually they
+were missing support for some key wording I needed, or handled user vagueness and timezones in a
+different way.
 
 Also, I kinda wanted to learn Rust via some example project as well.
 

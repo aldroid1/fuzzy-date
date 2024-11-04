@@ -180,6 +180,10 @@ mod fuzzydate {
         #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
         #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
+        #[classattr] const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
+        #[classattr] const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
+        #[classattr] const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
+
         // @formatter:on
     }
 
@@ -231,6 +235,9 @@ mod fuzzydate {
             #[classattr] const LONG_UNIT_WEEK: i16 = constants::TOKEN_LONG_UNIT_WEEK;
             #[classattr] const LONG_UNIT_MONTH: i16 = constants::TOKEN_LONG_UNIT_MONTH;
             #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
+
+            #[classattr] const MERIDIEM_AM: i16 = constants::TOKEN_MERIDIEM_AM;
+            #[classattr] const MERIDIEM_PM: i16 = constants::TOKEN_MERIDIEM_PM;
 
             // @formatter:on
     }
@@ -602,6 +609,13 @@ fn gid_into_token(gid: u32) -> Option<Token> {
         });
     }
 
+    if gid.ge(&601) && gid.le(&602) {
+        return Option::from(Token {
+            token: token::TokenType::Meridiem,
+            value: (gid - 600) as i64,
+        });
+    }
+
     None
 }
 
@@ -654,6 +668,41 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    #[test]
+    fn test_fixed_time() {
+        let current_time = "2024-01-12T15:22:28+02:00";
+        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+
+        let expect: Vec<(&str, &str)> = vec![
+            ("12am", "2024-01-12 00:00:00 +02:00"),
+            ("12a.m.", "2024-01-12 00:00:00 +02:00"),
+            ("12 am", "2024-01-12 00:00:00 +02:00"),
+            ("12 a.m.", "2024-01-12 00:00:00 +02:00"),
+            ("12:01 am", "2024-01-12 00:01:00 +02:00"),
+            ("12pm", "2024-01-12 12:00:00 +02:00"),
+            ("12 pm", "2024-01-12 12:00:00 +02:00"),
+            ("12:01 pm", "2024-01-12 12:01:00 +02:00"),
+            ("1pm", "2024-01-12 13:00:00 +02:00"),
+            ("1p.m.", "2024-01-12 13:00:00 +02:00"),
+            ("1 pm", "2024-01-12 13:00:00 +02:00"),
+            ("1 p.m.", "2024-01-12 13:00:00 +02:00"),
+            ("8pm", "2024-01-12 20:00:00 +02:00"),
+            ("8 pm", "2024-01-12 20:00:00 +02:00"),
+            ("8:01 pm", "2024-01-12 20:01:00 +02:00"),
+        ];
+
+        for (from_string, expect_time) in expect {
             let result_time = convert_str(
                 from_string,
                 &current_time,
@@ -876,6 +925,9 @@ mod tests {
     #[test]
     fn test_combinations() {
         assert_convert_from(vec![
+            ("@1705072948.544 2pm", "2024-01-12T15:22:28+02:00", "2024-01-12 14:00:00 +00:00"),
+            ("yesterday 1pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
+            ("yesterday 1:00 pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
             ("yesterday midnight", "2024-01-12T15:22:28+02:00", "2024-01-11 00:00:00 +02:00"),
             ("-2d 1h", "2024-05-12T15:22:28+02:00", "2024-05-10 14:22:28 +02:00"),
             ("-2d 1h midnight", "2024-05-12T15:22:28+02:00", "2024-05-10 00:00:00 +02:00"),
@@ -1034,6 +1086,15 @@ mod tests {
         }
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
+
+        for value in 601..603 {
+            assert_eq!(gid_into_token(value).unwrap(), Token {
+                token: token::TokenType::Meridiem,
+                value: (value - 600) as i64,
+            });
+        }
+        assert!(gid_into_token(600).is_none());
+        assert!(gid_into_token(603).is_none());
     }
 
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {

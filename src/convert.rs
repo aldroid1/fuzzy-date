@@ -156,6 +156,20 @@ pub(crate) fn offset_years(from_time: DateTime<FixedOffset>, amount: i64) -> Dat
         .with_day(into_month_day(new_year, 2, from_time.day())).unwrap()
 }
 
+// Move datetime into specified 12-hour, minute and second
+pub(crate) fn time_12h(from_time: DateTime<FixedOffset>, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<DateTime<FixedOffset>, ()> {
+    if hour.lt(&1) || hour.gt(&12) {
+        return Err(());
+    }
+
+    let hour = match hour.eq(&12) {
+        true => if meridiem.eq(&1) { 0 } else { 12 },
+        false => if meridiem.eq(&1) { hour } else { hour + 12 },
+    };
+
+    time_hms(from_time, hour, min, sec)
+}
+
 // Move datetime into specified hour, minute and second
 pub(crate) fn time_hms(from_time: DateTime<FixedOffset>, hour: i64, min: i64, sec: i64) -> Result<DateTime<FixedOffset>, ()> {
     if hour.lt(&0) || hour.gt(&23)
@@ -332,6 +346,23 @@ mod tests {
 
         assert!(time_hms(from_time, 0, 0, -1).is_err());
         assert!(time_hms(from_time, 0, 0, 60).is_err());
+    }
+
+    #[test]
+    fn test_time_12h() {
+        let from_time = into_datetime("2022-02-28T15:22:28+02:00");
+
+        for hour in 1..=11 {
+            assert_eq!(time_12h(from_time, hour, 0, 0, 1).unwrap().hour() as i64, hour);
+            assert_eq!(time_12h(from_time, hour, 0, 0, 2).unwrap().hour() as i64, hour + 12);
+        }
+
+        // 12 AM, PM
+        assert_eq!(time_12h(from_time, 12, 0, 0, 1).unwrap().hour() as i64, 0);
+        assert_eq!(time_12h(from_time, 12, 0, 0, 2).unwrap().hour() as i64, 12);
+
+        assert!(time_12h(from_time, 0, 0, 0, 1).is_err());
+        assert!(time_12h(from_time, 13, 0, 0, 1).is_err());
     }
 
     fn into_datetime(time_str: &str) -> DateTime<FixedOffset> {
