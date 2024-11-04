@@ -5,7 +5,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 44] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 46] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -109,6 +109,10 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     // 2023-12-07 15:02, 2023-12-07 15:02:01
     (&Pattern::DateTimeYmdHm, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], 0)),
     (&Pattern::DateTimeYmdHms, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5])),
+
+    // 3pm, 3:00 pm
+    (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v[0], 0, 0, v[1])),
+    (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v[0], v[1], 0, v[2])),
 ];
 
 #[derive(PartialEq)]
@@ -211,6 +215,11 @@ impl FuzzyDate {
         };
 
         Ok(Self { time: new_time })
+    }
+
+    /// Set time to specific hour, minute and second using 12-hour clock
+    fn time_12h(&self, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<Self, ()> {
+        Ok(Self { time: convert::time_12h(self.time, hour, min, sec, meridiem)? })
     }
 
     /// Set time to specific hour, minute and second

@@ -180,6 +180,9 @@ mod fuzzydate {
         #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
         #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
+        #[classattr] const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
+        #[classattr] const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
+
         // @formatter:on
     }
 
@@ -664,6 +667,33 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+            let result_time = convert_str(
+                from_string,
+                &current_time,
+                true,
+                HashMap::new(),
+                HashMap::new(),
+            );
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    #[test]
+    fn test_fixed_time() {
+        let current_time = "2024-01-12T15:22:28+02:00";
+        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+
+        let expect: Vec<(&str, &str)> = vec![
+            ("12 am", "2024-01-12 00:00:00 +02:00"),
+            ("12:01 am", "2024-01-12 00:01:00 +02:00"),
+            ("12 pm", "2024-01-12 12:00:00 +02:00"),
+            ("12:01 pm", "2024-01-12 12:01:00 +02:00"),
+            ("1 pm", "2024-01-12 13:00:00 +02:00"),
+            ("8 pm", "2024-01-12 20:00:00 +02:00"),
+            ("8:01 pm", "2024-01-12 20:01:00 +02:00"),
+        ];
+
+        for (from_string, expect_time) in expect {
             let result_time = convert_str(
                 from_string,
                 &current_time,
