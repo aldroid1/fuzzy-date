@@ -288,7 +288,7 @@ mod fuzzydate {
         module: &Bound<'_, PyModule>,
         py: Python,
         source: &str,
-        today: Option<Py<PyDate>>,
+        today: Option<Bound<PyDate>>,
         weekday_start_mon: bool) -> PyResult<NaiveDate> {
         let result = convert_str(
             &source,
@@ -331,7 +331,7 @@ mod fuzzydate {
         module: &Bound<'_, PyModule>,
         py: Python,
         source: &str,
-        now: Option<Py<PyDateTime>>,
+        now: Option<Bound<PyDateTime>>,
         weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
         let result = convert_str(
             &source,
