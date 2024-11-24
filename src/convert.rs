@@ -194,7 +194,7 @@ pub(crate) fn time_12h(
         }
     };
 
-    time_hms(from_time, hour, min, sec)
+    time_hms(from_time, hour, min, sec, 0)
 }
 
 // Move datetime into specified hour, minute and second
@@ -203,8 +203,13 @@ pub(crate) fn time_hms(
     hour: i64,
     min: i64,
     sec: i64,
+    ms: i64,
 ) -> Result<DateTime<FixedOffset>, ()> {
-    if hour.lt(&0) || hour.gt(&23) || min.lt(&0) || min.gt(&59) || sec.lt(&0) || sec.gt(&59) {
+    if hour.lt(&0) || min.lt(&0) || sec.lt(&0) || ms.lt(&0) {
+        return Err(());
+    }
+
+    if hour.gt(&23) || min.gt(&59) || sec.gt(&59) || ms.gt(&999) {
         return Err(());
     }
 
@@ -215,7 +220,7 @@ pub(crate) fn time_hms(
         .unwrap()
         .with_second(sec as u32)
         .unwrap()
-        .with_nanosecond(0)
+        .with_nanosecond((ms * 1_000_000) as u32)
         .unwrap())
 }
 
@@ -354,18 +359,18 @@ mod tests {
     fn test_time_hms() {
         let from_time = into_datetime("2022-02-28T15:22:28+02:00");
 
-        assert_eq!(time_hms(from_time, 0, 0, 0).unwrap().to_string(), "2022-02-28 00:00:00 +02:00",);
+        assert_eq!(time_hms(from_time, 0, 0, 0, 0).unwrap().to_string(), "2022-02-28 00:00:00 +02:00",);
 
-        assert_eq!(time_hms(from_time, 23, 15, 01).unwrap().to_string(), "2022-02-28 23:15:01 +02:00",);
+        assert_eq!(time_hms(from_time, 23, 15, 1, 0).unwrap().to_string(), "2022-02-28 23:15:01 +02:00",);
 
-        assert!(time_hms(from_time, -1, 0, 0).is_err());
-        assert!(time_hms(from_time, 24, 0, 0).is_err());
+        assert!(time_hms(from_time, -1, 0, 0, 0).is_err());
+        assert!(time_hms(from_time, 24, 0, 0, 0).is_err());
 
-        assert!(time_hms(from_time, 0, -1, 0).is_err());
-        assert!(time_hms(from_time, 0, 60, 0).is_err());
+        assert!(time_hms(from_time, 0, -1, 0, 0).is_err());
+        assert!(time_hms(from_time, 0, 60, 0, 0).is_err());
 
-        assert!(time_hms(from_time, 0, 0, -1).is_err());
-        assert!(time_hms(from_time, 0, 0, 60).is_err());
+        assert!(time_hms(from_time, 0, 0, -1, 0).is_err());
+        assert!(time_hms(from_time, 0, 0, 60, 0).is_err());
     }
 
     #[test]

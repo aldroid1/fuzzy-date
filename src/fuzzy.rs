@@ -5,7 +5,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 46] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 47] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -95,9 +95,10 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::DateMonthDayYear, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
     (&Pattern::DateMonthNthYear, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
     (&Pattern::DateDayMonthYear, |c, v, _| c.date_ymd(v[2], v[1], v[0])?.time_reset()),
-    // 2023-12-07 15:02, 2023-12-07 15:02:01
-    (&Pattern::DateTimeYmdHm, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], 0)),
-    (&Pattern::DateTimeYmdHms, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5])),
+    // 2023-12-07 15:02, 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
+    (&Pattern::DateTimeYmdHm, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], 0, 0)),
+    (&Pattern::DateTimeYmdHms, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5], 0)),
+    (&Pattern::DateTimeYmdHmsMs, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5], v[6])),
     // 3pm, 3:00 pm
     (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v[0], 0, 0, v[1])),
     (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v[0], v[1], 0, v[2])),
@@ -211,13 +212,13 @@ impl FuzzyDate {
     }
 
     /// Set time to specific hour, minute and second
-    fn time_hms(&self, hour: i64, min: i64, sec: i64) -> Result<Self, ()> {
-        Ok(Self { time: convert::time_hms(self.time, hour, min, sec)? })
+    fn time_hms(&self, hour: i64, min: i64, sec: i64, ms: i64) -> Result<Self, ()> {
+        Ok(Self { time: convert::time_hms(self.time, hour, min, sec, ms)? })
     }
 
     /// Reset time to midnight
     fn time_reset(&self) -> Result<Self, ()> {
-        self.time_hms(0, 0, 0)
+        self.time_hms(0, 0, 0, 0)
     }
 
     /// Current year

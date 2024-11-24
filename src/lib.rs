@@ -215,6 +215,8 @@ mod fuzzydate {
         const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
         #[classattr]
         const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
+        #[classattr]
+        const DATETIME_YMD_HMS_MS: &'static str = constants::PATTERN_DATETIME_YMD_HMS_MS;
 
         #[classattr]
         const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
@@ -700,6 +702,10 @@ mod tests {
             ("7 December 2023", "2023-12-07 00:00:00 +00:00"),
             ("2023-12-07 15:02", "2023-12-07 15:02:00 +00:00"),
             ("2023-12-07 15:02:01", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01.000", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01.001", "2023-12-07 15:02:01.001 +00:00"),
+            ("2023-12-07 15:02:01.999", "2023-12-07 15:02:01.999 +00:00"),
         ];
 
         let current_time = Utc::now().fixed_offset();
@@ -968,6 +974,7 @@ mod tests {
             "0000-01-12 15:22",       // Year invalid
             "1982-04-32",             // Date invalid
             "1982-04-01 15:61",       // Time invalid
+            "1995-07-01 12:00.1000",  // Milliseconds invalid
             "Feb 29th 2023",          // Day out of range
             "first day of this week", // Not supported
             "first minute of Jan",    // Not supported
@@ -1105,7 +1112,7 @@ mod tests {
 
     #[test]
     fn test_gid_into_token() {
-        for value in 101..108 {
+        for value in 101..=107 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Weekday, value: (value - 100) as i64 }
@@ -1114,7 +1121,7 @@ mod tests {
         assert!(gid_into_token(100).is_none());
         assert!(gid_into_token(108).is_none());
 
-        for value in 201..213 {
+        for value in 201..=212 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Month, value: (value - 200) as i64 }
@@ -1123,7 +1130,7 @@ mod tests {
         assert!(gid_into_token(200).is_none());
         assert!(gid_into_token(213).is_none());
 
-        for value in 301..304 {
+        for value in 301..=303 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Unit, value: (value - 300) as i64 }
@@ -1132,7 +1139,7 @@ mod tests {
         assert!(gid_into_token(300).is_none());
         assert!(gid_into_token(304).is_none());
 
-        for value in 401..408 {
+        for value in 401..=407 {
             if !value.eq(&402) {
                 assert_eq!(
                     gid_into_token(value).unwrap(),
@@ -1143,7 +1150,7 @@ mod tests {
         assert!(gid_into_token(400).is_none());
         assert!(gid_into_token(408).is_none());
 
-        for value in 501..508 {
+        for value in 501..=507 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::LongUnit, value: (value - 500) as i64 }
@@ -1152,7 +1159,7 @@ mod tests {
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
 
-        for value in 601..603 {
+        for value in 601..=602 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Meridiem, value: (value - 600) as i64 }

@@ -748,6 +748,22 @@ mod tests {
         );
 
         assert_eq!(
+            tokenize_str("2023-12-07 15:02:01.999"),
+            (
+                String::from("[year]-[int]-[int] [int]:[int]:[int].[int]"),
+                vec![
+                    Token { token: TokenType::Year, value: 2023 },
+                    Token { token: TokenType::Integer, value: 12 },
+                    Token { token: TokenType::Integer, value: 7 },
+                    Token { token: TokenType::Integer, value: 15 },
+                    Token { token: TokenType::Integer, value: 2 },
+                    Token { token: TokenType::Integer, value: 1 },
+                    Token { token: TokenType::Integer, value: 999 },
+                ]
+            )
+        );
+
+        assert_eq!(
             tokenize_str("2023-12-07 15:02:01"),
             (
                 String::from("[year]-[int]-[int] [int]:[int]:[int]"),
