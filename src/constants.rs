@@ -11,6 +11,11 @@ pub(crate) const PATTERN_PREV_WDAY: &'static str = "prev [wday]";
 pub(crate) const PATTERN_LAST_WDAY: &'static str = "last [wday]";
 pub(crate) const PATTERN_NEXT_WDAY: &'static str = "next [wday]";
 
+pub(crate) const PATTERN_THIS_MONTH: &'static str = "this [month]";
+pub(crate) const PATTERN_PREV_MONTH: &'static str = "prev [month]";
+pub(crate) const PATTERN_LAST_MONTH: &'static str = "last [month]";
+pub(crate) const PATTERN_NEXT_MONTH: &'static str = "next [month]";
+
 pub(crate) const PATTERN_THIS_LONG_UNIT: &'static str = "this [long_unit]";
 pub(crate) const PATTERN_PREV_LONG_UNIT: &'static str = "prev [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT: &'static str = "last [long_unit]";
@@ -132,6 +137,11 @@ pub(crate) enum Pattern {
     LastWday,
     NextWday,
 
+    ThisMonth,
+    PrevMonth,
+    LastMonth,
+    NextMonth,
+
     ThisLongUnit,
     PrevLongUnit,
     LastLongUnit,
@@ -204,6 +214,10 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::PrevWday, PATTERN_PREV_WDAY),
         (Pattern::LastWday, PATTERN_LAST_WDAY),
         (Pattern::NextWday, PATTERN_NEXT_WDAY),
+        (Pattern::ThisMonth, PATTERN_THIS_MONTH),
+        (Pattern::PrevMonth, PATTERN_PREV_MONTH),
+        (Pattern::LastMonth, PATTERN_LAST_MONTH),
+        (Pattern::NextMonth, PATTERN_NEXT_MONTH),
         (Pattern::ThisLongUnit, PATTERN_THIS_LONG_UNIT),
         (Pattern::PrevLongUnit, PATTERN_PREV_LONG_UNIT),
         (Pattern::LastLongUnit, PATTERN_LAST_LONG_UNIT),

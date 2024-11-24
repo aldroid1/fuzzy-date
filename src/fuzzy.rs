@@ -5,7 +5,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 47] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 51] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -17,6 +17,11 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
     (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
     (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)?.time_reset()),
+    // MONTH OFFSETS
+    (&Pattern::ThisMonth, |c, v, _| c.offset_month(v[0], convert::Change::None)?.time_reset()),
+    (&Pattern::PrevMonth, |c, v, _| c.offset_month(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::LastMonth, |c, v, _| c.offset_month(v[0], convert::Change::Prev)?.time_reset()),
+    (&Pattern::NextMonth, |c, v, _| c.offset_month(v[0], convert::Change::Next)?.time_reset()),
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), 0, r)),
     (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), -1, r)),
@@ -148,6 +153,11 @@ impl FuzzyDate {
     /// Set time to specific year, month and day
     fn date_ymd(&self, year: i64, month: i64, day: i64) -> Result<Self, ()> {
         Ok(Self { time: convert::date_ymd(self.time, year, month, day)? })
+    }
+
+    /// Move time into previous or upcoming month
+    fn offset_month(&self, new_month: i64, change: convert::Change) -> Result<Self, ()> {
+        Ok(Self { time: convert::offset_month(self.time, new_month, change) })
     }
 
     /// Move time into previous or upcoming weekday

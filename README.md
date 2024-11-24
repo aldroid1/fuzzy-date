@@ -107,6 +107,7 @@ pip install fuzzy-date
 - Adjustment `last`, `prev`, `this`, `next` or `+`, `-`
 - Units `next week`, `next month`, `next year`
 - Weekdays `next Mon`, `next Monday`
+- Months `next Jan`, `next January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
 - Ranges `last/first day of`
 

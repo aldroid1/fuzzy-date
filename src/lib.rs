@@ -139,6 +139,15 @@ mod fuzzydate {
         const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
 
         #[classattr]
+        const THIS_MONTH: &'static str = constants::PATTERN_THIS_MONTH;
+        #[classattr]
+        const PREV_MONTH: &'static str = constants::PATTERN_PREV_MONTH;
+        #[classattr]
+        const LAST_MONTH: &'static str = constants::PATTERN_LAST_MONTH;
+        #[classattr]
+        const NEXT_MONTH: &'static str = constants::PATTERN_NEXT_MONTH;
+
+        #[classattr]
         const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
         #[classattr]
         const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
@@ -917,6 +926,21 @@ mod tests {
             let result_time = convert_str(from_string, &current_time, false, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
+    }
+
+    #[test]
+    fn test_offset_month() {
+        assert_convert_from(vec![
+            ("this April", "2024-01-19T15:22:28+02:00", "2024-04-19 00:00:00 +02:00"),
+            ("prev April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
+            ("last April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
+            ("next April", "2024-01-19T15:22:28+02:00", "2024-04-19 00:00:00 +02:00"),
+            ("next January", "2024-01-19T15:22:28+02:00", "2025-01-19 00:00:00 +02:00"),
+            // When current month is the same as new month
+            ("this April", "2024-04-15T15:22:28+02:00", "2024-04-15 00:00:00 +02:00"),
+            ("prev April", "2024-04-15T15:22:28+02:00", "2023-04-15 00:00:00 +02:00"),
+            ("next April", "2024-04-15T15:22:28+02:00", "2025-04-15 00:00:00 +02:00"),
+        ]);
     }
 
     #[test]
