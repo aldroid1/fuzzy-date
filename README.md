@@ -169,9 +169,9 @@ This library was born out of the need to accept various user inputs for date ran
 times, to convert user time tracking entries into exact durations etc. All very much alike to what
 [timelib](https://github.com/derickr/timelib) does.
 
-Other implementations are available, but I did not find one that would have worked for me - usually they
-were missing support for some key wording I needed, or handled user vagueness and timezones in a
-different way.
+Other implementations are available, but I did not find one that would have worked for me - usually
+they were missing support for some key wording I needed, or handled user vagueness and timezones in
+a different way.
 
 Also, I kinda wanted to learn Rust via some example project as well.
 
