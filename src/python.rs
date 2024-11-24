@@ -4,10 +4,7 @@ use pyo3::{Bound, Py, PyErr, Python};
 
 /// Turn optional date from Python into DateTime with a timezone,
 /// setting UTC as timezone and time as midnight
-pub(crate) fn into_date(
-    py: Python,
-    value: Option<Bound<PyDate>>,
-) -> Result<DateTime<FixedOffset>, PyErr> {
+pub(crate) fn into_date(py: Python, value: Option<Bound<PyDate>>) -> Result<DateTime<FixedOffset>, PyErr> {
     match value {
         Some(v) => {
             let real_value: Py<PyDate> = v.unbind();
@@ -24,10 +21,7 @@ pub(crate) fn into_date(
 
 /// Turn optional datetime from Python object into DateTime with a timezone
 /// information, defaulting to UTC when missing
-pub(crate) fn into_datetime(
-    py: Python,
-    value: Option<Bound<PyDateTime>>,
-) -> Result<DateTime<FixedOffset>, PyErr> {
+pub(crate) fn into_datetime(py: Python, value: Option<Bound<PyDateTime>>) -> Result<DateTime<FixedOffset>, PyErr> {
     let py_value: Py<PyDateTime> = match value {
         Some(v) => v.unbind(),
         None => return Ok(Utc::now().fixed_offset()),

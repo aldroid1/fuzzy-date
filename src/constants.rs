@@ -181,7 +181,7 @@ pub(crate) enum Pattern {
 
 impl Pattern {
     pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
-        patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1 ).collect()
+        patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1).collect()
     }
 
     pub(crate) fn is_valid(value: &str) -> bool {

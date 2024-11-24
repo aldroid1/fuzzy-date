@@ -17,7 +17,12 @@ pub(crate) fn date_stamp(sec: i64, ms: i64) -> DateTime<FixedOffset> {
 }
 
 /// Move datetime into specified year, month and day
-pub(crate) fn date_ymd(from_time: DateTime<FixedOffset>, year: i64, month: i64, day: i64) -> Result<DateTime<FixedOffset>, ()> {
+pub(crate) fn date_ymd(
+    from_time: DateTime<FixedOffset>,
+    year: i64,
+    month: i64,
+    day: i64,
+) -> Result<DateTime<FixedOffset>, ()> {
     let new_time = from_time.with_day(1).unwrap();
 
     let new_time = match new_time.with_year(year as i32) {
@@ -67,13 +72,9 @@ pub(crate) fn offset_months(from_time: DateTime<FixedOffset>, amount: i64) -> Da
     let new_month: i32 = from_time.month() as i32 + amount as i32;
 
     if new_month.ge(&1) && new_month.le(&12) {
-        let target_day: u32 = into_month_day(
-            from_time.year(), new_month as u32, from_time.day(),
-        );
+        let target_day: u32 = into_month_day(from_time.year(), new_month as u32, from_time.day());
 
-        return from_time
-            .with_day(target_day).unwrap()
-            .with_month(new_month as u32).unwrap();
+        return from_time.with_day(target_day).unwrap().with_month(new_month as u32).unwrap();
     }
 
     let offset_months: u32 = (new_month as f64).abs() as u32;
@@ -89,18 +90,23 @@ pub(crate) fn offset_months(from_time: DateTime<FixedOffset>, amount: i64) -> Da
         false => from_time.year() + offset_years as i32,
     };
 
-    let target_day: u32 = into_month_day(
-        target_year, target_month, from_time.day(),
-    );
+    let target_day: u32 = into_month_day(target_year, target_month, from_time.day());
 
     from_time
-        .with_day(target_day).unwrap()
-        .with_month(target_month).unwrap()
-        .with_year(target_year).unwrap()
+        .with_day(target_day)
+        .unwrap()
+        .with_month(target_month)
+        .unwrap()
+        .with_year(target_year)
+        .unwrap()
 }
 
 /// Move datetime into first or last of the specified month
-pub(crate) fn offset_range_month(from_time: DateTime<FixedOffset>, month: i64, change: Change) -> Result<DateTime<FixedOffset>, ()> {
+pub(crate) fn offset_range_month(
+    from_time: DateTime<FixedOffset>,
+    month: i64,
+    change: Change,
+) -> Result<DateTime<FixedOffset>, ()> {
     if change.eq(&Change::First) {
         return date_ymd(from_time, from_time.year() as i64, month, 1);
     }
@@ -114,7 +120,11 @@ pub(crate) fn offset_range_month(from_time: DateTime<FixedOffset>, month: i64, c
 }
 
 /// Move datetime into previous or upcoming weekday
-pub(crate) fn offset_weekday(from_time: DateTime<FixedOffset>, new_weekday: i64, change: Change) -> DateTime<FixedOffset> {
+pub(crate) fn offset_weekday(
+    from_time: DateTime<FixedOffset>,
+    new_weekday: i64,
+    change: Change,
+) -> DateTime<FixedOffset> {
     let curr_weekday: i64 = from_time.weekday().num_days_from_monday() as i64 + 1;
 
     let mut offset_weeks: i64 = 0;
@@ -125,9 +135,7 @@ pub(crate) fn offset_weekday(from_time: DateTime<FixedOffset>, new_weekday: i64,
         offset_weeks = 1;
     }
 
-    from_time
-        + Duration::weeks(offset_weeks)
-        + Duration::days(new_weekday - curr_weekday)
+    from_time + Duration::weeks(offset_weeks) + Duration::days(new_weekday - curr_weekday)
 }
 
 /// Move datetime by given amount of weeks, to the start of the week
@@ -137,9 +145,7 @@ pub(crate) fn offset_weeks(from_time: DateTime<FixedOffset>, amount: i64, start_
         _ => from_time.weekday().num_days_from_sunday() as i64,
     };
 
-    from_time
-        - Duration::days(days_since_start)
-        + Duration::weeks(amount)
+    from_time - Duration::days(days_since_start) + Duration::weeks(amount)
 }
 
 /// Move datetime by given amount of years
@@ -151,38 +157,66 @@ pub(crate) fn offset_years(from_time: DateTime<FixedOffset>, amount: i64) -> Dat
     }
 
     from_time
-        .with_day(1).unwrap()
-        .with_year(new_year).unwrap()
-        .with_day(into_month_day(new_year, 2, from_time.day())).unwrap()
+        .with_day(1)
+        .unwrap()
+        .with_year(new_year)
+        .unwrap()
+        .with_day(into_month_day(new_year, 2, from_time.day()))
+        .unwrap()
 }
 
 // Move datetime into specified 12-hour, minute and second
-pub(crate) fn time_12h(from_time: DateTime<FixedOffset>, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<DateTime<FixedOffset>, ()> {
+pub(crate) fn time_12h(
+    from_time: DateTime<FixedOffset>,
+    hour: i64,
+    min: i64,
+    sec: i64,
+    meridiem: i64,
+) -> Result<DateTime<FixedOffset>, ()> {
     if hour.lt(&1) || hour.gt(&12) {
         return Err(());
     }
 
     let hour = match hour.eq(&12) {
-        true => if meridiem.eq(&1) { 0 } else { 12 },
-        false => if meridiem.eq(&1) { hour } else { hour + 12 },
+        true => {
+            if meridiem.eq(&1) {
+                0
+            } else {
+                12
+            }
+        }
+        false => {
+            if meridiem.eq(&1) {
+                hour
+            } else {
+                hour + 12
+            }
+        }
     };
 
     time_hms(from_time, hour, min, sec)
 }
 
 // Move datetime into specified hour, minute and second
-pub(crate) fn time_hms(from_time: DateTime<FixedOffset>, hour: i64, min: i64, sec: i64) -> Result<DateTime<FixedOffset>, ()> {
-    if hour.lt(&0) || hour.gt(&23)
-        || min.lt(&0) || min.gt(&59)
-        || sec.lt(&0) || sec.gt(&59) {
+pub(crate) fn time_hms(
+    from_time: DateTime<FixedOffset>,
+    hour: i64,
+    min: i64,
+    sec: i64,
+) -> Result<DateTime<FixedOffset>, ()> {
+    if hour.lt(&0) || hour.gt(&23) || min.lt(&0) || min.gt(&59) || sec.lt(&0) || sec.gt(&59) {
         return Err(());
     }
 
     Ok(from_time
-        .with_hour(hour as u32).unwrap()
-        .with_minute(min as u32).unwrap()
-        .with_second(sec as u32).unwrap()
-        .with_nanosecond(0).unwrap())
+        .with_hour(hour as u32)
+        .unwrap()
+        .with_minute(min as u32)
+        .unwrap()
+        .with_second(sec as u32)
+        .unwrap()
+        .with_nanosecond(0)
+        .unwrap())
 }
 
 #[cfg(test)]
@@ -201,15 +235,9 @@ mod tests {
     fn test_date_ymd() {
         let from_time = into_datetime("2022-01-31T15:22:28+02:00");
 
-        assert_eq!(
-            date_ymd(from_time, 2022, 2, 25).unwrap().to_string(),
-            "2022-02-25 15:22:28 +02:00",
-        );
+        assert_eq!(date_ymd(from_time, 2022, 2, 25).unwrap().to_string(), "2022-02-25 15:22:28 +02:00",);
 
-        assert_eq!(
-            date_ymd(from_time, 2024, 2, 29).unwrap().to_string(),
-            "2024-02-29 15:22:28 +02:00",
-        );
+        assert_eq!(date_ymd(from_time, 2024, 2, 29).unwrap().to_string(), "2024-02-29 15:22:28 +02:00",);
 
         assert!(date_ymd(from_time, 2024, 13, 10).is_err());
         assert!(date_ymd(from_time, 2024, 2, 30).is_err());
@@ -293,7 +321,6 @@ mod tests {
             ("2023-03-21T12:00:00+02:00", -25, 1, "2022-09-26 12:00:00 +02:00"),
             ("2023-03-21T12:00:00+02:00", 1, 1, "2023-03-27 12:00:00 +02:00"),
             ("2023-03-21T12:00:00+02:00", 125, 1, "2025-08-11 12:00:00 +02:00"),
-
             // Sunday as start of week
             ("2022-02-28T15:22:28+02:00", 0, 7, "2022-02-27 15:22:28 +02:00"),
             ("2023-03-21T12:00:00+02:00", -1, 7, "2023-03-12 12:00:00 +02:00"),
@@ -313,7 +340,6 @@ mod tests {
         let expect: Vec<(&str, i64, &str)> = vec![
             ("2022-02-28T15:22:28+02:00", 0, "2022-02-28 15:22:28 +02:00"),
             ("2022-03-31T15:22:28+02:00", 1, "2023-03-31 15:22:28 +02:00"),
-
             // From leap year to non-leap year
             ("2024-02-29T15:22:28+02:00", -1, "2023-02-28 15:22:28 +02:00"),
         ];
@@ -328,15 +354,9 @@ mod tests {
     fn test_time_hms() {
         let from_time = into_datetime("2022-02-28T15:22:28+02:00");
 
-        assert_eq!(
-            time_hms(from_time, 0, 0, 0).unwrap().to_string(),
-            "2022-02-28 00:00:00 +02:00",
-        );
+        assert_eq!(time_hms(from_time, 0, 0, 0).unwrap().to_string(), "2022-02-28 00:00:00 +02:00",);
 
-        assert_eq!(
-            time_hms(from_time, 23, 15, 01).unwrap().to_string(),
-            "2022-02-28 23:15:01 +02:00",
-        );
+        assert_eq!(time_hms(from_time, 23, 15, 01).unwrap().to_string(), "2022-02-28 23:15:01 +02:00",);
 
         assert!(time_hms(from_time, -1, 0, 0).is_err());
         assert!(time_hms(from_time, 24, 0, 0).is_err());
