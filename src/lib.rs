@@ -290,20 +290,26 @@ mod fuzzydate {
         source: &str,
         today: Option<Bound<PyDate>>,
         weekday_start_mon: bool) -> PyResult<NaiveDate> {
-        let result = convert_str(
-            &source,
-            &python::into_date(py, today)?,
-            weekday_start_mon,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let date_value = &python::into_date(py, today)?;
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Some(v) => Ok(v.date_naive()),
-            None => Err(PyValueError::new_err(format!(
-                "Unable to convert \"{}\" into datetime", source,
-            )))
-        }
+        py.allow_threads(move || {
+            let result = convert_str(
+                &source,
+                date_value,
+                weekday_start_mon,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Some(v) => Ok(v.date_naive()),
+                None => Err(PyValueError::new_err(format!(
+                    "Unable to convert \"{}\" into datetime", source,
+                )))
+            }
+        })
     }
 
     /// Turn time string into datetime.datetime object
@@ -333,20 +339,26 @@ mod fuzzydate {
         source: &str,
         now: Option<Bound<PyDateTime>>,
         weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
-        let result = convert_str(
-            &source,
-            &python::into_datetime(py, now)?,
-            weekday_start_mon,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let date_value = &python::into_datetime(py, now)?;
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Some(v) => Ok(v),
-            None => Err(PyValueError::new_err(format!(
-                "Unable to convert \"{}\" into datetime", source,
-            )))
-        }
+        py.allow_threads(move || {
+            let result = convert_str(
+                &source,
+                date_value,
+                weekday_start_mon,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Some(v) => Ok(v),
+                None => Err(PyValueError::new_err(format!(
+                    "Unable to convert \"{}\" into datetime", source,
+                )))
+            }
+        })
     }
 
     /// Convert number of seconds into a time duration string
@@ -382,6 +394,7 @@ mod fuzzydate {
     )]
     fn to_duration(
         module: &Bound<'_, PyModule>,
+        py: Python,
         seconds: f64,
         units: Option<&str>,
         max: &str,
@@ -394,8 +407,10 @@ mod fuzzydate {
             _ => unit_map.extend(read_config(module)?.units),
         }
 
-        let unit_locale = UnitLocale::from_map(unit_map);
-        Ok(convert_duration(seconds, &unit_locale, max, min))
+        py.allow_threads(move || {
+            let unit_locale = UnitLocale::from_map(unit_map);
+            Ok(convert_duration(seconds, &unit_locale, max, min))
+        })
     }
 
     /// Turn time duration string into seconds
@@ -417,17 +432,23 @@ mod fuzzydate {
     )]
     fn to_seconds(
         module: &Bound<'_, PyModule>,
+        py: Python,
         source: &str) -> PyResult<f64> {
-        let result = convert_seconds(
-            &source,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Ok(v) => Ok(v),
-            Err(e) => Err(PyValueError::new_err(e)),
-        }
+        py.allow_threads(move || {
+            let result = convert_seconds(
+                &source,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Ok(v) => Ok(v),
+                Err(e) => Err(PyValueError::new_err(e)),
+            }
+        })
     }
 
     #[pymodule_init]
