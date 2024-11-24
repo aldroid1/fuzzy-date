@@ -226,8 +226,6 @@ mod fuzzydate {
         const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
         #[classattr]
         const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
-        #[classattr]
-        const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
     }
 
     #[pyclass(name = "token")]
