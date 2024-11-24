@@ -5,7 +5,7 @@ mod python;
 mod token;
 
 use crate::fuzzy::UnitLocale;
-use crate::token::Token;
+use crate::token::{Token, TokenType};
 use chrono::{DateTime, Duration, FixedOffset, NaiveDate, Utc};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -663,28 +663,30 @@ fn convert_seconds(
 
 /// Turn global identifier into corresponding tokenization token
 fn gid_into_token(gid: u32) -> Option<Token> {
+    let gid = gid as i64;
+
     if gid.ge(&101) && gid.le(&107) {
-        return Option::from(Token { token: token::TokenType::Weekday, value: (gid - 100) as i64 });
+        return Option::from(Token::new(TokenType::Weekday, gid - 100));
     }
 
     if gid.ge(&201) && gid.le(&212) {
-        return Option::from(Token { token: token::TokenType::Month, value: (gid - 200) as i64 });
+        return Option::from(Token::new(TokenType::Month, gid - 200));
     }
 
     if gid.ge(&301) && gid.le(&303) {
-        return Option::from(Token { token: token::TokenType::Unit, value: (gid - 300) as i64 });
+        return Option::from(Token::new(TokenType::Unit, gid - 300));
     }
 
     if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
-        return Option::from(Token { token: token::TokenType::ShortUnit, value: (gid - 400) as i64 });
+        return Option::from(Token::new(TokenType::ShortUnit, gid - 400));
     }
 
     if gid.ge(&501) && gid.le(&507) {
-        return Option::from(Token { token: token::TokenType::LongUnit, value: (gid - 500) as i64 });
+        return Option::from(Token::new(TokenType::LongUnit, gid - 500));
     }
 
     if gid.ge(&601) && gid.le(&602) {
-        return Option::from(Token { token: token::TokenType::Meridiem, value: (gid - 600) as i64 });
+        return Option::from(Token::new(TokenType::Meridiem, gid - 600));
     }
 
     None
@@ -1146,7 +1148,7 @@ mod tests {
         for value in 101..=107 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
-                Token { token: token::TokenType::Weekday, value: (value - 100) as i64 }
+                Token::new(TokenType::Weekday, value as i64 - 100)
             );
         }
         assert!(gid_into_token(100).is_none());
@@ -1155,7 +1157,7 @@ mod tests {
         for value in 201..=212 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
-                Token { token: token::TokenType::Month, value: (value - 200) as i64 }
+                Token::new(TokenType::Month, value as i64 - 200)
             );
         }
         assert!(gid_into_token(200).is_none());
@@ -1164,7 +1166,7 @@ mod tests {
         for value in 301..=303 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
-                Token { token: token::TokenType::Unit, value: (value - 300) as i64 }
+                Token::new(TokenType::Unit, value as i64 - 300)
             );
         }
         assert!(gid_into_token(300).is_none());
@@ -1174,7 +1176,7 @@ mod tests {
             if !value.eq(&402) {
                 assert_eq!(
                     gid_into_token(value).unwrap(),
-                    Token { token: token::TokenType::ShortUnit, value: (value - 400) as i64 }
+                    Token::new(TokenType::ShortUnit, value as i64 - 400)
                 );
             }
         }
@@ -1184,7 +1186,7 @@ mod tests {
         for value in 501..=507 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
-                Token { token: token::TokenType::LongUnit, value: (value - 500) as i64 }
+                Token::new(TokenType::LongUnit, value as i64 - 500)
             );
         }
         assert!(gid_into_token(500).is_none());
@@ -1193,7 +1195,7 @@ mod tests {
         for value in 601..=602 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
-                Token { token: token::TokenType::Meridiem, value: (value - 600) as i64 }
+                Token::new(TokenType::Meridiem, value as i64 - 600)
             );
         }
         assert!(gid_into_token(600).is_none());
