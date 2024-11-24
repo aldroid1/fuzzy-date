@@ -1,0 +1,11 @@
+# General preferences
+chain_width = 80
+
+# Keep lists of closure calls in a single line
+fn_call_width = 120
+
+# Keep lists of struct mappings in a single line
+struct_lit_width = 120
+
+# Keep long constant lines in a single line
+max_width = 120
