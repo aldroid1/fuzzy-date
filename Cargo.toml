@@ -9,5 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 chrono = "0.4.38"
-pyo3 = { version = "0.22.5", features = ["chrono"]}
-log = "0.4.22"
+pyo3 = { version = "0.22.5", features = ["chrono"] }
