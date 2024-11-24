@@ -274,7 +274,7 @@ mod fuzzydate {
     /// :param today: Current date. Defaults to system date in UTC.
     /// :type today: datetime.date, optional
     /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
-    /// :type weekday_start_mon: bool, optional
+    /// :type weekday_start_mon: bool, optional, default True
     /// :raises ValueError
     /// :rtype datetime.date
     ///
@@ -288,22 +288,28 @@ mod fuzzydate {
         module: &Bound<'_, PyModule>,
         py: Python,
         source: &str,
-        today: Option<Py<PyDate>>,
+        today: Option<Bound<PyDate>>,
         weekday_start_mon: bool) -> PyResult<NaiveDate> {
-        let result = convert_str(
-            &source,
-            &python::into_date(py, today)?,
-            weekday_start_mon,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let date_value = &python::into_date(py, today)?;
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Some(v) => Ok(v.date_naive()),
-            None => Err(PyValueError::new_err(format!(
-                "Unable to convert \"{}\" into datetime", source,
-            )))
-        }
+        py.allow_threads(move || {
+            let result = convert_str(
+                &source,
+                date_value,
+                weekday_start_mon,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Some(v) => Ok(v.date_naive()),
+                None => Err(PyValueError::new_err(format!(
+                    "Unable to convert \"{}\" into datetime", source,
+                )))
+            }
+        })
     }
 
     /// Turn time string into datetime.datetime object
@@ -317,7 +323,7 @@ mod fuzzydate {
     /// :param now: Current time. Defaults to system time in UTC.
     /// :type now: datetime.datetime, optional
     /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
-    /// :type weekday_start_mon: bool, optional
+    /// :type weekday_start_mon: bool, optional, default True
     /// :raises ValueError
     /// :rtype datetime.datetime
     ///
@@ -331,40 +337,53 @@ mod fuzzydate {
         module: &Bound<'_, PyModule>,
         py: Python,
         source: &str,
-        now: Option<Py<PyDateTime>>,
+        now: Option<Bound<PyDateTime>>,
         weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
-        let result = convert_str(
-            &source,
-            &python::into_datetime(py, now)?,
-            weekday_start_mon,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let date_value = &python::into_datetime(py, now)?;
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Some(v) => Ok(v),
-            None => Err(PyValueError::new_err(format!(
-                "Unable to convert \"{}\" into datetime", source,
-            )))
-        }
+        py.allow_threads(move || {
+            let result = convert_str(
+                &source,
+                date_value,
+                weekday_start_mon,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Some(v) => Ok(v),
+                None => Err(PyValueError::new_err(format!(
+                    "Unable to convert \"{}\" into datetime", source,
+                )))
+            }
+        })
     }
 
     /// Convert number of seconds into a time duration string
     ///
-    /// Build a a time duration strings from number of seconds seconds,
-    /// e.g. 93600.0 into "1d 2h". Maximum supported unit is weeks, minimum
-    /// supported unit is seconds. Units with 0 value are not shown.
+    /// Build a time duration string from number of seconds, e.g. 93600.0 is
+    /// converted to "1d 2h". Maximum supported unit is weeks, minimum supported
+    /// unit is seconds. Units that have no value (are 0) are not shown.
     ///
-    /// Returns n empty string if duration is less than lowest shown unit.
+    /// Returns an empty string if number of seconds is not enough for the
+    /// lowest shown unit.
     ///
     /// :param source: Number of seconds
     /// :type source: float
-    /// :param unit: Unit type to show, long (seconds) short, (s) or None (sec). Defaults to None.
+    /// :param unit: Unit type to use. Possible values are "long", "short" and None. Defaults to
+    ///              None. For example, "long" would display seconds as "seconds", short as "s" and
+    ///              default as "sec".
     /// :type unit: str, optional
-    /// :param max: Maximum unit to show, defaults 'w' for weeks
-    /// :type max: str, optional
-    /// :param min: Minimum unit to show, defaults 's' for seconds
-    /// :type min: str, optional
+    /// :param max: Maximum unit to show, defaults 'w' for weeks. Possible values are "s/sec" for
+    ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
+    ///             and "w/week/weeks" for weeks.
+    /// :type max: str, optional, default "w"
+    /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are s/sec for
+    ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
+    ///             and "w/week/weeks" for weeks.
+    /// :type min: str, optional, default "s"
     /// :rtype str
     ///
     #[pyfunction]
@@ -375,6 +394,7 @@ mod fuzzydate {
     )]
     fn to_duration(
         module: &Bound<'_, PyModule>,
+        py: Python,
         seconds: f64,
         units: Option<&str>,
         max: &str,
@@ -387,8 +407,10 @@ mod fuzzydate {
             _ => unit_map.extend(read_config(module)?.units),
         }
 
-        let unit_locale = UnitLocale::from_map(unit_map);
-        Ok(convert_duration(seconds, &unit_locale, max, min))
+        py.allow_threads(move || {
+            let unit_locale = UnitLocale::from_map(unit_map);
+            Ok(convert_duration(seconds, &unit_locale, max, min))
+        })
     }
 
     /// Turn time duration string into seconds
@@ -410,17 +432,23 @@ mod fuzzydate {
     )]
     fn to_seconds(
         module: &Bound<'_, PyModule>,
+        py: Python,
         source: &str) -> PyResult<f64> {
-        let result = convert_seconds(
-            &source,
-            read_config(module)?.patterns,
-            read_tokens(module)?,
-        );
+        let config_patterns = read_config(module)?.patterns;
+        let config_tokens = read_tokens(module)?;
 
-        match result {
-            Ok(v) => Ok(v),
-            Err(e) => Err(PyValueError::new_err(e)),
-        }
+        py.allow_threads(move || {
+            let result = convert_seconds(
+                &source,
+                config_patterns,
+                config_tokens,
+            );
+
+            match result {
+                Ok(v) => Ok(v),
+                Err(e) => Err(PyValueError::new_err(e)),
+            }
+        })
     }
 
     #[pymodule_init]
