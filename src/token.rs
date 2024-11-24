@@ -168,6 +168,10 @@ impl Token {
     pub(crate) fn new(token: TokenType, value: i64) -> Self {
         Self { token: token, value: value, zeros: 0 }
     }
+
+    pub(crate) fn new_integer(value: i64, zeros: u8) -> Self {
+        Self { token: TokenType::Integer, value: value, zeros: zeros }
+    }
 }
 
 struct TokenList {
@@ -384,7 +388,12 @@ fn parse_number(source: &str) -> Option<Token> {
         return Option::from(Token::new(TokenType::Year, value));
     }
 
-    Option::from(Token::new(TokenType::Integer, value))
+    let zeros = match value.eq(&0) {
+        true => 0,
+        false => source.len() - source.trim_start_matches("0").len(),
+    };
+
+    Option::from(Token::new_integer(value, zeros as u8))
 }
 
 #[cfg(test)]
@@ -543,7 +552,7 @@ mod tests {
                     String::from("-[int][short_unit]"),
                     vec![
                         Token::new(TokenType::Integer, 2),
-                        Token::new(TokenType::ShortUnit, expect_value),
+                        Token::new(TokenType::ShortUnit, expect_value)
                     ]
                 )
             );
@@ -734,8 +743,8 @@ mod tests {
                 String::from("[year]-[int]-[int]"),
                 vec![
                     Token::new(TokenType::Year, 2023),
-                    Token::new(TokenType::Integer, 7),
-                    Token::new(TokenType::Integer, 1),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(1, 1),
                 ]
             )
         );
@@ -746,26 +755,26 @@ mod tests {
                 String::from("[year]-[int]-[int] [int]:[int]"),
                 vec![
                     Token::new(TokenType::Year, 2023),
-                    Token::new(TokenType::Integer, 12),
-                    Token::new(TokenType::Integer, 7),
-                    Token::new(TokenType::Integer, 15),
-                    Token::new(TokenType::Integer, 2),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
                 ]
             )
         );
 
         assert_eq!(
-            tokenize_str("2023-12-07 15:02:01.999"),
+            tokenize_str("2023-12-07 15:02:01.014"),
             (
                 String::from("[year]-[int]-[int] [int]:[int]:[int].[int]"),
                 vec![
                     Token::new(TokenType::Year, 2023),
-                    Token::new(TokenType::Integer, 12),
-                    Token::new(TokenType::Integer, 7),
-                    Token::new(TokenType::Integer, 15),
-                    Token::new(TokenType::Integer, 2),
-                    Token::new(TokenType::Integer, 1),
-                    Token::new(TokenType::Integer, 999),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                    Token::new_integer(1, 1),
+                    Token::new_integer(14, 1),
                 ]
             )
         );
@@ -776,11 +785,11 @@ mod tests {
                 String::from("[year]-[int]-[int] [int]:[int]:[int]"),
                 vec![
                     Token::new(TokenType::Year, 2023),
-                    Token::new(TokenType::Integer, 12),
-                    Token::new(TokenType::Integer, 7),
-                    Token::new(TokenType::Integer, 15),
-                    Token::new(TokenType::Integer, 2),
-                    Token::new(TokenType::Integer, 1),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                    Token::new_integer(1, 1),
                 ]
             )
         );
@@ -790,8 +799,8 @@ mod tests {
             (
                 String::from("[int]/[int]/[year]"),
                 vec![
-                    Token::new(TokenType::Integer, 1),
-                    Token::new(TokenType::Integer, 7),
+                    Token::new_integer(1, 1),
+                    Token::new_integer(7, 1),
                     Token::new(TokenType::Year, 2023),
                 ]
             )
@@ -802,8 +811,8 @@ mod tests {
             (
                 String::from("[int].[int].[year]"),
                 vec![
-                    Token::new(TokenType::Integer, 7),
-                    Token::new(TokenType::Integer, 1),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(1, 1),
                     Token::new(TokenType::Year, 2023),
                 ]
             )
