@@ -11,6 +11,11 @@ pub(crate) const PATTERN_PREV_WDAY: &'static str = "prev [wday]";
 pub(crate) const PATTERN_LAST_WDAY: &'static str = "last [wday]";
 pub(crate) const PATTERN_NEXT_WDAY: &'static str = "next [wday]";
 
+pub(crate) const PATTERN_THIS_MONTH: &'static str = "this [month]";
+pub(crate) const PATTERN_PREV_MONTH: &'static str = "prev [month]";
+pub(crate) const PATTERN_LAST_MONTH: &'static str = "last [month]";
+pub(crate) const PATTERN_NEXT_MONTH: &'static str = "next [month]";
+
 pub(crate) const PATTERN_THIS_LONG_UNIT: &'static str = "this [long_unit]";
 pub(crate) const PATTERN_PREV_LONG_UNIT: &'static str = "prev [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT: &'static str = "last [long_unit]";
@@ -50,9 +55,12 @@ pub(crate) const PATTERN_DATE_MONTH_NTH: &'static str = "[month] [nth]";
 pub(crate) const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [year]";
 pub(crate) const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
+pub(crate) const PATTERN_DATE_NTH_MONTH: &'static str = "[nth] of [month]";
+pub(crate) const PATTERN_DATE_NTH_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
 
 pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
+pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
@@ -129,6 +137,11 @@ pub(crate) enum Pattern {
     LastWday,
     NextWday,
 
+    ThisMonth,
+    PrevMonth,
+    LastMonth,
+    NextMonth,
+
     ThisLongUnit,
     PrevLongUnit,
     LastLongUnit,
@@ -174,6 +187,7 @@ pub(crate) enum Pattern {
     DateDayMonthYear,
     DateTimeYmdHm,
     DateTimeYmdHms,
+    DateTimeYmdHmsMs,
 
     TimeMeridiemH,
     TimeMeridiemHm,
@@ -200,6 +214,10 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::PrevWday, PATTERN_PREV_WDAY),
         (Pattern::LastWday, PATTERN_LAST_WDAY),
         (Pattern::NextWday, PATTERN_NEXT_WDAY),
+        (Pattern::ThisMonth, PATTERN_THIS_MONTH),
+        (Pattern::PrevMonth, PATTERN_PREV_MONTH),
+        (Pattern::LastMonth, PATTERN_LAST_MONTH),
+        (Pattern::NextMonth, PATTERN_NEXT_MONTH),
         (Pattern::ThisLongUnit, PATTERN_THIS_LONG_UNIT),
         (Pattern::PrevLongUnit, PATTERN_PREV_LONG_UNIT),
         (Pattern::LastLongUnit, PATTERN_LAST_LONG_UNIT),
@@ -233,8 +251,11 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateMonthNthYear, PATTERN_DATE_MONTH_NTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_DAY_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_DAY_MONTH_YEAR),
+        (Pattern::DateDayMonth, PATTERN_DATE_NTH_MONTH),
+        (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_MONTH_YEAR),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
+        (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),

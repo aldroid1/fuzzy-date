@@ -139,6 +139,15 @@ mod fuzzydate {
         const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
 
         #[classattr]
+        const THIS_MONTH: &'static str = constants::PATTERN_THIS_MONTH;
+        #[classattr]
+        const PREV_MONTH: &'static str = constants::PATTERN_PREV_MONTH;
+        #[classattr]
+        const LAST_MONTH: &'static str = constants::PATTERN_LAST_MONTH;
+        #[classattr]
+        const NEXT_MONTH: &'static str = constants::PATTERN_NEXT_MONTH;
+
+        #[classattr]
         const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
         #[classattr]
         const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
@@ -210,18 +219,22 @@ mod fuzzydate {
         const DATE_DAY_MONTH: &'static str = constants::PATTERN_DATE_DAY_MONTH;
         #[classattr]
         const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+        #[classattr]
+        const DATE_NTH_MONTH: &'static str = constants::PATTERN_DATE_NTH_MONTH;
+        #[classattr]
+        const DATE_NTH_MONTH_YEAR: &'static str = constants::PATTERN_DATE_NTH_MONTH_YEAR;
 
         #[classattr]
         const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
         #[classattr]
         const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
+        #[classattr]
+        const DATETIME_YMD_HMS_MS: &'static str = constants::PATTERN_DATETIME_YMD_HMS_MS;
 
         #[classattr]
         const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
         #[classattr]
         const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
-        #[classattr]
-        const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
     }
 
     #[pyclass(name = "token")]
@@ -695,11 +708,17 @@ mod tests {
             ("Dec 7 2023", "2023-12-07 00:00:00 +00:00"),
             ("Dec 7th 2023", "2023-12-07 00:00:00 +00:00"),
             ("Dec 7th, 2023", "2023-12-07 00:00:00 +00:00"),
+            ("7th of December 2023", "2023-12-07 00:00:00 +00:00"),
+            ("7th of Dec, 2023", "2023-12-07 00:00:00 +00:00"),
             ("December 7th 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 Dec 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 December 2023", "2023-12-07 00:00:00 +00:00"),
             ("2023-12-07 15:02", "2023-12-07 15:02:00 +00:00"),
             ("2023-12-07 15:02:01", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01.000", "2023-12-07 15:02:01 +00:00"),
+            ("2023-12-07 15:02:01.001", "2023-12-07 15:02:01.001 +00:00"),
+            ("2023-12-07 15:02:01.999", "2023-12-07 15:02:01.999 +00:00"),
         ];
 
         let current_time = Utc::now().fixed_offset();
@@ -716,6 +735,8 @@ mod tests {
             ("Dec 7", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("December 7th", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("7 Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("7th of Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("7th of December", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {
@@ -908,6 +929,21 @@ mod tests {
     }
 
     #[test]
+    fn test_offset_month() {
+        assert_convert_from(vec![
+            ("this April", "2024-01-19T15:22:28+02:00", "2024-04-19 00:00:00 +02:00"),
+            ("prev April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
+            ("last April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
+            ("next April", "2024-01-19T15:22:28+02:00", "2024-04-19 00:00:00 +02:00"),
+            ("next January", "2024-01-19T15:22:28+02:00", "2025-01-19 00:00:00 +02:00"),
+            // When current month is the same as new month
+            ("this April", "2024-04-15T15:22:28+02:00", "2024-04-15 00:00:00 +02:00"),
+            ("prev April", "2024-04-15T15:22:28+02:00", "2023-04-15 00:00:00 +02:00"),
+            ("next April", "2024-04-15T15:22:28+02:00", "2025-04-15 00:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
     fn test_offset_months() {
         assert_convert_from(vec![
             ("this month", "2024-03-12T15:22:28+02:00", "2024-03-12 15:22:28 +02:00"),
@@ -968,9 +1004,11 @@ mod tests {
             "0000-01-12 15:22",       // Year invalid
             "1982-04-32",             // Date invalid
             "1982-04-01 15:61",       // Time invalid
+            "1995-07-01 12:00.1000",  // Milliseconds invalid
             "Feb 29th 2023",          // Day out of range
             "first day of this week", // Not supported
             "first minute of Jan",    // Not supported
+            "7 of Jan",               // Missing nth supported
         ];
 
         let current_time = Utc::now().fixed_offset();
@@ -1105,7 +1143,7 @@ mod tests {
 
     #[test]
     fn test_gid_into_token() {
-        for value in 101..108 {
+        for value in 101..=107 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Weekday, value: (value - 100) as i64 }
@@ -1114,7 +1152,7 @@ mod tests {
         assert!(gid_into_token(100).is_none());
         assert!(gid_into_token(108).is_none());
 
-        for value in 201..213 {
+        for value in 201..=212 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Month, value: (value - 200) as i64 }
@@ -1123,7 +1161,7 @@ mod tests {
         assert!(gid_into_token(200).is_none());
         assert!(gid_into_token(213).is_none());
 
-        for value in 301..304 {
+        for value in 301..=303 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Unit, value: (value - 300) as i64 }
@@ -1132,7 +1170,7 @@ mod tests {
         assert!(gid_into_token(300).is_none());
         assert!(gid_into_token(304).is_none());
 
-        for value in 401..408 {
+        for value in 401..=407 {
             if !value.eq(&402) {
                 assert_eq!(
                     gid_into_token(value).unwrap(),
@@ -1143,7 +1181,7 @@ mod tests {
         assert!(gid_into_token(400).is_none());
         assert!(gid_into_token(408).is_none());
 
-        for value in 501..508 {
+        for value in 501..=507 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::LongUnit, value: (value - 500) as i64 }
@@ -1152,7 +1190,7 @@ mod tests {
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
 
-        for value in 601..603 {
+        for value in 601..=602 {
             assert_eq!(
                 gid_into_token(value).unwrap(),
                 Token { token: token::TokenType::Meridiem, value: (value - 600) as i64 }

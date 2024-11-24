@@ -16,6 +16,7 @@ fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
 fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
 fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
 fd.to_datetime('prev Monday')            # 2023-03-27 00:00:00+00:00
+fd.to_datetime('prev June')              # 2022-06-01 00:00:00+00:00
 fd.to_datetime('last day of this month') # 2023-04-30 00:00:00+00:00
 
 # Anything invalid raises a ValueError
@@ -107,6 +108,7 @@ pip install fuzzy-date
 - Adjustment `last`, `prev`, `this`, `next` or `+`, `-`
 - Units `next week`, `next month`, `next year`
 - Weekdays `next Mon`, `next Monday`
+- Months `next Jan`, `next January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
 - Ranges `last/first day of`
 
@@ -115,8 +117,8 @@ pip install fuzzy-date
 - Unix timestamp `@1680307200`
 - Dates `2023-04-01`, `04/01/2023`, `01.04.2023`
 - Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`
-- Day and month `April 1st`, `April 1`, `1 April`
-- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`
+- Day and month `April 1st`, `April 1`, `1 April`, `1st of April`
+- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`, `2023-04-01 12:00:00.410`
 - Time of day `2pm`, `2:00 pm`
 
 ## Methods

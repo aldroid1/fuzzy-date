@@ -50,21 +50,36 @@ pub(crate) fn into_month_day(year: i32, month: u32, day: u32) -> u32 {
         return day;
     }
 
-    let next_month: u32 = match month {
-        12 => 1,
-        _ => month + 1,
-    };
-
-    let next_year: i32 = match month {
-        12 => year + 1,
-        _ => year,
-    };
+    let next_month: u32 = if month.eq(&12) { 1 } else { month + 1 };
+    let next_year: i32 = if month.eq(&12) { year + 1 } else { year };
 
     let month_start = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
     let month_end = NaiveDate::from_ymd_opt(next_year, next_month, 1).unwrap();
     let max_days: u32 = month_end.signed_duration_since(month_start).num_days() as u32;
 
     cmp::min(max_days, day)
+}
+
+/// Move datetime into previous or upcoming month
+pub(crate) fn offset_month(from_time: DateTime<FixedOffset>, new_month: i64, change: Change) -> DateTime<FixedOffset> {
+    let curr_month: i64 = from_time.month() as i64;
+
+    if change.eq(&Change::None) && curr_month.eq(&new_month) {
+        return from_time;
+    }
+
+    let move_by: i64 = match change {
+        Change::Prev => match new_month.lt(&curr_month) {
+            true => 0 - (curr_month - new_month),
+            false => -12 - (curr_month - new_month),
+        },
+        _ => match new_month.le(&curr_month) {
+            true => 12 - (curr_month - new_month),
+            false => new_month - curr_month,
+        },
+    };
+
+    offset_months(from_time, move_by)
 }
 
 /// Move datetime by given amount of months
@@ -194,7 +209,7 @@ pub(crate) fn time_12h(
         }
     };
 
-    time_hms(from_time, hour, min, sec)
+    time_hms(from_time, hour, min, sec, 0)
 }
 
 // Move datetime into specified hour, minute and second
@@ -203,8 +218,13 @@ pub(crate) fn time_hms(
     hour: i64,
     min: i64,
     sec: i64,
+    ms: i64,
 ) -> Result<DateTime<FixedOffset>, ()> {
-    if hour.lt(&0) || hour.gt(&23) || min.lt(&0) || min.gt(&59) || sec.lt(&0) || sec.gt(&59) {
+    if hour.lt(&0) || min.lt(&0) || sec.lt(&0) || ms.lt(&0) {
+        return Err(());
+    }
+
+    if hour.gt(&23) || min.gt(&59) || sec.gt(&59) || ms.gt(&999) {
         return Err(());
     }
 
@@ -215,7 +235,7 @@ pub(crate) fn time_hms(
         .unwrap()
         .with_second(sec as u32)
         .unwrap()
-        .with_nanosecond(0)
+        .with_nanosecond((ms * 1_000_000) as u32)
         .unwrap())
 }
 
@@ -248,6 +268,58 @@ mod tests {
         assert_eq!(into_month_day(2024, 2, 1), 1);
         assert_eq!(into_month_day(2024, 2, 29), 29);
         assert_eq!(into_month_day(2024, 2, 30), 29);
+    }
+
+    #[test]
+    fn test_offset_month() {
+        let expect: Vec<(&str, i64, Change, &str)> = vec![
+            // This
+            ("2022-02-23T15:22:28+02:00", 1, Change::None, "2023-01-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 2, Change::None, "2022-02-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 3, Change::None, "2022-03-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 4, Change::None, "2022-04-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 5, Change::None, "2022-05-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 6, Change::None, "2022-06-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 7, Change::None, "2022-07-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 8, Change::None, "2022-08-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 9, Change::None, "2022-09-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 10, Change::None, "2022-10-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 11, Change::None, "2022-11-23 15:22:28 +02:00"),
+            ("2022-02-23T15:22:28+02:00", 12, Change::None, "2022-12-23 15:22:28 +02:00"),
+            // Prev
+            ("2022-06-23T15:22:28+02:00", 1, Change::Prev, "2022-01-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 2, Change::Prev, "2022-02-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 3, Change::Prev, "2022-03-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 4, Change::Prev, "2022-04-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 5, Change::Prev, "2022-05-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 6, Change::Prev, "2021-06-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 7, Change::Prev, "2021-07-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 8, Change::Prev, "2021-08-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 9, Change::Prev, "2021-09-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 10, Change::Prev, "2021-10-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 11, Change::Prev, "2021-11-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 12, Change::Prev, "2021-12-23 15:22:28 +02:00"),
+            // Next
+            ("2022-06-23T15:22:28+02:00", 1, Change::Next, "2023-01-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 2, Change::Next, "2023-02-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 3, Change::Next, "2023-03-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 4, Change::Next, "2023-04-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 5, Change::Next, "2023-05-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 6, Change::Next, "2023-06-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 7, Change::Next, "2022-07-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 8, Change::Next, "2022-08-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 9, Change::Next, "2022-09-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 10, Change::Next, "2022-10-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 11, Change::Next, "2022-11-23 15:22:28 +02:00"),
+            ("2022-06-23T15:22:28+02:00", 12, Change::Next, "2022-12-23 15:22:28 +02:00"),
+            // Day is automatically adjusted
+            ("2022-01-30T15:22:28+02:00", 2, Change::Next, "2022-02-28 15:22:28 +02:00"),
+        ];
+
+        for (from_time, new_month, change, expect_time) in expect {
+            let result_time = offset_month(into_datetime(from_time), new_month, change);
+            assert_eq!(result_time.to_string(), expect_time);
+        }
     }
 
     #[test]
@@ -354,18 +426,18 @@ mod tests {
     fn test_time_hms() {
         let from_time = into_datetime("2022-02-28T15:22:28+02:00");
 
-        assert_eq!(time_hms(from_time, 0, 0, 0).unwrap().to_string(), "2022-02-28 00:00:00 +02:00",);
+        assert_eq!(time_hms(from_time, 0, 0, 0, 0).unwrap().to_string(), "2022-02-28 00:00:00 +02:00",);
 
-        assert_eq!(time_hms(from_time, 23, 15, 01).unwrap().to_string(), "2022-02-28 23:15:01 +02:00",);
+        assert_eq!(time_hms(from_time, 23, 15, 1, 0).unwrap().to_string(), "2022-02-28 23:15:01 +02:00",);
 
-        assert!(time_hms(from_time, -1, 0, 0).is_err());
-        assert!(time_hms(from_time, 24, 0, 0).is_err());
+        assert!(time_hms(from_time, -1, 0, 0, 0).is_err());
+        assert!(time_hms(from_time, 24, 0, 0, 0).is_err());
 
-        assert!(time_hms(from_time, 0, -1, 0).is_err());
-        assert!(time_hms(from_time, 0, 60, 0).is_err());
+        assert!(time_hms(from_time, 0, -1, 0, 0).is_err());
+        assert!(time_hms(from_time, 0, 60, 0, 0).is_err());
 
-        assert!(time_hms(from_time, 0, 0, -1).is_err());
-        assert!(time_hms(from_time, 0, 0, 60).is_err());
+        assert!(time_hms(from_time, 0, 0, -1, 0).is_err());
+        assert!(time_hms(from_time, 0, 0, 60, 0).is_err());
     }
 
     #[test]
