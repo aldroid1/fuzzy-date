@@ -16,6 +16,7 @@ fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
 fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
 fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
 fd.to_datetime('prev Monday')            # 2023-03-27 00:00:00+00:00
+fd.to_datetime('prev June')              # 2022-06-01 00:00:00+00:00
 fd.to_datetime('last day of this month') # 2023-04-30 00:00:00+00:00
 
 # Anything invalid raises a ValueError
