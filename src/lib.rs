@@ -1,8 +1,8 @@
+mod constants;
 mod convert;
 mod fuzzy;
-mod token;
 mod python;
-mod constants;
+mod token;
 
 use crate::fuzzy::UnitLocale;
 use crate::token::Token;
@@ -59,9 +59,7 @@ mod fuzzydate {
             /// :rtype None
             ///
             #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
-            fn add_patterns(
-                &mut self,
-                patterns: HashMap<String, String>) -> PyResult<()> {
+            fn add_patterns(&mut self, patterns: HashMap<String, String>) -> PyResult<()> {
                 for (pattern, value) in patterns {
                     if !constants::Pattern::is_valid(&value) {
                         return Err(PyValueError::new_err(format!(
@@ -100,18 +98,14 @@ mod fuzzydate {
             /// :rtype None
             ///
             #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
-            fn add_tokens(
-                &mut self,
-                tokens: HashMap<String, u32>) -> PyResult<()> {
+            fn add_tokens(&mut self, tokens: HashMap<String, u32>) -> PyResult<()> {
                 for (keyword, gid) in tokens {
                     if gid_into_token(gid).is_some() {
                         self.tokens.insert(keyword.to_lowercase(), gid);
                         continue;
                     }
 
-                    return Err(PyValueError::new_err(format!(
-                        "Token \"{}\" value {} does not exist", keyword, gid,
-                    )));
+                    return Err(PyValueError::new_err(format!("Token \"{}\" value {} does not exist", keyword, gid,)));
                 }
 
                 Ok(())
@@ -124,67 +118,110 @@ mod fuzzydate {
 
     #[pymethods]
     impl Patterns {
-        // @formatter:off
+        #[classattr]
+        const NOW: &'static str = constants::PATTERN_NOW;
+        #[classattr]
+        const TODAY: &'static str = constants::PATTERN_TODAY;
+        #[classattr]
+        const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
+        #[classattr]
+        const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
+        #[classattr]
+        const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
 
-        #[classattr] const NOW: &'static str = constants::PATTERN_NOW;
-        #[classattr] const TODAY: &'static str = constants::PATTERN_TODAY;
-        #[classattr] const MIDNIGHT: &'static str = constants::PATTERN_MIDNIGHT;
-        #[classattr] const YESTERDAY: &'static str = constants::PATTERN_YESTERDAY;
-        #[classattr] const TOMORROW: &'static str = constants::PATTERN_TOMORROW;
+        #[classattr]
+        const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
+        #[classattr]
+        const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
+        #[classattr]
+        const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
+        #[classattr]
+        const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
 
-        #[classattr] const THIS_WDAY: &'static str = constants::PATTERN_THIS_WDAY;
-        #[classattr] const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
-        #[classattr] const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
-        #[classattr] const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
+        #[classattr]
+        const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
+        #[classattr]
+        const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
+        #[classattr]
+        const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
+        #[classattr]
+        const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
 
-        #[classattr] const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
-        #[classattr] const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
-        #[classattr] const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
-        #[classattr] const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
+        #[classattr]
+        const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
+        #[classattr]
+        const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
+        #[classattr]
+        const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
 
-        #[classattr] const MINUS_UNIT: &'static str = constants::PATTERN_MINUS_UNIT;
-        #[classattr] const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
-        #[classattr] const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
+        #[classattr]
+        const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
+        #[classattr]
+        const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
+        #[classattr]
+        const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
+        #[classattr]
+        const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
+        #[classattr]
+        const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
 
-        #[classattr] const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
-        #[classattr] const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
-        #[classattr] const PLUS_LONG_UNIT: &'static str = constants::PATTERN_PLUS_LONG_UNIT;
-        #[classattr] const UNIT_AGO: &'static str = constants::PATTERN_UNIT_AGO;
-        #[classattr] const LONG_UNIT_AGO: &'static str = constants::PATTERN_LONG_UNIT_AGO;
+        #[classattr]
+        const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
+        #[classattr]
+        const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
+        #[classattr]
+        const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
+        #[classattr]
+        const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
+        #[classattr]
+        const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
 
-        #[classattr] const FIRST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH;
-        #[classattr] const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
-        #[classattr] const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
-        #[classattr] const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
-        #[classattr] const FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT;
-        #[classattr] const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
-        #[classattr] const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
-        #[classattr] const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
-        #[classattr] const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
-        #[classattr] const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+        #[classattr]
+        const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
+        #[classattr]
+        const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
 
-        #[classattr] const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
-        #[classattr] const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
+        #[classattr]
+        const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
+        #[classattr]
+        const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
+        #[classattr]
+        const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
 
-        #[classattr] const DATE_YMD: &'static str = constants::PATTERN_DATE_YMD;
-        #[classattr] const DATE_DMY: &'static str = constants::PATTERN_DATE_DMY;
-        #[classattr] const DATE_MDY: &'static str = constants::PATTERN_DATE_MDY;
+        #[classattr]
+        const DATE_MONTH_DAY: &'static str = constants::PATTERN_DATE_MONTH_DAY;
+        #[classattr]
+        const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
+        #[classattr]
+        const DATE_MONTH_NTH: &'static str = constants::PATTERN_DATE_MONTH_NTH;
+        #[classattr]
+        const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
+        #[classattr]
+        const DATE_DAY_MONTH: &'static str = constants::PATTERN_DATE_DAY_MONTH;
+        #[classattr]
+        const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
 
-        #[classattr] const DATE_MONTH_DAY: &'static str = constants::PATTERN_DATE_MONTH_DAY;
-        #[classattr] const DATE_MONTH_DAY_YEAR: &'static str = constants::PATTERN_DATE_MONTH_DAY_YEAR;
-        #[classattr] const DATE_MONTH_NTH: &'static str = constants::PATTERN_DATE_MONTH_NTH;
-        #[classattr] const DATE_MONTH_NTH_YEAR: &'static str = constants::PATTERN_DATE_MONTH_NTH_YEAR;
-        #[classattr] const DATE_DAY_MONTH: &'static str = constants::PATTERN_DATE_DAY_MONTH;
-        #[classattr] const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+        #[classattr]
+        const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
+        #[classattr]
+        const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
 
-        #[classattr] const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
-        #[classattr] const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
-
-        #[classattr] const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
-        #[classattr] const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
-        #[classattr] const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
-
-        // @formatter:on
+        #[classattr]
+        const TIME_12H_H: &'static str = constants::PATTERN_TIME_12H_H;
+        #[classattr]
+        const TIME_12H_HM: &'static str = constants::PATTERN_TIME_12H_HM;
+        #[classattr]
+        const TIME_12H_HOUR: &'static str = constants::PATTERN_TIME_12H_HOUR;
     }
 
     #[pyclass(name = "token")]
@@ -192,54 +229,87 @@ mod fuzzydate {
 
     #[pymethods]
     impl Tokens {
-        // @formatter:off
+        // Weekdays
+        #[classattr]
+        const WDAY_MON: i16 = constants::TOKEN_WDAY_MON;
+        #[classattr]
+        const WDAY_TUE: i16 = constants::TOKEN_WDAY_TUE;
+        #[classattr]
+        const WDAY_WED: i16 = constants::TOKEN_WDAY_WED;
+        #[classattr]
+        const WDAY_THU: i16 = constants::TOKEN_WDAY_THU;
+        #[classattr]
+        const WDAY_FRI: i16 = constants::TOKEN_WDAY_FRI;
+        #[classattr]
+        const WDAY_SAT: i16 = constants::TOKEN_WDAY_SAT;
+        #[classattr]
+        const WDAY_SUN: i16 = constants::TOKEN_WDAY_SUN;
 
-            // Weekdays
-            #[classattr] const WDAY_MON: i16 = constants::TOKEN_WDAY_MON;
-            #[classattr] const WDAY_TUE: i16 = constants::TOKEN_WDAY_TUE;
-            #[classattr] const WDAY_WED: i16 = constants::TOKEN_WDAY_WED;
-            #[classattr] const WDAY_THU: i16 = constants::TOKEN_WDAY_THU;
-            #[classattr] const WDAY_FRI: i16 = constants::TOKEN_WDAY_FRI;
-            #[classattr] const WDAY_SAT: i16 = constants::TOKEN_WDAY_SAT;
-            #[classattr] const WDAY_SUN: i16 = constants::TOKEN_WDAY_SUN;
+        // Months
+        #[classattr]
+        const MONTH_JAN: i16 = constants::TOKEN_MONTH_JAN;
+        #[classattr]
+        const MONTH_FEB: i16 = constants::TOKEN_MONTH_FEB;
+        #[classattr]
+        const MONTH_MAR: i16 = constants::TOKEN_MONTH_MAR;
+        #[classattr]
+        const MONTH_APR: i16 = constants::TOKEN_MONTH_APR;
+        #[classattr]
+        const MONTH_MAY: i16 = constants::TOKEN_MONTH_MAY;
+        #[classattr]
+        const MONTH_JUN: i16 = constants::TOKEN_MONTH_JUN;
+        #[classattr]
+        const MONTH_JUL: i16 = constants::TOKEN_MONTH_JUL;
+        #[classattr]
+        const MONTH_AUG: i16 = constants::TOKEN_MONTH_AUG;
+        #[classattr]
+        const MONTH_SEP: i16 = constants::TOKEN_MONTH_SEP;
+        #[classattr]
+        const MONTH_OCT: i16 = constants::TOKEN_MONTH_OCT;
+        #[classattr]
+        const MONTH_NOV: i16 = constants::TOKEN_MONTH_NOV;
+        #[classattr]
+        const MONTH_DEC: i16 = constants::TOKEN_MONTH_DEC;
 
-            // Months
-            #[classattr] const MONTH_JAN: i16 = constants::TOKEN_MONTH_JAN;
-            #[classattr] const MONTH_FEB: i16 = constants::TOKEN_MONTH_FEB;
-            #[classattr] const MONTH_MAR: i16 = constants::TOKEN_MONTH_MAR;
-            #[classattr] const MONTH_APR: i16 = constants::TOKEN_MONTH_APR;
-            #[classattr] const MONTH_MAY: i16 = constants::TOKEN_MONTH_MAY;
-            #[classattr] const MONTH_JUN: i16 = constants::TOKEN_MONTH_JUN;
-            #[classattr] const MONTH_JUL: i16 = constants::TOKEN_MONTH_JUL;
-            #[classattr] const MONTH_AUG: i16 = constants::TOKEN_MONTH_AUG;
-            #[classattr] const MONTH_SEP: i16 = constants::TOKEN_MONTH_SEP;
-            #[classattr] const MONTH_OCT: i16 = constants::TOKEN_MONTH_OCT;
-            #[classattr] const MONTH_NOV: i16 = constants::TOKEN_MONTH_NOV;
-            #[classattr] const MONTH_DEC: i16 = constants::TOKEN_MONTH_DEC;
+        #[classattr]
+        const UNIT_SEC: i16 = constants::TOKEN_UNIT_SEC;
+        #[classattr]
+        const UNIT_MIN: i16 = constants::TOKEN_UNIT_MIN;
+        #[classattr]
+        const UNIT_HRS: i16 = constants::TOKEN_UNIT_HRS;
 
-            #[classattr] const UNIT_SEC: i16 = constants::TOKEN_UNIT_SEC;
-            #[classattr] const UNIT_MIN: i16 = constants::TOKEN_UNIT_MIN;
-            #[classattr] const UNIT_HRS: i16 = constants::TOKEN_UNIT_HRS;
+        #[classattr]
+        const SHORT_UNIT_SEC: i16 = constants::TOKEN_SHORT_UNIT_SEC;
+        #[classattr]
+        const SHORT_UNIT_HRS: i16 = constants::TOKEN_SHORT_UNIT_HRS;
+        #[classattr]
+        const SHORT_UNIT_DAY: i16 = constants::TOKEN_SHORT_UNIT_DAY;
+        #[classattr]
+        const SHORT_UNIT_WEEK: i16 = constants::TOKEN_SHORT_UNIT_WEEK;
+        #[classattr]
+        const SHORT_UNIT_MONTH: i16 = constants::TOKEN_SHORT_UNIT_MONTH;
+        #[classattr]
+        const SHORT_UNIT_YEAR: i16 = constants::TOKEN_SHORT_UNIT_YEAR;
 
-            #[classattr] const SHORT_UNIT_SEC: i16 = constants::TOKEN_SHORT_UNIT_SEC;
-            #[classattr] const SHORT_UNIT_HRS: i16 = constants::TOKEN_SHORT_UNIT_HRS;
-            #[classattr] const SHORT_UNIT_DAY: i16 = constants::TOKEN_SHORT_UNIT_DAY;
-            #[classattr] const SHORT_UNIT_WEEK: i16 = constants::TOKEN_SHORT_UNIT_WEEK;
-            #[classattr] const SHORT_UNIT_MONTH: i16 = constants::TOKEN_SHORT_UNIT_MONTH;
-            #[classattr] const SHORT_UNIT_YEAR: i16 = constants::TOKEN_SHORT_UNIT_YEAR;
+        #[classattr]
+        const LONG_UNIT_SEC: i16 = constants::TOKEN_LONG_UNIT_SEC;
+        #[classattr]
+        const LONG_UNIT_MIN: i16 = constants::TOKEN_LONG_UNIT_MIN;
+        #[classattr]
+        const LONG_UNIT_HRS: i16 = constants::TOKEN_LONG_UNIT_HRS;
+        #[classattr]
+        const LONG_UNIT_DAY: i16 = constants::TOKEN_LONG_UNIT_DAY;
+        #[classattr]
+        const LONG_UNIT_WEEK: i16 = constants::TOKEN_LONG_UNIT_WEEK;
+        #[classattr]
+        const LONG_UNIT_MONTH: i16 = constants::TOKEN_LONG_UNIT_MONTH;
+        #[classattr]
+        const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
 
-            #[classattr] const LONG_UNIT_SEC: i16 = constants::TOKEN_LONG_UNIT_SEC;
-            #[classattr] const LONG_UNIT_MIN: i16 = constants::TOKEN_LONG_UNIT_MIN;
-            #[classattr] const LONG_UNIT_HRS: i16 = constants::TOKEN_LONG_UNIT_HRS;
-            #[classattr] const LONG_UNIT_DAY: i16 = constants::TOKEN_LONG_UNIT_DAY;
-            #[classattr] const LONG_UNIT_WEEK: i16 = constants::TOKEN_LONG_UNIT_WEEK;
-            #[classattr] const LONG_UNIT_MONTH: i16 = constants::TOKEN_LONG_UNIT_MONTH;
-            #[classattr] const LONG_UNIT_YEAR: i16 = constants::TOKEN_LONG_UNIT_YEAR;
-
-            #[classattr] const MERIDIEM_AM: i16 = constants::TOKEN_MERIDIEM_AM;
-            #[classattr] const MERIDIEM_PM: i16 = constants::TOKEN_MERIDIEM_PM;
-
-            // @formatter:on
+        #[classattr]
+        const MERIDIEM_AM: i16 = constants::TOKEN_MERIDIEM_AM;
+        #[classattr]
+        const MERIDIEM_PM: i16 = constants::TOKEN_MERIDIEM_PM;
     }
 
     #[pyclass(name = "unit")]
@@ -247,20 +317,26 @@ mod fuzzydate {
 
     #[pymethods]
     impl Units {
-        // @formatter:off
-
-        #[classattr] const DAY: &'static str = constants::UNIT_DAY;
-        #[classattr] const DAYS: &'static str = constants::UNIT_DAYS;
-        #[classattr] const HOUR: &'static str = constants::UNIT_HOUR;
-        #[classattr] const HOURS: &'static str = constants::UNIT_HOURS;
-        #[classattr] const MINUTE: &'static str = constants::UNIT_MINUTE;
-        #[classattr] const MINUTES: &'static str = constants::UNIT_MINUTES;
-        #[classattr] const SECOND: &'static str = constants::UNIT_SECOND;
-        #[classattr] const SECONDS: &'static str = constants::UNIT_SECONDS;
-        #[classattr] const WEEK: &'static str = constants::UNIT_WEEK;
-        #[classattr] const WEEKS: &'static str = constants::UNIT_WEEKS;
-
-        // @formatter:on
+        #[classattr]
+        const DAY: &'static str = constants::UNIT_DAY;
+        #[classattr]
+        const DAYS: &'static str = constants::UNIT_DAYS;
+        #[classattr]
+        const HOUR: &'static str = constants::UNIT_HOUR;
+        #[classattr]
+        const HOURS: &'static str = constants::UNIT_HOURS;
+        #[classattr]
+        const MINUTE: &'static str = constants::UNIT_MINUTE;
+        #[classattr]
+        const MINUTES: &'static str = constants::UNIT_MINUTES;
+        #[classattr]
+        const SECOND: &'static str = constants::UNIT_SECOND;
+        #[classattr]
+        const SECONDS: &'static str = constants::UNIT_SECONDS;
+        #[classattr]
+        const WEEK: &'static str = constants::UNIT_WEEK;
+        #[classattr]
+        const WEEKS: &'static str = constants::UNIT_WEEKS;
     }
 
     /// Turn time string into datetime.date object
@@ -289,25 +365,18 @@ mod fuzzydate {
         py: Python,
         source: &str,
         today: Option<Bound<PyDate>>,
-        weekday_start_mon: bool) -> PyResult<NaiveDate> {
+        weekday_start_mon: bool,
+    ) -> PyResult<NaiveDate> {
         let date_value = &python::into_date(py, today)?;
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
         py.allow_threads(move || {
-            let result = convert_str(
-                &source,
-                date_value,
-                weekday_start_mon,
-                config_patterns,
-                config_tokens,
-            );
+            let result = convert_str(&source, date_value, weekday_start_mon, config_patterns, config_tokens);
 
             match result {
                 Some(v) => Ok(v.date_naive()),
-                None => Err(PyValueError::new_err(format!(
-                    "Unable to convert \"{}\" into datetime", source,
-                )))
+                None => Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime", source,))),
             }
         })
     }
@@ -338,25 +407,18 @@ mod fuzzydate {
         py: Python,
         source: &str,
         now: Option<Bound<PyDateTime>>,
-        weekday_start_mon: bool) -> PyResult<DateTime<FixedOffset>> {
+        weekday_start_mon: bool,
+    ) -> PyResult<DateTime<FixedOffset>> {
         let date_value = &python::into_datetime(py, now)?;
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
         py.allow_threads(move || {
-            let result = convert_str(
-                &source,
-                date_value,
-                weekday_start_mon,
-                config_patterns,
-                config_tokens,
-            );
+            let result = convert_str(&source, date_value, weekday_start_mon, config_patterns, config_tokens);
 
             match result {
                 Some(v) => Ok(v),
-                None => Err(PyValueError::new_err(format!(
-                    "Unable to convert \"{}\" into datetime", source,
-                )))
+                None => Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime", source,))),
             }
         })
     }
@@ -398,7 +460,8 @@ mod fuzzydate {
         seconds: f64,
         units: Option<&str>,
         max: &str,
-        min: &str) -> PyResult<String> {
+        min: &str,
+    ) -> PyResult<String> {
         let mut unit_map = units_locale(units.unwrap_or(""));
 
         match units {
@@ -430,19 +493,12 @@ mod fuzzydate {
         signature = (source),
         text_signature = "(source: str)"
     )]
-    fn to_seconds(
-        module: &Bound<'_, PyModule>,
-        py: Python,
-        source: &str) -> PyResult<f64> {
+    fn to_seconds(module: &Bound<'_, PyModule>, py: Python, source: &str) -> PyResult<f64> {
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
         py.allow_threads(move || {
-            let result = convert_seconds(
-                &source,
-                config_patterns,
-                config_tokens,
-            );
+            let result = convert_seconds(&source, config_patterns, config_tokens);
 
             match result {
                 Ok(v) => Ok(v),
@@ -453,25 +509,23 @@ mod fuzzydate {
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        module.add(ATTR_CONFIG, Config {
-            patterns: HashMap::new(),
-            tokens: HashMap::new(),
-            units: units_locale(""),
-            units_long: units_locale("long"),
-            units_short: units_locale("short"),
-        })?;
+        module.add(
+            ATTR_CONFIG,
+            Config {
+                patterns: HashMap::new(),
+                tokens: HashMap::new(),
+                units: units_locale(""),
+                units_long: units_locale("long"),
+                units_short: units_locale("short"),
+            },
+        )?;
 
         Ok(())
     }
 
     /// Read config registered to Python module
-    fn read_config(
-        module: &Bound<'_, PyModule>) -> Result<Config, PyErr> {
-        let config = &module
-            .as_borrowed()
-            .getattr(ATTR_CONFIG)?
-            .downcast_into::<Config>()?
-            .borrow();
+    fn read_config(module: &Bound<'_, PyModule>) -> Result<Config, PyErr> {
+        let config = &module.as_borrowed().getattr(ATTR_CONFIG)?.downcast_into::<Config>()?.borrow();
 
         Ok(Config {
             patterns: config.patterns.clone(),
@@ -484,8 +538,7 @@ mod fuzzydate {
 
     /// Read custom tokens registered to Python module, and return
     /// them as tokens the tokenization (currently) accepts
-    fn read_tokens(
-        module: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
+    fn read_tokens(module: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
         let config = read_config(module)?;
         let mut result = HashMap::new();
 
@@ -500,14 +553,11 @@ mod fuzzydate {
 }
 
 /// Tokenize source string
-fn tokenize_str(
-    source: &str,
-    custom_tokens: HashMap<String, Token>) -> (String, Vec<Token>, Vec<i64>) {
+fn tokenize_str(source: &str, custom_tokens: HashMap<String, Token>) -> (String, Vec<Token>, Vec<i64>) {
     let (pattern, tokens) = token::tokenize(&source, custom_tokens);
     let values: Vec<i64> = tokens.iter().map(|p| p.value).collect();
     (pattern, tokens, values)
 }
-
 
 fn units_locale(name: &str) -> HashMap<String, String> {
     match name {
@@ -555,17 +605,14 @@ fn convert_str(
     current_time: &DateTime<FixedOffset>,
     first_weekday_mon: bool,
     custom_patterns: HashMap<String, String>,
-    custom_tokens: HashMap<String, Token>) -> Option<DateTime<FixedOffset>> {
+    custom_tokens: HashMap<String, Token>,
+) -> Option<DateTime<FixedOffset>> {
     let (pattern, _, values) = tokenize_str(&source, custom_tokens);
     fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
 }
 
 /// Convert number of seconds into a time duration string
-fn convert_duration(
-    seconds: f64,
-    units: &UnitLocale,
-    max: &str,
-    min: &str) -> String {
+fn convert_duration(seconds: f64, units: &UnitLocale, max: &str, min: &str) -> String {
     fuzzy::to_duration(seconds, &units, max, min)
 }
 
@@ -573,7 +620,8 @@ fn convert_duration(
 fn convert_seconds(
     source: &str,
     custom_patterns: HashMap<String, String>,
-    custom_tokens: HashMap<String, Token>) -> Result<f64, String> {
+    custom_tokens: HashMap<String, Token>,
+) -> Result<f64, String> {
     let (pattern, tokens, values) = tokenize_str(&source, custom_tokens);
 
     if !token::is_time_duration(&pattern) {
@@ -582,11 +630,11 @@ fn convert_seconds(
 
     for token in tokens {
         if token.token.is_unit() && token.value.eq(&7) {
-            return Err(String::from("Converting years into seconds is not supported"))
+            return Err(String::from("Converting years into seconds is not supported"));
         }
 
         if token.token.is_unit() && token.value.eq(&6) {
-            return Err(String::from("Converting months into seconds is not supported"))
+            return Err(String::from("Converting months into seconds is not supported"));
         }
     }
 
@@ -603,45 +651,27 @@ fn convert_seconds(
 /// Turn global identifier into corresponding tokenization token
 fn gid_into_token(gid: u32) -> Option<Token> {
     if gid.ge(&101) && gid.le(&107) {
-        return Option::from(Token {
-            token: token::TokenType::Weekday,
-            value: (gid - 100) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::Weekday, value: (gid - 100) as i64 });
     }
 
     if gid.ge(&201) && gid.le(&212) {
-        return Option::from(Token {
-            token: token::TokenType::Month,
-            value: (gid - 200) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::Month, value: (gid - 200) as i64 });
     }
 
     if gid.ge(&301) && gid.le(&303) {
-        return Option::from(Token {
-            token: token::TokenType::Unit,
-            value: (gid - 300) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::Unit, value: (gid - 300) as i64 });
     }
 
     if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
-        return Option::from(Token {
-            token: token::TokenType::ShortUnit,
-            value: (gid - 400) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::ShortUnit, value: (gid - 400) as i64 });
     }
 
     if gid.ge(&501) && gid.le(&507) {
-        return Option::from(Token {
-            token: token::TokenType::LongUnit,
-            value: (gid - 500) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::LongUnit, value: (gid - 500) as i64 });
     }
 
     if gid.ge(&601) && gid.le(&602) {
-        return Option::from(Token {
-            token: token::TokenType::Meridiem,
-            value: (gid - 600) as i64,
-        });
+        return Option::from(Token { token: token::TokenType::Meridiem, value: (gid - 600) as i64 });
     }
 
     None
@@ -675,13 +705,7 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for (from_string, expect_time) in expect {
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                true,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -696,13 +720,7 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                true,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -731,13 +749,7 @@ mod tests {
         ];
 
         for (from_string, expect_time) in expect {
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                true,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -761,7 +773,6 @@ mod tests {
             ("first day of prev month", "2024-03-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of last month", "2024-03-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of next month", "2024-02-12T15:22:28+02:00", "2024-03-01 00:00:00 +02:00"),
-
             // Last
             ("last day of February", "2024-05-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
             ("last day of this month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
@@ -846,7 +857,6 @@ mod tests {
             ("last Mon", "2024-01-19T15:22:28+02:00", "2024-01-15 00:00:00 +02:00"),
             ("next Mon", "2024-01-19T15:22:28+02:00", "2024-01-22 00:00:00 +02:00"),
             ("next Sunday", "2024-01-19T15:22:28+02:00", "2024-01-21 00:00:00 +02:00"),
-
             // Current weekday is the same as new weekday
             ("this Saturday", "2024-01-20T15:22:28+02:00", "2024-01-20 00:00:00 +02:00"),
             ("prev Saturday", "2024-01-20T15:22:28+02:00", "2024-01-13 00:00:00 +02:00"),
@@ -876,13 +886,7 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                true,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -898,13 +902,7 @@ mod tests {
 
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                false,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, false, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string())
         }
     }
@@ -921,7 +919,6 @@ mod tests {
             ("+1m", "2024-03-12T15:22:28+02:00", "2024-04-12 15:22:28 +02:00"),
             ("+13 months", "2023-12-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
             ("1 month ago", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
-
             // Different number of days in each month
             ("-1m", "2022-05-31T15:22:28+02:00", "2022-04-30 15:22:28 +02:00"),
         ]);
@@ -939,12 +936,10 @@ mod tests {
             ("+1y", "2024-01-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
             ("+10 years", "2024-01-12T15:22:28+02:00", "2034-01-12 15:22:28 +02:00"),
             ("2 years ago", "2024-01-12T15:22:28+02:00", "2022-01-12 15:22:28 +02:00"),
-
             // Non-leap years
             ("-1y", "2022-02-01T15:22:28+02:00", "2021-02-01 15:22:28 +02:00"),
             ("-1y", "2022-02-05T15:22:28+02:00", "2021-02-05 15:22:28 +02:00"),
             ("-1y", "2022-02-28T15:22:28+02:00", "2021-02-28 15:22:28 +02:00"),
-
             // Leap year
             ("-1y", "2024-02-29T15:22:28+02:00", "2023-02-28 15:22:28 +02:00"),
         ]);
@@ -981,49 +976,74 @@ mod tests {
         let current_time = Utc::now().fixed_offset();
 
         for from_string in expect {
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                true,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert!(result_time.is_none());
         }
     }
 
     #[test]
     fn test_to_duration_all() {
-        assert_to_duration("", "", vec![
-            // Short
-            (0.0, "short", ""), (604800.0, "short", "1w"), (1209600.0, "short", "2w"),
-            (0.0, "short", ""), (86400.0, "short", "1d"), (172800.0, "short", "2d"),
-            (0.0, "short", ""), (3600.0, "short", "1h"), (7200.0, "short", "2h"),
-            (0.0, "short", ""), (60.0, "short", "1min"), (120.0, "short", "2min"),
-            (0.0, "short", ""), (1.0, "short", "1s"), (2.0, "short", "2s"),
-
-            // Long
-            (0.0, "long", ""), (604800.0, "long", "1 week"), (1209600.0, "long", "2 weeks"),
-            (0.0, "long", ""), (86400.0, "long", "1 day"), (172800.0, "long", "2 days"),
-            (0.0, "long", ""), (3600.0, "long", "1 hour"), (7200.0, "long", "2 hours"),
-            (0.0, "long", ""), (60.0, "long", "1 minute"), (120.0, "long", "2 minutes"),
-            (0.0, "long", ""), (1.0, "long", "1 second"), (2.0, "long", "2 seconds"),
-
-            // Default
-            (0.0, "", ""), (604800.0, "", "1w"), (1209600.0, "", "2w"),
-            (0.0, "", ""), (86400.0, "", "1d"), (172800.0, "", "2d"),
-            (0.0, "", ""), (3600.0, "", "1hr"), (7200.0, "", "2hrs"),
-            (0.0, "", ""), (60.0, "", "1min"), (120.0, "", "2min"),
-            (0.0, "", ""), (1.0, "", "1sec"), (2.0, "", "2sec"),
-
-            // Combinations
-            (694861.0, "", "1w 1d 1hr 1min 1sec"),
-            (1389722.0, "", "2w 2d 2hrs 2min 2sec"),
-            (1389720.0, "", "2w 2d 2hrs 2min"),
-            (1389600.0, "", "2w 2d 2hrs"),
-            (1382400.0, "", "2w 2d"),
-            (1209600.0, "", "2w"),
-        ])
+        assert_to_duration(
+            "",
+            "",
+            vec![
+                // Short
+                (0.0, "short", ""),
+                (604800.0, "short", "1w"),
+                (1209600.0, "short", "2w"),
+                (0.0, "short", ""),
+                (86400.0, "short", "1d"),
+                (172800.0, "short", "2d"),
+                (0.0, "short", ""),
+                (3600.0, "short", "1h"),
+                (7200.0, "short", "2h"),
+                (0.0, "short", ""),
+                (60.0, "short", "1min"),
+                (120.0, "short", "2min"),
+                (0.0, "short", ""),
+                (1.0, "short", "1s"),
+                (2.0, "short", "2s"),
+                // Long
+                (0.0, "long", ""),
+                (604800.0, "long", "1 week"),
+                (1209600.0, "long", "2 weeks"),
+                (0.0, "long", ""),
+                (86400.0, "long", "1 day"),
+                (172800.0, "long", "2 days"),
+                (0.0, "long", ""),
+                (3600.0, "long", "1 hour"),
+                (7200.0, "long", "2 hours"),
+                (0.0, "long", ""),
+                (60.0, "long", "1 minute"),
+                (120.0, "long", "2 minutes"),
+                (0.0, "long", ""),
+                (1.0, "long", "1 second"),
+                (2.0, "long", "2 seconds"),
+                // Default
+                (0.0, "", ""),
+                (604800.0, "", "1w"),
+                (1209600.0, "", "2w"),
+                (0.0, "", ""),
+                (86400.0, "", "1d"),
+                (172800.0, "", "2d"),
+                (0.0, "", ""),
+                (3600.0, "", "1hr"),
+                (7200.0, "", "2hrs"),
+                (0.0, "", ""),
+                (60.0, "", "1min"),
+                (120.0, "", "2min"),
+                (0.0, "", ""),
+                (1.0, "", "1sec"),
+                (2.0, "", "2sec"),
+                // Combinations
+                (694861.0, "", "1w 1d 1hr 1min 1sec"),
+                (1389722.0, "", "2w 2d 2hrs 2min 2sec"),
+                (1389720.0, "", "2w 2d 2hrs 2min"),
+                (1389600.0, "", "2w 2d 2hrs"),
+                (1382400.0, "", "2w 2d"),
+                (1209600.0, "", "2w"),
+            ],
+        )
     }
 
     #[test]
@@ -1041,10 +1061,18 @@ mod tests {
     #[test]
     fn test_to_seconds_some() {
         let expect: Vec<(&str, f64)> = vec![
-            ("1 day", 86400.0), ("1d", 86400.0), ("-1 day", -86400.0),
-            ("1 hour", 3600.0), ("1h", 3600.0), ("-1 hour", -3600.0),
-            ("1d 1h 1min 2s", 90062.0), ("+1d 1h 1min 2s", 90062.0), ("-1d 1h 1min 2s", -90062.0),
-            ("1d 1h 1min -2s", 90058.0), ("-1d 1h 1min +2s", -90058.0), ("-1d +1h -1min", -82860.0),
+            ("1 day", 86400.0),
+            ("1d", 86400.0),
+            ("-1 day", -86400.0),
+            ("1 hour", 3600.0),
+            ("1h", 3600.0),
+            ("-1 hour", -3600.0),
+            ("1d 1h 1min 2s", 90062.0),
+            ("+1d 1h 1min 2s", 90062.0),
+            ("-1d 1h 1min 2s", -90062.0),
+            ("1d 1h 1min -2s", 90058.0),
+            ("-1d 1h 1min +2s", -90058.0),
+            ("-1d +1h -1min", -82860.0),
         ];
 
         for (from_string, expect_value) in expect {
@@ -1056,8 +1084,17 @@ mod tests {
     #[test]
     fn test_to_seconds_none() {
         let expect: Vec<&str> = vec![
-            "", "7", "2020-01-07", "last week", "1 hour ago",
-            "1y", "+1 year", "-2 years", "1m", "+1 month", "-2 months",
+            "",
+            "7",
+            "2020-01-07",
+            "last week",
+            "1 hour ago",
+            "1y",
+            "+1 year",
+            "-2 years",
+            "1m",
+            "+1 month",
+            "-2 months",
         ];
 
         for from_string in expect {
@@ -1069,57 +1106,57 @@ mod tests {
     #[test]
     fn test_gid_into_token() {
         for value in 101..108 {
-            assert_eq!(gid_into_token(value).unwrap(), Token {
-                token: token::TokenType::Weekday,
-                value: (value - 100) as i64,
-            });
+            assert_eq!(
+                gid_into_token(value).unwrap(),
+                Token { token: token::TokenType::Weekday, value: (value - 100) as i64 }
+            );
         }
         assert!(gid_into_token(100).is_none());
         assert!(gid_into_token(108).is_none());
 
         for value in 201..213 {
-            assert_eq!(gid_into_token(value).unwrap(), Token {
-                token: token::TokenType::Month,
-                value: (value - 200) as i64,
-            });
+            assert_eq!(
+                gid_into_token(value).unwrap(),
+                Token { token: token::TokenType::Month, value: (value - 200) as i64 }
+            );
         }
         assert!(gid_into_token(200).is_none());
         assert!(gid_into_token(213).is_none());
 
         for value in 301..304 {
-            assert_eq!(gid_into_token(value).unwrap(), Token {
-                token: token::TokenType::Unit,
-                value: (value - 300) as i64,
-            });
+            assert_eq!(
+                gid_into_token(value).unwrap(),
+                Token { token: token::TokenType::Unit, value: (value - 300) as i64 }
+            );
         }
         assert!(gid_into_token(300).is_none());
         assert!(gid_into_token(304).is_none());
 
         for value in 401..408 {
             if !value.eq(&402) {
-                assert_eq!(gid_into_token(value).unwrap(), Token {
-                    token: token::TokenType::ShortUnit,
-                    value: (value - 400) as i64,
-                });
+                assert_eq!(
+                    gid_into_token(value).unwrap(),
+                    Token { token: token::TokenType::ShortUnit, value: (value - 400) as i64 }
+                );
             }
         }
         assert!(gid_into_token(400).is_none());
         assert!(gid_into_token(408).is_none());
 
         for value in 501..508 {
-            assert_eq!(gid_into_token(value).unwrap(), Token {
-                token: token::TokenType::LongUnit,
-                value: (value - 500) as i64,
-            });
+            assert_eq!(
+                gid_into_token(value).unwrap(),
+                Token { token: token::TokenType::LongUnit, value: (value - 500) as i64 }
+            );
         }
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
 
         for value in 601..603 {
-            assert_eq!(gid_into_token(value).unwrap(), Token {
-                token: token::TokenType::Meridiem,
-                value: (value - 600) as i64,
-            });
+            assert_eq!(
+                gid_into_token(value).unwrap(),
+                Token { token: token::TokenType::Meridiem, value: (value - 600) as i64 }
+            );
         }
         assert!(gid_into_token(600).is_none());
         assert!(gid_into_token(603).is_none());
@@ -1128,13 +1165,7 @@ mod tests {
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(
-                from_string,
-                &current_time,
-                false,
-                HashMap::new(),
-                HashMap::new(),
-            );
+            let result_time = convert_str(from_string, &current_time, false, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -1152,4 +1183,3 @@ mod tests {
         }
     }
 }
-
