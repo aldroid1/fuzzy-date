@@ -210,6 +210,10 @@ mod fuzzydate {
         const DATE_DAY_MONTH: &'static str = constants::PATTERN_DATE_DAY_MONTH;
         #[classattr]
         const DATE_DAY_MONTH_YEAR: &'static str = constants::PATTERN_DATE_DAY_MONTH_YEAR;
+        #[classattr]
+        const DATE_NTH_MONTH: &'static str = constants::PATTERN_DATE_NTH_MONTH;
+        #[classattr]
+        const DATE_NTH_MONTH_YEAR: &'static str = constants::PATTERN_DATE_NTH_MONTH_YEAR;
 
         #[classattr]
         const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
@@ -697,6 +701,8 @@ mod tests {
             ("Dec 7 2023", "2023-12-07 00:00:00 +00:00"),
             ("Dec 7th 2023", "2023-12-07 00:00:00 +00:00"),
             ("Dec 7th, 2023", "2023-12-07 00:00:00 +00:00"),
+            ("7th of December 2023", "2023-12-07 00:00:00 +00:00"),
+            ("7th of Dec, 2023", "2023-12-07 00:00:00 +00:00"),
             ("December 7th 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 Dec 2023", "2023-12-07 00:00:00 +00:00"),
             ("7 December 2023", "2023-12-07 00:00:00 +00:00"),
@@ -722,6 +728,8 @@ mod tests {
             ("Dec 7", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("December 7th", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("7 Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("7th of Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("7th of December", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {
@@ -978,6 +986,7 @@ mod tests {
             "Feb 29th 2023",          // Day out of range
             "first day of this week", // Not supported
             "first minute of Jan",    // Not supported
+            "7 of Jan",               // Missing nth supported
         ];
 
         let current_time = Utc::now().fixed_offset();
