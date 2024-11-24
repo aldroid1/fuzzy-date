@@ -8,18 +8,18 @@ pub(crate) fn into_date(
     py: Python,
     value: Option<Bound<PyDate>>,
 ) -> Result<DateTime<FixedOffset>, PyErr> {
-    if value.is_none() {
-        let system_date = NaiveDateTime::from(Utc::now().date_naive());
-        return Ok(Utc
-            .from_local_datetime(&system_date)
-            .unwrap()
-            .fixed_offset());
+    match value {
+        Some(v) => {
+            let real_value: Py<PyDate> = v.unbind();
+            let date_value = real_value.extract::<NaiveDate>(py)?;
+            let date_time = NaiveDateTime::from(date_value);
+            Ok(Utc.from_local_datetime(&date_time).unwrap().fixed_offset())
+        }
+        None => {
+            let system_date = NaiveDateTime::from(Utc::now().date_naive());
+            Ok(Utc.from_local_datetime(&system_date).unwrap().fixed_offset())
+        }
     }
-
-    let real_value: Py<PyDate> = value.unwrap().unbind();
-    let date_value = real_value.extract::<NaiveDate>(py)?;
-    let date_time = NaiveDateTime::from(date_value);
-    Ok(Utc.from_local_datetime(&date_time).unwrap().fixed_offset())
 }
 
 /// Turn optional datetime from Python object into DateTime with a timezone
@@ -28,22 +28,17 @@ pub(crate) fn into_datetime(
     py: Python,
     value: Option<Bound<PyDateTime>>,
 ) -> Result<DateTime<FixedOffset>, PyErr> {
-    if value.is_none() {
-        return Ok(Utc::now().fixed_offset());
-    }
+    let py_value: Py<PyDateTime> = match value {
+        Some(v) => v.unbind(),
+        None => return Ok(Utc::now().fixed_offset()),
+    };
 
-    let real_value: Py<PyDateTime> = value.unwrap().unbind();
-    let with_timezone = real_value.extract(py);
+    let naive_value = match py_value.extract(py) {
+        Ok(v) => return Ok(v),
+        Err(_) => py_value.extract::<NaiveDateTime>(py)?,
+    };
 
-    if with_timezone.is_ok() {
-        return Ok(with_timezone?);
-    }
-
-    let without_timezone = real_value.extract::<NaiveDateTime>(py)?;
-    Ok(Utc
-        .from_local_datetime(&without_timezone)
-        .unwrap()
-        .fixed_offset())
+    Ok(Utc.from_local_datetime(&naive_value).unwrap().fixed_offset())
 }
 
 #[cfg(test)]
@@ -75,10 +70,7 @@ mod test {
         Python::with_gil(|py| {
             let expect_value = Utc::now().format("%Y-%m-%d %H:").to_string();
             let result_value = into_datetime(py, Option::from(None));
-            assert!(result_value
-                .unwrap()
-                .to_string()
-                .starts_with(expect_value.as_str()));
+            assert!(result_value.unwrap().to_string().starts_with(expect_value.as_str()));
         });
 
         Python::with_gil(|py| {
@@ -89,8 +81,7 @@ mod test {
         Python::with_gil(|py| {
             let tz_offset = FixedOffset::east_opt(5 * 60 * 60).unwrap();
             let tz_bound: Bound<PyTzInfo> = tz_offset.into_pyobject(py).unwrap();
-            let test_value =
-                PyDateTime::new(py, 2023, 4, 1, 15, 2, 1, 7, Option::from(&tz_bound));
+            let test_value = PyDateTime::new(py, 2023, 4, 1, 15, 2, 1, 7, Option::from(&tz_bound));
             assert_datetime(py, test_value, "2023-04-01 15:02:01.000007 +05:00");
         });
     }
