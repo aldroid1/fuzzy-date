@@ -151,20 +151,20 @@ impl TimeUnit {
 }
 
 struct CallValues {
-    values: Vec<i64>,
-    zeros: Vec<u8>,
+    tokens: Vec<Token>,
 }
 
 impl CallValues {
     fn from_tokens(tokens: Vec<Token>) -> Self {
-        Self {
-            values: tokens.iter().map(|v| v.value).collect::<Vec<i64>>(),
-            zeros: tokens.iter().map(|v| v.zeros).collect::<Vec<u8>>(),
-        }
+        Self {tokens: tokens}
+    }
+
+    fn drop_used(&mut self, used: usize) {
+        self.tokens = self.tokens[used..].to_owned();
     }
 
     fn get_int(&self, index: usize) -> i64 {
-        self.values[index]
+        self.tokens[index].value
     }
 
     /// Get value with the assumption that it should represent milliseconds,
@@ -172,8 +172,8 @@ impl CallValues {
     /// are too many zeros, we use -1 to break out on millisecond value
     /// validation.
     fn get_ms(&self, index: usize) -> i64 {
-        let value = self.get_int(index);
-        let zeros = self.zeros.get(index).unwrap_or(&2);
+        let value = self.tokens[index].value;
+        let zeros = self.tokens[index].zeros;
 
         let multiply_by = match zeros {
             0 => {
@@ -408,16 +408,14 @@ pub(crate) fn convert(
     let rules = Rules { week_start_mon: week_start_mon };
 
     let mut ctx_time = FuzzyDate::new(current_time.to_owned());
-    let mut ctx_vals: Vec<Token> = tokens;
+    let mut ctx_vals = CallValues::from_tokens(tokens);
 
     for (pattern_match, pattern_call) in call_list {
-        let call_vals = CallValues::from_tokens(ctx_vals.to_owned());
-        ctx_time = match pattern_call(ctx_time, &call_vals, &rules) {
+        ctx_time = match pattern_call(ctx_time, &ctx_vals, &rules) {
             Ok(value) => value,
-            Err(()) => return None,
+            Err(_) => return None,
         };
-        let used_vals: usize = pattern_match.split("[").count() - 1;
-        ctx_vals = ctx_vals[used_vals..].to_owned();
+        ctx_vals.drop_used(pattern_match.split("[").count() - 1);
     }
 
     Option::from(ctx_time.time)
