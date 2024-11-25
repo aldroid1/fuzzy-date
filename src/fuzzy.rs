@@ -5,7 +5,22 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>); 51] = [
+struct PatternValues {
+    values: Vec<i64>,
+    zeros: Vec<u8>,
+}
+
+impl PatternValues {
+    fn from_values(values: Vec<i64>) -> Self {
+        Self { values: values, zeros: vec![] }
+    }
+
+    fn get_int(&self, index: usize) -> i64 {
+        self.values[index]
+    }
+}
+
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &PatternValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -13,100 +28,137 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<Fuz
     (&Pattern::Yesterday, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, -1, r)?.time_reset()),
     (&Pattern::Tomorrow, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, 1, r)?.time_reset()),
     // WEEKDAY OFFSETS
-    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v[0], convert::Change::None)?.time_reset()),
-    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
-    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Prev)?.time_reset()),
-    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v[0], convert::Change::Next)?.time_reset()),
+    (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::None)?.time_reset()),
+    (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.time_reset()),
+    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.time_reset()),
+    (&Pattern::NextWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Next)?.time_reset()),
     // MONTH OFFSETS
-    (&Pattern::ThisMonth, |c, v, _| c.offset_month(v[0], convert::Change::None)?.time_reset()),
-    (&Pattern::PrevMonth, |c, v, _| c.offset_month(v[0], convert::Change::Prev)?.time_reset()),
-    (&Pattern::LastMonth, |c, v, _| c.offset_month(v[0], convert::Change::Prev)?.time_reset()),
-    (&Pattern::NextMonth, |c, v, _| c.offset_month(v[0], convert::Change::Next)?.time_reset()),
+    (&Pattern::ThisMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::None)?.time_reset()),
+    (&Pattern::PrevMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Prev)?.time_reset()),
+    (&Pattern::LastMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Prev)?.time_reset()),
+    (&Pattern::NextMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Next)?.time_reset()),
     // KEYWORD OFFSETS
-    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), 0, r)),
-    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), -1, r)),
-    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), -1, r)),
-    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v[0]), 1, r)),
+    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), 0, r)),
+    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), -1, r)),
+    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), -1, r)),
+    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), 1, r)),
     // NUMERIC OFFSET, MINUS
-    (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
+    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
+    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
     // NUMERIC OFFSET, PLUS
-    (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
-    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), v[0], r)),
+    (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
+    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
+    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
     // NUMERIC OFFSET, PLUS
-    (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
-    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v[1]), 0 - v[0], r)),
+    (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
+    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
     // FIRST/LAST OFFSETS
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| {
-        c.offset_range_month(TimeUnit::from_int(v[0]), v[1], convert::Change::First)?
+        c.offset_range_month(TimeUnit::from_int(v.get_int(0)), v.get_int(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfMonth, |c, v, _| {
-        c.offset_range_month(TimeUnit::from_int(v[0]), v[1], convert::Change::Last)?
+        c.offset_range_month(TimeUnit::from_int(v.get_int(0)), v.get_int(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, _| {
-        c.offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
+        c.offset_range_unit(TimeUnit::from_int(v.get_int(0)), TimeUnit::from_int(v.get_int(1)), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfThisLongUnit, |c, v, _| {
-        c.offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
+        c.offset_range_unit(TimeUnit::from_int(v.get_int(0)), TimeUnit::from_int(v.get_int(1)), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfPrevLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::First,
+            )?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::Last,
+            )?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfLastLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::First,
+            )?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfLastLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), -1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::Last,
+            )?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfNextLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), 1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::First)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), 1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::First,
+            )?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v[1]), 1, r)?
-            .offset_range_unit(TimeUnit::from_int(v[0]), TimeUnit::from_int(v[1]), convert::Change::Last)?
+        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), 1, r)?
+            .offset_range_unit(
+                TimeUnit::from_int(v.get_int(0)),
+                TimeUnit::from_int(v.get_int(1)),
+                convert::Change::Last,
+            )?
             .time_reset()
     }),
     // @1705072948, @1705072948.452
-    (&Pattern::Timestamp, |c, v, _| c.date_stamp(v[0], 0)),
-    (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v[0], v[1])),
+    (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
+    (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_int(1))),
     // 2023-01-01, 30.1.2023, 1/30/2023
-    (&Pattern::DateYmd, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_reset()),
-    (&Pattern::DateDmy, |c, v, _| c.date_ymd(v[2], v[1], v[0])?.time_reset()),
-    (&Pattern::DateMdy, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
+    (&Pattern::DateYmd, |c, v, _| c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.time_reset()),
+    (&Pattern::DateDmy, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
+    (&Pattern::DateMdy, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
     // Dec 7, Dec 7th, 7 Dec
-    (&Pattern::DateMonthDay, |c, v, _| c.date_ymd(c.year(), v[0], v[1])?.time_reset()),
-    (&Pattern::DateMonthNth, |c, v, _| c.date_ymd(c.year(), v[0], v[1])?.time_reset()),
-    (&Pattern::DateDayMonth, |c, v, _| c.date_ymd(c.year(), v[1], v[0])?.time_reset()),
+    (&Pattern::DateMonthDay, |c, v, _| c.date_ymd(c.year(), v.get_int(0), v.get_int(1))?.time_reset()),
+    (&Pattern::DateMonthNth, |c, v, _| c.date_ymd(c.year(), v.get_int(0), v.get_int(1))?.time_reset()),
+    (&Pattern::DateDayMonth, |c, v, _| c.date_ymd(c.year(), v.get_int(1), v.get_int(0))?.time_reset()),
     // Dec 7 2023, Dec 7th 2023, 7 Dec 2023
-    (&Pattern::DateMonthDayYear, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
-    (&Pattern::DateMonthNthYear, |c, v, _| c.date_ymd(v[2], v[0], v[1])?.time_reset()),
-    (&Pattern::DateDayMonthYear, |c, v, _| c.date_ymd(v[2], v[1], v[0])?.time_reset()),
+    (&Pattern::DateMonthDayYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
+    (&Pattern::DateMonthNthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
+    (&Pattern::DateDayMonthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
     // 2023-12-07 15:02, 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
-    (&Pattern::DateTimeYmdHm, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], 0, 0)),
-    (&Pattern::DateTimeYmdHms, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5], 0)),
-    (&Pattern::DateTimeYmdHmsMs, |c, v, _| c.date_ymd(v[0], v[1], v[2])?.time_hms(v[3], v[4], v[5], v[6])),
+    (&Pattern::DateTimeYmdHm, |c, v, _| {
+        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
+            .time_hms(v.get_int(3), v.get_int(4), 0, 0)
+    }),
+    (&Pattern::DateTimeYmdHms, |c, v, _| {
+        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
+            .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)
+    }),
+    (&Pattern::DateTimeYmdHmsMs, |c, v, _| {
+        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.time_hms(
+            v.get_int(3),
+            v.get_int(4),
+            v.get_int(5),
+            v.get_int(6),
+        )
+    }),
     // 3pm, 3:00 pm
-    (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v[0], 0, 0, v[1])),
-    (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v[0], v[1], 0, v[2])),
+    (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v.get_int(0), 0, 0, v.get_int(1))),
+    (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v.get_int(0), v.get_int(1), 0, v.get_int(2))),
 ];
 
 #[derive(PartialEq)]
@@ -342,7 +394,8 @@ pub(crate) fn convert(
     let mut values: Vec<i64> = values.to_owned();
 
     for (pattern_match, pattern_call) in call_list {
-        ctx_time = match pattern_call(ctx_time, &values, &rules) {
+        let call_vals = PatternValues::from_values(values.to_owned());
+        ctx_time = match pattern_call(ctx_time, &call_vals, &rules) {
             Ok(value) => value,
             Err(()) => return None,
         };
@@ -426,7 +479,7 @@ pub(crate) fn to_duration(seconds: f64, units: &UnitLocale, max_unit: &str, min_
 fn find_pattern_calls(
     pattern: &str,
     custom: HashMap<String, String>,
-) -> Vec<(String, fn(FuzzyDate, &Vec<i64>, &Rules) -> Result<FuzzyDate, ()>)> {
+) -> Vec<(String, fn(FuzzyDate, &PatternValues, &Rules) -> Result<FuzzyDate, ()>)> {
     let mut closure_map = HashMap::new();
     let mut pattern_map = HashMap::new();
 
