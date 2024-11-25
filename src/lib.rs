@@ -1000,18 +1000,21 @@ mod tests {
     #[test]
     fn test_unsupported() {
         let expect: Vec<&str> = vec![
-            "",                         // Not parsed
-            " ",                        // Nothing to parse
-            "+1day",                    // Not recognized
-            "0000-01-12 15:22",         // Year invalid
-            "1982-04-32",               // Date invalid
-            "1982-04-01 15:61",         // Time invalid
-            "1995-07-01 12:00:00.1000", // Milliseconds invalid
-            "1995-07-01 12:00:00.0001", // Milliseconds invalid
-            "Feb 29th 2023",            // Day out of range
-            "first day of this week",   // Not supported
-            "first minute of Jan",      // Not supported
-            "7 of Jan",                 // Missing nth supported
+            "",                          // Not parsed
+            " ",                         // Nothing to parse
+            "+1day",                     // Not recognized
+            "0000-01-12 15:22",          // Year invalid
+            "1982-04-32",                // Date invalid
+            "1982-04-01 15:61",          // Time invalid
+            "1995-07-01 12:00:00.10000", // Milliseconds invalid
+            "1995-07-01 12:00:00.1000",  // Milliseconds invalid
+            "1995-07-01 12:00:00.0001",  // Milliseconds invalid
+            "1995-07-01 12:00:00.0010",  // Milliseconds invalid
+            "1995-07-01 12:00:00.0230",  // Milliseconds invalid
+            "Feb 29th 2023",             // Day out of range
+            "first day of this week",    // Not supported
+            "first minute of Jan",       // Not supported
+            "7 of Jan",                  // Missing nth supported
         ];
 
         let current_time = Utc::now().fixed_offset();

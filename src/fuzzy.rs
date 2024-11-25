@@ -156,7 +156,7 @@ struct CallValues {
 
 impl CallValues {
     fn from_tokens(tokens: Vec<Token>) -> Self {
-        Self {tokens: tokens}
+        Self { tokens: tokens }
     }
 
     fn drop_used(&mut self, used: usize) {
@@ -175,25 +175,26 @@ impl CallValues {
         let value = self.tokens[index].value;
         let zeros = self.tokens[index].zeros;
 
-        let multiply_by = match zeros {
-            0 => {
-                if value.lt(&10) {
-                    100
-                } else if value.lt(&100) {
-                    10
-                } else {
-                    1
-                }
+        let multiply_by = if value.lt(&10) {
+            match zeros {
+                0 => 100,
+                1 => 10,
+                2 => 1,
+                _ => return -1,
             }
-            1 => {
-                if value.lt(&10) {
-                    10
-                } else {
-                    1
-                }
+        } else if value.lt(&100) {
+            match zeros {
+                0 => 10,
+                1 => 1,
+                _ => return -1,
             }
-            2 => 1,
-            _ => return -1,
+        } else if value.lt(&1000) {
+            match zeros {
+                0 => 1,
+                _ => return -1,
+            }
+        } else {
+            return -1;
         };
 
         value * multiply_by
