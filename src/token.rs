@@ -13,109 +13,109 @@ const IGNORED_CHARS: [&'static str; 1] = [","];
 
 const STANDARD_TOKENS: [(&'static str, Token); 97] = [
     // Months
-    ("jan", Token { token: TokenType::Month, value: 1 }),
-    ("january", Token { token: TokenType::Month, value: 1 }),
-    ("feb", Token { token: TokenType::Month, value: 2 }),
-    ("february", Token { token: TokenType::Month, value: 2 }),
-    ("mar", Token { token: TokenType::Month, value: 3 }),
-    ("march", Token { token: TokenType::Month, value: 3 }),
-    ("apr", Token { token: TokenType::Month, value: 4 }),
-    ("april", Token { token: TokenType::Month, value: 4 }),
-    ("may", Token { token: TokenType::Month, value: 5 }),
-    ("jun", Token { token: TokenType::Month, value: 6 }),
-    ("june", Token { token: TokenType::Month, value: 6 }),
-    ("jul", Token { token: TokenType::Month, value: 7 }),
-    ("july", Token { token: TokenType::Month, value: 7 }),
-    ("aug", Token { token: TokenType::Month, value: 8 }),
-    ("august", Token { token: TokenType::Month, value: 8 }),
-    ("sep", Token { token: TokenType::Month, value: 9 }),
-    ("september", Token { token: TokenType::Month, value: 9 }),
-    ("oct", Token { token: TokenType::Month, value: 10 }),
-    ("october", Token { token: TokenType::Month, value: 10 }),
-    ("nov", Token { token: TokenType::Month, value: 11 }),
-    ("november", Token { token: TokenType::Month, value: 11 }),
-    ("dec", Token { token: TokenType::Month, value: 12 }),
-    ("december", Token { token: TokenType::Month, value: 12 }),
+    ("jan", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("january", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("feb", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("february", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("mar", Token { token: TokenType::Month, value: 3, zeros: 0 }),
+    ("march", Token { token: TokenType::Month, value: 3, zeros: 0 }),
+    ("apr", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("april", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("may", Token { token: TokenType::Month, value: 5, zeros: 0 }),
+    ("jun", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("june", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("jul", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("july", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("aug", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("august", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("sep", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("september", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("oct", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("october", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("nov", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("november", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("dec", Token { token: TokenType::Month, value: 12, zeros: 0 }),
+    ("december", Token { token: TokenType::Month, value: 12, zeros: 0 }),
     // Weekdays
-    ("mon", Token { token: TokenType::Weekday, value: 1 }),
-    ("monday", Token { token: TokenType::Weekday, value: 1 }),
-    ("tue", Token { token: TokenType::Weekday, value: 2 }),
-    ("tuesday", Token { token: TokenType::Weekday, value: 2 }),
-    ("wed", Token { token: TokenType::Weekday, value: 3 }),
-    ("wednesday", Token { token: TokenType::Weekday, value: 3 }),
-    ("thu", Token { token: TokenType::Weekday, value: 4 }),
-    ("thursday", Token { token: TokenType::Weekday, value: 4 }),
-    ("fri", Token { token: TokenType::Weekday, value: 5 }),
-    ("friday", Token { token: TokenType::Weekday, value: 5 }),
-    ("sat", Token { token: TokenType::Weekday, value: 6 }),
-    ("saturday", Token { token: TokenType::Weekday, value: 6 }),
-    ("sun", Token { token: TokenType::Weekday, value: 7 }),
-    ("sunday", Token { token: TokenType::Weekday, value: 7 }),
+    ("mon", Token { token: TokenType::Weekday, value: 1, zeros: 0 }),
+    ("monday", Token { token: TokenType::Weekday, value: 1, zeros: 0 }),
+    ("tue", Token { token: TokenType::Weekday, value: 2, zeros: 0 }),
+    ("tuesday", Token { token: TokenType::Weekday, value: 2, zeros: 0 }),
+    ("wed", Token { token: TokenType::Weekday, value: 3, zeros: 0 }),
+    ("wednesday", Token { token: TokenType::Weekday, value: 3, zeros: 0 }),
+    ("thu", Token { token: TokenType::Weekday, value: 4, zeros: 0 }),
+    ("thursday", Token { token: TokenType::Weekday, value: 4, zeros: 0 }),
+    ("fri", Token { token: TokenType::Weekday, value: 5, zeros: 0 }),
+    ("friday", Token { token: TokenType::Weekday, value: 5, zeros: 0 }),
+    ("sat", Token { token: TokenType::Weekday, value: 6, zeros: 0 }),
+    ("saturday", Token { token: TokenType::Weekday, value: 6, zeros: 0 }),
+    ("sun", Token { token: TokenType::Weekday, value: 7, zeros: 0 }),
+    ("sunday", Token { token: TokenType::Weekday, value: 7, zeros: 0 }),
     // Nth
-    ("1st", Token { token: TokenType::Nth, value: 1 }),
-    ("2nd", Token { token: TokenType::Nth, value: 2 }),
-    ("3rd", Token { token: TokenType::Nth, value: 3 }),
-    ("4th", Token { token: TokenType::Nth, value: 4 }),
-    ("5th", Token { token: TokenType::Nth, value: 5 }),
-    ("6th", Token { token: TokenType::Nth, value: 6 }),
-    ("7th", Token { token: TokenType::Nth, value: 7 }),
-    ("8th", Token { token: TokenType::Nth, value: 8 }),
-    ("9th", Token { token: TokenType::Nth, value: 9 }),
-    ("10th", Token { token: TokenType::Nth, value: 10 }),
-    ("11th", Token { token: TokenType::Nth, value: 11 }),
-    ("12th", Token { token: TokenType::Nth, value: 12 }),
-    ("13th", Token { token: TokenType::Nth, value: 13 }),
-    ("14th", Token { token: TokenType::Nth, value: 14 }),
-    ("15th", Token { token: TokenType::Nth, value: 15 }),
-    ("16th", Token { token: TokenType::Nth, value: 16 }),
-    ("17th", Token { token: TokenType::Nth, value: 17 }),
-    ("18th", Token { token: TokenType::Nth, value: 18 }),
-    ("19th", Token { token: TokenType::Nth, value: 19 }),
-    ("20th", Token { token: TokenType::Nth, value: 20 }),
-    ("21st", Token { token: TokenType::Nth, value: 21 }),
-    ("22nd", Token { token: TokenType::Nth, value: 22 }),
-    ("23rd", Token { token: TokenType::Nth, value: 23 }),
-    ("24th", Token { token: TokenType::Nth, value: 24 }),
-    ("25th", Token { token: TokenType::Nth, value: 25 }),
-    ("26th", Token { token: TokenType::Nth, value: 26 }),
-    ("27th", Token { token: TokenType::Nth, value: 27 }),
-    ("28th", Token { token: TokenType::Nth, value: 28 }),
-    ("29th", Token { token: TokenType::Nth, value: 29 }),
-    ("30th", Token { token: TokenType::Nth, value: 30 }),
-    ("31st", Token { token: TokenType::Nth, value: 31 }),
+    ("1st", Token { token: TokenType::Nth, value: 1, zeros: 0 }),
+    ("2nd", Token { token: TokenType::Nth, value: 2, zeros: 0 }),
+    ("3rd", Token { token: TokenType::Nth, value: 3, zeros: 0 }),
+    ("4th", Token { token: TokenType::Nth, value: 4, zeros: 0 }),
+    ("5th", Token { token: TokenType::Nth, value: 5, zeros: 0 }),
+    ("6th", Token { token: TokenType::Nth, value: 6, zeros: 0 }),
+    ("7th", Token { token: TokenType::Nth, value: 7, zeros: 0 }),
+    ("8th", Token { token: TokenType::Nth, value: 8, zeros: 0 }),
+    ("9th", Token { token: TokenType::Nth, value: 9, zeros: 0 }),
+    ("10th", Token { token: TokenType::Nth, value: 10, zeros: 0 }),
+    ("11th", Token { token: TokenType::Nth, value: 11, zeros: 0 }),
+    ("12th", Token { token: TokenType::Nth, value: 12, zeros: 0 }),
+    ("13th", Token { token: TokenType::Nth, value: 13, zeros: 0 }),
+    ("14th", Token { token: TokenType::Nth, value: 14, zeros: 0 }),
+    ("15th", Token { token: TokenType::Nth, value: 15, zeros: 0 }),
+    ("16th", Token { token: TokenType::Nth, value: 16, zeros: 0 }),
+    ("17th", Token { token: TokenType::Nth, value: 17, zeros: 0 }),
+    ("18th", Token { token: TokenType::Nth, value: 18, zeros: 0 }),
+    ("19th", Token { token: TokenType::Nth, value: 19, zeros: 0 }),
+    ("20th", Token { token: TokenType::Nth, value: 20, zeros: 0 }),
+    ("21st", Token { token: TokenType::Nth, value: 21, zeros: 0 }),
+    ("22nd", Token { token: TokenType::Nth, value: 22, zeros: 0 }),
+    ("23rd", Token { token: TokenType::Nth, value: 23, zeros: 0 }),
+    ("24th", Token { token: TokenType::Nth, value: 24, zeros: 0 }),
+    ("25th", Token { token: TokenType::Nth, value: 25, zeros: 0 }),
+    ("26th", Token { token: TokenType::Nth, value: 26, zeros: 0 }),
+    ("27th", Token { token: TokenType::Nth, value: 27, zeros: 0 }),
+    ("28th", Token { token: TokenType::Nth, value: 28, zeros: 0 }),
+    ("29th", Token { token: TokenType::Nth, value: 29, zeros: 0 }),
+    ("30th", Token { token: TokenType::Nth, value: 30, zeros: 0 }),
+    ("31st", Token { token: TokenType::Nth, value: 31, zeros: 0 }),
     // Time units
-    ("sec", Token { token: TokenType::Unit, value: 1 }),
-    ("min", Token { token: TokenType::Unit, value: 2 }),
-    ("mins", Token { token: TokenType::Unit, value: 2 }),
-    ("hr", Token { token: TokenType::Unit, value: 3 }),
-    ("hrs", Token { token: TokenType::Unit, value: 3 }),
+    ("sec", Token { token: TokenType::Unit, value: 1, zeros: 0 }),
+    ("min", Token { token: TokenType::Unit, value: 2, zeros: 0 }),
+    ("mins", Token { token: TokenType::Unit, value: 2, zeros: 0 }),
+    ("hr", Token { token: TokenType::Unit, value: 3, zeros: 0 }),
+    ("hrs", Token { token: TokenType::Unit, value: 3, zeros: 0 }),
     // Short time units
-    ("s", Token { token: TokenType::ShortUnit, value: 1 }),
-    ("h", Token { token: TokenType::ShortUnit, value: 3 }),
-    ("d", Token { token: TokenType::ShortUnit, value: 4 }),
-    ("w", Token { token: TokenType::ShortUnit, value: 5 }),
-    ("m", Token { token: TokenType::ShortUnit, value: 6 }),
-    ("y", Token { token: TokenType::ShortUnit, value: 7 }),
+    ("s", Token { token: TokenType::ShortUnit, value: 1, zeros: 0 }),
+    ("h", Token { token: TokenType::ShortUnit, value: 3, zeros: 0 }),
+    ("d", Token { token: TokenType::ShortUnit, value: 4, zeros: 0 }),
+    ("w", Token { token: TokenType::ShortUnit, value: 5, zeros: 0 }),
+    ("m", Token { token: TokenType::ShortUnit, value: 6, zeros: 0 }),
+    ("y", Token { token: TokenType::ShortUnit, value: 7, zeros: 0 }),
     // Long time units
-    ("second", Token { token: TokenType::LongUnit, value: 1 }),
-    ("seconds", Token { token: TokenType::LongUnit, value: 1 }),
-    ("minute", Token { token: TokenType::LongUnit, value: 2 }),
-    ("minutes", Token { token: TokenType::LongUnit, value: 2 }),
-    ("hour", Token { token: TokenType::LongUnit, value: 3 }),
-    ("hours", Token { token: TokenType::LongUnit, value: 3 }),
-    ("day", Token { token: TokenType::LongUnit, value: 4 }),
-    ("days", Token { token: TokenType::LongUnit, value: 4 }),
-    ("week", Token { token: TokenType::LongUnit, value: 5 }),
-    ("weeks", Token { token: TokenType::LongUnit, value: 5 }),
-    ("month", Token { token: TokenType::LongUnit, value: 6 }),
-    ("months", Token { token: TokenType::LongUnit, value: 6 }),
-    ("year", Token { token: TokenType::LongUnit, value: 7 }),
-    ("years", Token { token: TokenType::LongUnit, value: 7 }),
+    ("second", Token { token: TokenType::LongUnit, value: 1, zeros: 0 }),
+    ("seconds", Token { token: TokenType::LongUnit, value: 1, zeros: 0 }),
+    ("minute", Token { token: TokenType::LongUnit, value: 2, zeros: 0 }),
+    ("minutes", Token { token: TokenType::LongUnit, value: 2, zeros: 0 }),
+    ("hour", Token { token: TokenType::LongUnit, value: 3, zeros: 0 }),
+    ("hours", Token { token: TokenType::LongUnit, value: 3, zeros: 0 }),
+    ("day", Token { token: TokenType::LongUnit, value: 4, zeros: 0 }),
+    ("days", Token { token: TokenType::LongUnit, value: 4, zeros: 0 }),
+    ("week", Token { token: TokenType::LongUnit, value: 5, zeros: 0 }),
+    ("weeks", Token { token: TokenType::LongUnit, value: 5, zeros: 0 }),
+    ("month", Token { token: TokenType::LongUnit, value: 6, zeros: 0 }),
+    ("months", Token { token: TokenType::LongUnit, value: 6, zeros: 0 }),
+    ("year", Token { token: TokenType::LongUnit, value: 7, zeros: 0 }),
+    ("years", Token { token: TokenType::LongUnit, value: 7, zeros: 0 }),
     // Meridiems
-    ("am", Token { token: TokenType::Meridiem, value: 1 }),
-    ("a.m.", Token { token: TokenType::Meridiem, value: 1 }),
-    ("pm", Token { token: TokenType::Meridiem, value: 2 }),
-    ("p.m.", Token { token: TokenType::Meridiem, value: 2 }),
+    ("am", Token { token: TokenType::Meridiem, value: 1, zeros: 0 }),
+    ("a.m.", Token { token: TokenType::Meridiem, value: 1, zeros: 0 }),
+    ("pm", Token { token: TokenType::Meridiem, value: 2, zeros: 0 }),
+    ("p.m.", Token { token: TokenType::Meridiem, value: 2, zeros: 0 }),
 ];
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
@@ -161,6 +161,17 @@ impl TokenType {
 pub(crate) struct Token {
     pub(crate) token: TokenType,
     pub(crate) value: i64,
+    pub(crate) zeros: u8,
+}
+
+impl Token {
+    pub(crate) fn new(token: TokenType, value: i64) -> Self {
+        Self { token: token, value: value, zeros: 0 }
+    }
+
+    pub(crate) fn new_integer(value: i64, zeros: u8) -> Self {
+        Self { token: TokenType::Integer, value: value, zeros: zeros }
+    }
 }
 
 struct TokenList {
@@ -370,14 +381,19 @@ fn parse_number(source: &str) -> Option<Token> {
     };
 
     if value.ge(&10000) {
-        return Option::from(Token { token: TokenType::Timestamp, value: value });
+        return Option::from(Token::new(TokenType::Timestamp, value));
     }
 
     if value.ge(&1000) {
-        return Option::from(Token { token: TokenType::Year, value: value });
+        return Option::from(Token::new(TokenType::Year, value));
     }
 
-    Option::from(Token { token: TokenType::Integer, value: value })
+    let zeros = match value.eq(&0) {
+        true => 0,
+        false => source.len() - source.trim_start_matches("0").len(),
+    };
+
+    Option::from(Token::new_integer(value, zeros as u8))
 }
 
 #[cfg(test)]
@@ -422,7 +438,7 @@ mod tests {
         for (from_string, expect_value) in expect {
             assert_eq!(
                 tokenize_str(from_string),
-                (String::from("[wday]"), vec![Token { token: TokenType::Weekday, value: expect_value }])
+                (String::from("[wday]"), vec![Token::new(TokenType::Weekday, expect_value)])
             );
         }
     }
@@ -458,7 +474,7 @@ mod tests {
         for (from_string, expect_value) in expect {
             assert_eq!(
                 tokenize_str(from_string),
-                (String::from("[month]"), vec![Token { token: TokenType::Month, value: expect_value }])
+                (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
             );
         }
     }
@@ -502,7 +518,7 @@ mod tests {
         for (from_string, expect_value) in expect {
             assert_eq!(
                 tokenize_str(from_string),
-                (String::from("[nth]"), vec![Token { token: TokenType::Nth, value: expect_value }])
+                (String::from("[nth]"), vec![Token::new(TokenType::Nth, expect_value)])
             );
         }
     }
@@ -517,8 +533,8 @@ mod tests {
                 (
                     String::from("-[int][unit]"),
                     vec![
-                        Token { token: TokenType::Integer, value: 2 },
-                        Token { token: TokenType::Unit, value: expect_value }
+                        Token::new(TokenType::Integer, 2),
+                        Token::new(TokenType::Unit, expect_value),
                     ]
                 )
             );
@@ -535,8 +551,8 @@ mod tests {
                 (
                     String::from("-[int][short_unit]"),
                     vec![
-                        Token { token: TokenType::Integer, value: 2 },
-                        Token { token: TokenType::ShortUnit, value: expect_value }
+                        Token::new(TokenType::Integer, 2),
+                        Token::new(TokenType::ShortUnit, expect_value)
                     ]
                 )
             );
@@ -568,8 +584,8 @@ mod tests {
                 (
                     String::from("-[int][long_unit]"),
                     vec![
-                        Token { token: TokenType::Integer, value: 2 },
-                        Token { token: TokenType::LongUnit, value: expect_value }
+                        Token::new(TokenType::Integer, 2),
+                        Token::new(TokenType::LongUnit, expect_value),
                     ]
                 )
             );
@@ -586,8 +602,8 @@ mod tests {
                 (
                     String::from("[int] [meridiem]"),
                     vec![
-                        Token { token: TokenType::Integer, value: 2 },
-                        Token { token: TokenType::Meridiem, value: expect_value },
+                        Token::new(TokenType::Integer, 2),
+                        Token::new(TokenType::Meridiem, expect_value),
                     ],
                 )
             );
@@ -597,8 +613,8 @@ mod tests {
                 (
                     String::from("[int][meridiem]"),
                     vec![
-                        Token { token: TokenType::Integer, value: 2 },
-                        Token { token: TokenType::Meridiem, value: expect_value },
+                        Token::new(TokenType::Integer, 2),
+                        Token::new(TokenType::Meridiem, expect_value),
                     ],
                 )
             );
@@ -630,14 +646,14 @@ mod tests {
             (
                 String::from("+[int][short_unit] [int][short_unit] [int][short_unit] [int][short_unit]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::ShortUnit, value: 7 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 6 },
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::ShortUnit, value: 5 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 4 },
+                    Token::new(TokenType::Integer, 1),
+                    Token::new(TokenType::ShortUnit, 7),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::ShortUnit, 6),
+                    Token::new(TokenType::Integer, 2),
+                    Token::new(TokenType::ShortUnit, 5),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::ShortUnit, 4),
                 ]
             )
         );
@@ -647,14 +663,14 @@ mod tests {
             (
                 String::from("+[int][short_unit] +[int][short_unit] -[int][short_unit] +[int][short_unit]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::ShortUnit, value: 7 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 6 },
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::ShortUnit, value: 5 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::ShortUnit, value: 4 },
+                    Token::new(TokenType::Integer, 1),
+                    Token::new(TokenType::ShortUnit, 7),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::ShortUnit, 6),
+                    Token::new(TokenType::Integer, 2),
+                    Token::new(TokenType::ShortUnit, 5),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::ShortUnit, 4),
                 ]
             )
         );
@@ -664,10 +680,10 @@ mod tests {
             (
                 String::from("+[int][short_unit] [int][short_unit]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::ShortUnit, value: 3 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::ShortUnit, value: 1 },
+                    Token::new(TokenType::Integer, 2),
+                    Token::new(TokenType::ShortUnit, 3),
+                    Token::new(TokenType::Integer, 8),
+                    Token::new(TokenType::ShortUnit, 1),
                 ]
             )
         );
@@ -677,12 +693,12 @@ mod tests {
             (
                 String::from("-[int][unit] [int][unit] [int][unit]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Unit, value: 3 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::Unit, value: 2 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::Unit, value: 1 },
+                    Token::new(TokenType::Integer, 2),
+                    Token::new(TokenType::Unit, 3),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::Unit, 2),
+                    Token::new(TokenType::Integer, 8),
+                    Token::new(TokenType::Unit, 1),
                 ]
             )
         );
@@ -692,12 +708,12 @@ mod tests {
             (
                 String::from("-[int][unit] [int][unit] [int][unit]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Unit, value: 3 },
-                    Token { token: TokenType::Integer, value: 5 },
-                    Token { token: TokenType::Unit, value: 2 },
-                    Token { token: TokenType::Integer, value: 8 },
-                    Token { token: TokenType::Unit, value: 1 },
+                    Token::new(TokenType::Integer, 2),
+                    Token::new(TokenType::Unit, 3),
+                    Token::new(TokenType::Integer, 5),
+                    Token::new(TokenType::Unit, 2),
+                    Token::new(TokenType::Integer, 8),
+                    Token::new(TokenType::Unit, 1),
                 ]
             )
         );
@@ -707,7 +723,7 @@ mod tests {
     fn test_strings() {
         assert_eq!(
             tokenize_str("@1705072948"),
-            (String::from("[timestamp]"), vec![Token { token: TokenType::Timestamp, value: 1705072948 },])
+            (String::from("[timestamp]"), vec![Token::new(TokenType::Timestamp, 1705072948)])
         );
 
         assert_eq!(
@@ -715,8 +731,8 @@ mod tests {
             (
                 String::from("[timestamp].[int]"),
                 vec![
-                    Token { token: TokenType::Timestamp, value: 1705072948 },
-                    Token { token: TokenType::Integer, value: 0 },
+                    Token::new(TokenType::Timestamp, 1705072948),
+                    Token::new(TokenType::Integer, 0),
                 ]
             )
         );
@@ -726,9 +742,9 @@ mod tests {
             (
                 String::from("[year]-[int]-[int]"),
                 vec![
-                    Token { token: TokenType::Year, value: 2023 },
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Integer, value: 1 },
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(1, 1),
                 ]
             )
         );
@@ -738,27 +754,27 @@ mod tests {
             (
                 String::from("[year]-[int]-[int] [int]:[int]"),
                 vec![
-                    Token { token: TokenType::Year, value: 2023 },
-                    Token { token: TokenType::Integer, value: 12 },
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Integer, value: 15 },
-                    Token { token: TokenType::Integer, value: 2 },
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
                 ]
             )
         );
 
         assert_eq!(
-            tokenize_str("2023-12-07 15:02:01.999"),
+            tokenize_str("2023-12-07 15:02:01.014"),
             (
                 String::from("[year]-[int]-[int] [int]:[int]:[int].[int]"),
                 vec![
-                    Token { token: TokenType::Year, value: 2023 },
-                    Token { token: TokenType::Integer, value: 12 },
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Integer, value: 15 },
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::Integer, value: 999 },
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                    Token::new_integer(1, 1),
+                    Token::new_integer(14, 1),
                 ]
             )
         );
@@ -768,12 +784,12 @@ mod tests {
             (
                 String::from("[year]-[int]-[int] [int]:[int]:[int]"),
                 vec![
-                    Token { token: TokenType::Year, value: 2023 },
-                    Token { token: TokenType::Integer, value: 12 },
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Integer, value: 15 },
-                    Token { token: TokenType::Integer, value: 2 },
-                    Token { token: TokenType::Integer, value: 1 },
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                    Token::new_integer(1, 1),
                 ]
             )
         );
@@ -783,9 +799,9 @@ mod tests {
             (
                 String::from("[int]/[int]/[year]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Year, value: 2023 },
+                    Token::new_integer(1, 1),
+                    Token::new_integer(7, 1),
+                    Token::new(TokenType::Year, 2023),
                 ]
             )
         );
@@ -795,9 +811,9 @@ mod tests {
             (
                 String::from("[int].[int].[year]"),
                 vec![
-                    Token { token: TokenType::Integer, value: 7 },
-                    Token { token: TokenType::Integer, value: 1 },
-                    Token { token: TokenType::Year, value: 2023 },
+                    Token::new_integer(7, 1),
+                    Token::new_integer(1, 1),
+                    Token::new(TokenType::Year, 2023),
                 ]
             )
         );
@@ -807,34 +823,34 @@ mod tests {
             (
                 String::from("[month] [nth] [year]"),
                 vec![
-                    Token { token: TokenType::Month, value: 2 },
-                    Token { token: TokenType::Nth, value: 7 },
-                    Token { token: TokenType::Year, value: 2023 },
+                    Token::new(TokenType::Month, 2),
+                    Token::new(TokenType::Nth, 7),
+                    Token::new(TokenType::Year, 2023),
                 ]
             )
         );
 
         assert_eq!(
             tokenize_str("next Monday midnight"),
-            (String::from("next [wday] midnight"), vec![Token { token: TokenType::Weekday, value: 1 },])
+            (String::from("next [wday] midnight"), vec![Token::new(TokenType::Weekday, 1)])
         );
     }
 
     #[test]
     fn test_custom_tokens() {
         let monday_examples = HashMap::from([
-            (String::from("maanantai"), Token { token: TokenType::Weekday, value: 1 }),
-            (String::from("måndag"), Token { token: TokenType::Weekday, value: 1 }),
+            (String::from("maanantai"), Token::new(TokenType::Weekday, 1)),
+            (String::from("måndag"), Token::new(TokenType::Weekday, 1)),
         ]);
 
         assert_eq!(
             tokenize("next Maanantai", monday_examples.to_owned()),
-            (String::from("next [wday]"), vec![Token { token: TokenType::Weekday, value: 1 }],),
+            (String::from("next [wday]"), vec![Token::new(TokenType::Weekday, 1)]),
         );
 
         assert_eq!(
             tokenize("next Måndag", monday_examples.to_owned()),
-            (String::from("next [wday]"), vec![Token { token: TokenType::Weekday, value: 1 }],),
+            (String::from("next [wday]"), vec![Token::new(TokenType::Weekday, 1)]),
         );
     }
 
