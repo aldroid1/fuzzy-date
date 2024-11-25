@@ -5,22 +5,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-struct PatternValues {
-    values: Vec<i64>,
-    zeros: Vec<u8>,
-}
-
-impl PatternValues {
-    fn from_values(values: Vec<i64>) -> Self {
-        Self { values: values, zeros: vec![] }
-    }
-
-    fn get_int(&self, index: usize) -> i64 {
-        self.values[index]
-    }
-}
-
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &PatternValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -38,95 +23,71 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &PatternValues, &Rules) -> Resul
     (&Pattern::LastMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Prev)?.time_reset()),
     (&Pattern::NextMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Next)?.time_reset()),
     // KEYWORD OFFSETS
-    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), 0, r)),
-    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), -1, r)),
-    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), -1, r)),
-    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(TimeUnit::from_int(v.get_int(0)), 1, r)),
+    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
+    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
+    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
+    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
     // NUMERIC OFFSET, MINUS
-    (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
-    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
-    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
+    (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
+    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
+    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
     // NUMERIC OFFSET, PLUS
-    (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
-    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
-    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), v.get_int(0), r)),
+    (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
+    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
+    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
     // NUMERIC OFFSET, PLUS
-    (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
-    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(TimeUnit::from_int(v.get_int(1)), 0 - v.get_int(0), r)),
+    (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
+    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
     // FIRST/LAST OFFSETS
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| {
-        c.offset_range_month(TimeUnit::from_int(v.get_int(0)), v.get_int(1), convert::Change::First)?
+        c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfMonth, |c, v, _| {
-        c.offset_range_month(TimeUnit::from_int(v.get_int(0)), v.get_int(1), convert::Change::Last)?
+        c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, _| {
-        c.offset_range_unit(TimeUnit::from_int(v.get_int(0)), TimeUnit::from_int(v.get_int(1)), convert::Change::First)?
+        c.offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfThisLongUnit, |c, v, _| {
-        c.offset_range_unit(TimeUnit::from_int(v.get_int(0)), TimeUnit::from_int(v.get_int(1)), convert::Change::Last)?
+        c.offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfPrevLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::First,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), -1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::Last,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), -1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfLastLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::First,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), -1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfLastLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), -1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::Last,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), -1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfNextLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), 1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::First,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), 1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| {
-        c.offset_unit_keyword(TimeUnit::from_int(v.get_int(1)), 1, r)?
-            .offset_range_unit(
-                TimeUnit::from_int(v.get_int(0)),
-                TimeUnit::from_int(v.get_int(1)),
-                convert::Change::Last,
-            )?
+        c.offset_unit_keyword(v.get_unit(1), 1, r)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
     // @1705072948, @1705072948.452
     (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
-    (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_int(1))),
+    (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_ms(1))),
     // 2023-01-01, 30.1.2023, 1/30/2023
     (&Pattern::DateYmd, |c, v, _| c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.time_reset()),
     (&Pattern::DateDmy, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
@@ -153,7 +114,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &PatternValues, &Rules) -> Resul
             v.get_int(3),
             v.get_int(4),
             v.get_int(5),
-            v.get_int(6),
+            v.get_ms(6),
         )
     }),
     // 3pm, 3:00 pm
@@ -185,6 +146,54 @@ impl TimeUnit {
             7 => Self::Years,
             _ => Self::None,
         }
+    }
+}
+
+struct CallValues {
+    values: Vec<i64>,
+    zeros: Vec<u8>,
+}
+
+impl CallValues {
+    fn from_values(values: Vec<i64>) -> Self {
+        Self { values: values, zeros: vec![] }
+    }
+
+    fn get_int(&self, index: usize) -> i64 {
+        self.values[index]
+    }
+
+    /// Get value with the assumption that it should represent milliseconds,
+    /// and thus the number of zeros before the casted value matters
+    fn get_ms(&self, index: usize) -> i64 {
+        let value = self.get_int(index);
+        let zeros = self.zeros.get(index).unwrap_or(&2);
+
+        let multiply_by = match zeros {
+            0 => {
+                if value.lt(&10) {
+                    100
+                } else if value.lt(&100) {
+                    10
+                } else {
+                    1
+                }
+            }
+            1 => {
+                if value.lt(&10) {
+                    10
+                } else {
+                    1
+                }
+            }
+            _ => 1,
+        };
+
+        value * multiply_by
+    }
+
+    fn get_unit(&self, index: usize) -> TimeUnit {
+        TimeUnit::from_int(self.get_int(index))
     }
 }
 
@@ -394,7 +403,7 @@ pub(crate) fn convert(
     let mut values: Vec<i64> = values.to_owned();
 
     for (pattern_match, pattern_call) in call_list {
-        let call_vals = PatternValues::from_values(values.to_owned());
+        let call_vals = CallValues::from_values(values.to_owned());
         ctx_time = match pattern_call(ctx_time, &call_vals, &rules) {
             Ok(value) => value,
             Err(()) => return None,
@@ -479,7 +488,7 @@ pub(crate) fn to_duration(seconds: f64, units: &UnitLocale, max_unit: &str, min_
 fn find_pattern_calls(
     pattern: &str,
     custom: HashMap<String, String>,
-) -> Vec<(String, fn(FuzzyDate, &PatternValues, &Rules) -> Result<FuzzyDate, ()>)> {
+) -> Vec<(String, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>)> {
     let mut closure_map = HashMap::new();
     let mut pattern_map = HashMap::new();
 
