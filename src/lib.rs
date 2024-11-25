@@ -565,13 +565,6 @@ mod fuzzydate {
     }
 }
 
-/// Tokenize source string
-fn tokenize_str(source: &str, custom_tokens: HashMap<String, Token>) -> (String, Vec<Token>, Vec<i64>) {
-    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
-    let values: Vec<i64> = tokens.iter().map(|p| p.value).collect();
-    (pattern, tokens, values)
-}
-
 fn units_locale(name: &str) -> HashMap<String, String> {
     match name {
         "long" => HashMap::from([
@@ -620,8 +613,8 @@ fn convert_str(
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>,
 ) -> Option<DateTime<FixedOffset>> {
-    let (pattern, _, values) = tokenize_str(&source, custom_tokens);
-    fuzzy::convert(&pattern, &values, &current_time, first_weekday_mon, custom_patterns)
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
+    fuzzy::convert(&pattern, tokens, &current_time, first_weekday_mon, custom_patterns)
 }
 
 /// Convert number of seconds into a time duration string
@@ -635,13 +628,13 @@ fn convert_seconds(
     custom_patterns: HashMap<String, String>,
     custom_tokens: HashMap<String, Token>,
 ) -> Result<f64, String> {
-    let (pattern, tokens, values) = tokenize_str(&source, custom_tokens);
+    let (pattern, tokens) = token::tokenize(&source, custom_tokens);
 
     if !token::is_time_duration(&pattern) {
         return Err(format!("Unable to convert \"{}\" into seconds", source));
     }
 
-    for token in tokens {
+    for token in &tokens {
         if token.token.is_unit() && token.value.eq(&7) {
             return Err(String::from("Converting years into seconds is not supported"));
         }
@@ -653,7 +646,7 @@ fn convert_seconds(
 
     let current_time = Utc::now().fixed_offset();
 
-    if let Some(from_time) = fuzzy::convert(&pattern, &values, &current_time, true, custom_patterns) {
+    if let Some(from_time) = fuzzy::convert(&pattern, tokens, &current_time, true, custom_patterns) {
         let duration: Duration = from_time - current_time;
         return Ok((duration.num_milliseconds() / 1_000) as f64);
     }
@@ -702,6 +695,11 @@ mod tests {
         let expect: Vec<(&str, &str)> = vec![
             ("@1705072948", "2024-01-12 15:22:28 +00:00"),
             ("@1705072948.0", "2024-01-12 15:22:28 +00:00"),
+            ("@1705072948.9", "2024-01-12 15:22:28.900 +00:00"),
+            ("@1705072948.09", "2024-01-12 15:22:28.090 +00:00"),
+            ("@1705072948.090", "2024-01-12 15:22:28.090 +00:00"),
+            ("@1705072948.099", "2024-01-12 15:22:28.099 +00:00"),
+            ("@1705072948.009", "2024-01-12 15:22:28.009 +00:00"),
             ("@1705072948.544", "2024-01-12 15:22:28.544 +00:00"),
             ("2023-01-01", "2023-01-01 00:00:00 +00:00"),
             ("07.02.2023", "2023-02-07 00:00:00 +00:00"),
@@ -720,6 +718,8 @@ mod tests {
             ("2023-12-07 15:02:01", "2023-12-07 15:02:01 +00:00"),
             ("2023-12-07 15:02:01.000", "2023-12-07 15:02:01 +00:00"),
             ("2023-12-07 15:02:01.001", "2023-12-07 15:02:01.001 +00:00"),
+            ("2023-12-07 15:02:01.010", "2023-12-07 15:02:01.010 +00:00"),
+            ("2023-12-07 15:02:01.04", "2023-12-07 15:02:01.040 +00:00"),
             ("2023-12-07 15:02:01.999", "2023-12-07 15:02:01.999 +00:00"),
         ];
 
@@ -1000,17 +1000,18 @@ mod tests {
     #[test]
     fn test_unsupported() {
         let expect: Vec<&str> = vec![
-            "",                       // Not parsed
-            " ",                      // Nothing to parse
-            "+1day",                  // Not recognized
-            "0000-01-12 15:22",       // Year invalid
-            "1982-04-32",             // Date invalid
-            "1982-04-01 15:61",       // Time invalid
-            "1995-07-01 12:00.1000",  // Milliseconds invalid
-            "Feb 29th 2023",          // Day out of range
-            "first day of this week", // Not supported
-            "first minute of Jan",    // Not supported
-            "7 of Jan",               // Missing nth supported
+            "",                         // Not parsed
+            " ",                        // Nothing to parse
+            "+1day",                    // Not recognized
+            "0000-01-12 15:22",         // Year invalid
+            "1982-04-32",               // Date invalid
+            "1982-04-01 15:61",         // Time invalid
+            "1995-07-01 12:00:00.1000", // Milliseconds invalid
+            "1995-07-01 12:00:00.0001", // Milliseconds invalid
+            "Feb 29th 2023",            // Day out of range
+            "first day of this week",   // Not supported
+            "first minute of Jan",      // Not supported
+            "7 of Jan",                 // Missing nth supported
         ];
 
         let current_time = Utc::now().fixed_offset();
@@ -1146,57 +1147,39 @@ mod tests {
     #[test]
     fn test_gid_into_token() {
         for value in 101..=107 {
-            assert_eq!(
-                gid_into_token(value).unwrap(),
-                Token::new(TokenType::Weekday, value as i64 - 100)
-            );
+            assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::Weekday, value as i64 - 100));
         }
         assert!(gid_into_token(100).is_none());
         assert!(gid_into_token(108).is_none());
 
         for value in 201..=212 {
-            assert_eq!(
-                gid_into_token(value).unwrap(),
-                Token::new(TokenType::Month, value as i64 - 200)
-            );
+            assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::Month, value as i64 - 200));
         }
         assert!(gid_into_token(200).is_none());
         assert!(gid_into_token(213).is_none());
 
         for value in 301..=303 {
-            assert_eq!(
-                gid_into_token(value).unwrap(),
-                Token::new(TokenType::Unit, value as i64 - 300)
-            );
+            assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::Unit, value as i64 - 300));
         }
         assert!(gid_into_token(300).is_none());
         assert!(gid_into_token(304).is_none());
 
         for value in 401..=407 {
             if !value.eq(&402) {
-                assert_eq!(
-                    gid_into_token(value).unwrap(),
-                    Token::new(TokenType::ShortUnit, value as i64 - 400)
-                );
+                assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::ShortUnit, value as i64 - 400));
             }
         }
         assert!(gid_into_token(400).is_none());
         assert!(gid_into_token(408).is_none());
 
         for value in 501..=507 {
-            assert_eq!(
-                gid_into_token(value).unwrap(),
-                Token::new(TokenType::LongUnit, value as i64 - 500)
-            );
+            assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::LongUnit, value as i64 - 500));
         }
         assert!(gid_into_token(500).is_none());
         assert!(gid_into_token(508).is_none());
 
         for value in 601..=602 {
-            assert_eq!(
-                gid_into_token(value).unwrap(),
-                Token::new(TokenType::Meridiem, value as i64 - 600)
-            );
+            assert_eq!(gid_into_token(value).unwrap(), Token::new(TokenType::Meridiem, value as i64 - 600));
         }
         assert!(gid_into_token(600).is_none());
         assert!(gid_into_token(603).is_none());

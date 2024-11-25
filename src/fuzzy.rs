@@ -1,5 +1,6 @@
 use crate::constants::Pattern;
 use crate::convert;
+use crate::token::Token;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
 use std::cmp::PartialEq;
@@ -155,8 +156,11 @@ struct CallValues {
 }
 
 impl CallValues {
-    fn from_values(values: Vec<i64>) -> Self {
-        Self { values: values, zeros: vec![] }
+    fn from_tokens(tokens: Vec<Token>) -> Self {
+        Self {
+            values: tokens.iter().map(|v| v.value).collect::<Vec<i64>>(),
+            zeros: tokens.iter().map(|v| v.zeros).collect::<Vec<u8>>(),
+        }
     }
 
     fn get_int(&self, index: usize) -> i64 {
@@ -164,7 +168,9 @@ impl CallValues {
     }
 
     /// Get value with the assumption that it should represent milliseconds,
-    /// and thus the number of zeros before the casted value matters
+    /// and thus the number of zeros before the number is meaningful. If there
+    /// are too many zeros, we use -1 to break out on millisecond value
+    /// validation.
     fn get_ms(&self, index: usize) -> i64 {
         let value = self.get_int(index);
         let zeros = self.zeros.get(index).unwrap_or(&2);
@@ -186,7 +192,8 @@ impl CallValues {
                     1
                 }
             }
-            _ => 1,
+            2 => 1,
+            _ => return -1,
         };
 
         value * multiply_by
@@ -387,7 +394,7 @@ impl UnitLocale {
 /// relative to given datetime
 pub(crate) fn convert(
     pattern: &str,
-    values: &Vec<i64>,
+    tokens: Vec<Token>,
     current_time: &DateTime<FixedOffset>,
     week_start_mon: bool,
     custom_patterns: HashMap<String, String>,
@@ -399,17 +406,18 @@ pub(crate) fn convert(
     }
 
     let rules = Rules { week_start_mon: week_start_mon };
+
     let mut ctx_time = FuzzyDate::new(current_time.to_owned());
-    let mut values: Vec<i64> = values.to_owned();
+    let mut ctx_vals: Vec<Token> = tokens;
 
     for (pattern_match, pattern_call) in call_list {
-        let call_vals = CallValues::from_values(values.to_owned());
+        let call_vals = CallValues::from_tokens(ctx_vals.to_owned());
         ctx_time = match pattern_call(ctx_time, &call_vals, &rules) {
             Ok(value) => value,
             Err(()) => return None,
         };
-        let used_vars: usize = pattern_match.split("[").count() - 1;
-        values = values[used_vars..].to_owned();
+        let used_vals: usize = pattern_match.split("[").count() - 1;
+        ctx_vals = ctx_vals[used_vals..].to_owned();
     }
 
     Option::from(ctx_time.time)
@@ -579,7 +587,12 @@ mod tests {
             }
         }
 
-        let result_time = convert(pattern, &values, &current_time, false, custom_patterns);
+        let tokens = values
+            .iter()
+            .map(|v| Token::new_integer(v.to_owned(), 0))
+            .collect::<Vec<Token>>();
+
+        let result_time = convert(pattern, tokens, &current_time, false, custom_patterns);
         result_time.unwrap().to_string()
     }
 }
