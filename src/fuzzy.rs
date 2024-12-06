@@ -6,18 +6,6 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-#[derive(PartialEq)]
-enum TimeUnit {
-    Days,
-    Hours,
-    Minutes,
-    Months,
-    Seconds,
-    Weeks,
-    Years,
-    None,
-}
-
 const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 47] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
@@ -122,6 +110,18 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v.get_int(0), 0, 0, v.get_int(1))),
     (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v.get_int(0), v.get_int(1), 0, v.get_int(2))),
 ];
+
+#[derive(PartialEq)]
+enum TimeUnit {
+    Days,
+    Hours,
+    Minutes,
+    Months,
+    Seconds,
+    Weeks,
+    Years,
+    None,
+}
 
 impl TimeUnit {
     fn from_int(value: i64) -> TimeUnit {
