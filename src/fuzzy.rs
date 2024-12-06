@@ -6,7 +6,19 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
+#[derive(PartialEq)]
+enum TimeUnit {
+    Days,
+    Hours,
+    Minutes,
+    Months,
+    Seconds,
+    Weeks,
+    Years,
+    None,
+}
+
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 52] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -27,6 +39,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
     (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
     (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
+    (&Pattern::LastNLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(1), 0 - v.get_int(0), r)),
     (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
     // NUMERIC OFFSET, MINUS
     (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
@@ -122,18 +135,6 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v.get_int(0), 0, 0, v.get_int(1))),
     (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v.get_int(0), v.get_int(1), 0, v.get_int(2))),
 ];
-
-#[derive(PartialEq)]
-enum TimeUnit {
-    Days,
-    Hours,
-    Minutes,
-    Months,
-    Seconds,
-    Weeks,
-    Years,
-    None,
-}
 
 impl TimeUnit {
     fn from_int(value: i64) -> TimeUnit {

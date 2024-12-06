@@ -25,6 +25,10 @@ pub(crate) const PATTERN_MINUS_UNIT: &'static str = "-[int][unit]";
 pub(crate) const PATTERN_MINUS_SHORT_UNIT: &'static str = "-[int][short_unit]";
 pub(crate) const PATTERN_MINUS_LONG_UNIT: &'static str = "-[int] [long_unit]";
 
+pub(crate) const PATTERN_PAST_N_LONG_UNIT: &'static str = "past [int] [long_unit]";
+pub(crate) const PATTERN_PREV_N_LONG_UNIT: &'static str = "prev [int] [long_unit]";
+pub(crate) const PATTERN_LAST_N_LONG_UNIT: &'static str = "last [int] [long_unit]";
+
 pub(crate) const PATTERN_PLUS_UNIT: &'static str = "+[int][unit]";
 pub(crate) const PATTERN_PLUS_SHORT_UNIT: &'static str = "+[int][short_unit]";
 pub(crate) const PATTERN_PLUS_LONG_UNIT: &'static str = "+[int] [long_unit]";
@@ -145,6 +149,7 @@ pub(crate) enum Pattern {
     ThisLongUnit,
     PrevLongUnit,
     LastLongUnit,
+    LastNLongUnit,
     NextLongUnit,
 
     MinusUnit,
@@ -225,6 +230,9 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::MinusUnit, PATTERN_MINUS_UNIT),
         (Pattern::MinusShortUnit, PATTERN_MINUS_SHORT_UNIT),
         (Pattern::MinusLongUnit, PATTERN_MINUS_LONG_UNIT),
+        (Pattern::MinusLongUnit, PATTERN_PAST_N_LONG_UNIT),
+        (Pattern::LastNLongUnit, PATTERN_PREV_N_LONG_UNIT),
+        (Pattern::LastNLongUnit, PATTERN_LAST_N_LONG_UNIT),
         (Pattern::PlusUnit, PATTERN_PLUS_UNIT),
         (Pattern::PlusShortUnit, PATTERN_PLUS_SHORT_UNIT),
         (Pattern::PlusLongUnit, PATTERN_PLUS_LONG_UNIT),
