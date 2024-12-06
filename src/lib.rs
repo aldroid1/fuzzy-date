@@ -455,7 +455,7 @@ mod fuzzydate {
     ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
     ///             and "w/week/weeks" for weeks.
     /// :type max: str, optional, default "w"
-    /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are s/sec for
+    /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are "s/sec" for
     ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
     ///             and "w/week/weeks" for weeks.
     /// :type min: str, optional, default "s"
@@ -503,8 +503,8 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         pass_module,
-        signature = (source),
-        text_signature = "(source: str)"
+        signature = (source,),
+        text_signature = "(source: str) -> float"
     )]
     fn to_seconds(module: &Bound<'_, PyModule>, py: Python, source: &str) -> PyResult<f64> {
         let config_patterns = read_config(module)?.patterns;
