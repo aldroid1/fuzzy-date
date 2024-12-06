@@ -164,6 +164,9 @@ mod fuzzydate {
         const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
 
         #[classattr]
+        const PREV_N_LONG_UNIT: &'static str = constants::PATTERN_PREV_N_LONG_UNIT;
+
+        #[classattr]
         const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
         #[classattr]
         const PLUS_SHORT_UNIT: &'static str = constants::PATTERN_PLUS_SHORT_UNIT;
