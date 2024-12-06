@@ -134,6 +134,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
         #[classattr]
+        #[deprecated]
         const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
         #[classattr]
         const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
@@ -143,6 +144,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_MONTH: &'static str = constants::PATTERN_PREV_MONTH;
         #[classattr]
+        #[deprecated]
         const LAST_MONTH: &'static str = constants::PATTERN_LAST_MONTH;
         #[classattr]
         const NEXT_MONTH: &'static str = constants::PATTERN_NEXT_MONTH;
@@ -152,6 +154,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
         #[classattr]
         const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
@@ -190,8 +193,10 @@ mod fuzzydate {
         #[classattr]
         const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
         #[classattr]
         const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
