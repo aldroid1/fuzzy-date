@@ -25,6 +25,10 @@ pub(crate) const PATTERN_MINUS_UNIT: &'static str = "-[int][unit]";
 pub(crate) const PATTERN_MINUS_SHORT_UNIT: &'static str = "-[int][short_unit]";
 pub(crate) const PATTERN_MINUS_LONG_UNIT: &'static str = "-[int] [long_unit]";
 
+pub(crate) const PATTERN_PAST_N_LONG_UNIT: &'static str = "past [int] [long_unit]";
+pub(crate) const PATTERN_PREV_N_LONG_UNIT: &'static str = "prev [int] [long_unit]";
+pub(crate) const PATTERN_LAST_N_LONG_UNIT: &'static str = "last [int] [long_unit]";
+
 pub(crate) const PATTERN_PLUS_UNIT: &'static str = "+[int][unit]";
 pub(crate) const PATTERN_PLUS_SHORT_UNIT: &'static str = "+[int][short_unit]";
 pub(crate) const PATTERN_PLUS_LONG_UNIT: &'static str = "+[int] [long_unit]";
@@ -134,17 +138,15 @@ pub(crate) enum Pattern {
 
     ThisWday,
     PrevWday,
-    LastWday,
     NextWday,
 
     ThisMonth,
     PrevMonth,
-    LastMonth,
     NextMonth,
 
     ThisLongUnit,
     PrevLongUnit,
-    LastLongUnit,
+    PrevNLongUnit,
     NextLongUnit,
 
     MinusUnit,
@@ -166,9 +168,6 @@ pub(crate) enum Pattern {
 
     FirstLongUnitOfPrevLongUnit,
     LastLongUnitOfPrevLongUnit,
-
-    FirstLongUnitOfLastLongUnit,
-    LastLongUnitOfLastLongUnit,
 
     FirstLongUnitOfNextLongUnit,
     LastLongUnitOfNextLongUnit,
@@ -212,19 +211,22 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::Tomorrow, PATTERN_TOMORROW),
         (Pattern::ThisWday, PATTERN_THIS_WDAY),
         (Pattern::PrevWday, PATTERN_PREV_WDAY),
-        (Pattern::LastWday, PATTERN_LAST_WDAY),
+        (Pattern::PrevWday, PATTERN_LAST_WDAY),
         (Pattern::NextWday, PATTERN_NEXT_WDAY),
         (Pattern::ThisMonth, PATTERN_THIS_MONTH),
         (Pattern::PrevMonth, PATTERN_PREV_MONTH),
-        (Pattern::LastMonth, PATTERN_LAST_MONTH),
+        (Pattern::PrevMonth, PATTERN_LAST_MONTH),
         (Pattern::NextMonth, PATTERN_NEXT_MONTH),
         (Pattern::ThisLongUnit, PATTERN_THIS_LONG_UNIT),
         (Pattern::PrevLongUnit, PATTERN_PREV_LONG_UNIT),
-        (Pattern::LastLongUnit, PATTERN_LAST_LONG_UNIT),
+        (Pattern::PrevLongUnit, PATTERN_LAST_LONG_UNIT),
         (Pattern::NextLongUnit, PATTERN_NEXT_LONG_UNIT),
         (Pattern::MinusUnit, PATTERN_MINUS_UNIT),
         (Pattern::MinusShortUnit, PATTERN_MINUS_SHORT_UNIT),
         (Pattern::MinusLongUnit, PATTERN_MINUS_LONG_UNIT),
+        (Pattern::MinusLongUnit, PATTERN_PAST_N_LONG_UNIT),
+        (Pattern::PrevNLongUnit, PATTERN_PREV_N_LONG_UNIT),
+        (Pattern::PrevNLongUnit, PATTERN_LAST_N_LONG_UNIT),
         (Pattern::PlusUnit, PATTERN_PLUS_UNIT),
         (Pattern::PlusShortUnit, PATTERN_PLUS_SHORT_UNIT),
         (Pattern::PlusLongUnit, PATTERN_PLUS_LONG_UNIT),
@@ -235,9 +237,9 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::FirstLongUnitOfThisLongUnit, PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT),
         (Pattern::LastLongUnitOfThisLongUnit, PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT),
         (Pattern::FirstLongUnitOfPrevLongUnit, PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT),
+        (Pattern::FirstLongUnitOfPrevLongUnit, PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT),
         (Pattern::LastLongUnitOfPrevLongUnit, PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT),
-        (Pattern::FirstLongUnitOfLastLongUnit, PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT),
-        (Pattern::LastLongUnitOfLastLongUnit, PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT),
+        (Pattern::LastLongUnitOfPrevLongUnit, PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT),
         (Pattern::FirstLongUnitOfNextLongUnit, PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT),
         (Pattern::LastLongUnitOfNextLongUnit, PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT),
         (Pattern::Timestamp, PATTERN_TIMESTAMP),

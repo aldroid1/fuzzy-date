@@ -134,6 +134,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_WDAY: &'static str = constants::PATTERN_PREV_WDAY;
         #[classattr]
+        #[deprecated]
         const LAST_WDAY: &'static str = constants::PATTERN_LAST_WDAY;
         #[classattr]
         const NEXT_WDAY: &'static str = constants::PATTERN_NEXT_WDAY;
@@ -143,6 +144,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_MONTH: &'static str = constants::PATTERN_PREV_MONTH;
         #[classattr]
+        #[deprecated]
         const LAST_MONTH: &'static str = constants::PATTERN_LAST_MONTH;
         #[classattr]
         const NEXT_MONTH: &'static str = constants::PATTERN_NEXT_MONTH;
@@ -152,6 +154,7 @@ mod fuzzydate {
         #[classattr]
         const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT;
         #[classattr]
         const NEXT_LONG_UNIT: &'static str = constants::PATTERN_NEXT_LONG_UNIT;
@@ -162,6 +165,9 @@ mod fuzzydate {
         const MINUS_SHORT_UNIT: &'static str = constants::PATTERN_MINUS_SHORT_UNIT;
         #[classattr]
         const MINUS_LONG_UNIT: &'static str = constants::PATTERN_MINUS_LONG_UNIT;
+
+        #[classattr]
+        const PREV_N_LONG_UNIT: &'static str = constants::PATTERN_PREV_N_LONG_UNIT;
 
         #[classattr]
         const PLUS_UNIT: &'static str = constants::PATTERN_PLUS_UNIT;
@@ -187,8 +193,10 @@ mod fuzzydate {
         #[classattr]
         const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
         #[classattr]
+        #[deprecated]
         const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
         #[classattr]
         const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
@@ -455,7 +463,7 @@ mod fuzzydate {
     ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
     ///             and "w/week/weeks" for weeks.
     /// :type max: str, optional, default "w"
-    /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are s/sec for
+    /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are "s/sec" for
     ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
     ///             and "w/week/weeks" for weeks.
     /// :type min: str, optional, default "s"
@@ -503,8 +511,8 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         pass_module,
-        signature = (source),
-        text_signature = "(source: str)"
+        signature = (source,),
+        text_signature = "(source: str) -> float"
     )]
     fn to_seconds(module: &Bound<'_, PyModule>, py: Python, source: &str) -> PyResult<f64> {
         let config_patterns = read_config(module)?.patterns;
@@ -820,6 +828,9 @@ mod tests {
             ("+60 seconds", "2024-01-12T15:22:28+02:00", "2024-01-12 15:23:28 +02:00"),
             ("1 sec ago", "2024-01-25T15:22:28+02:00", "2024-01-25 15:22:27 +02:00"),
             ("1 seconds ago", "2024-01-25T15:22:28+02:00", "2024-01-25 15:22:27 +02:00"),
+            ("past 1 seconds", "2024-01-25T15:22:28+02:00", "2024-01-25 15:22:27 +02:00"),
+            ("prev 2 seconds", "2024-01-25T15:22:28+02:00", "2024-01-25 15:22:26 +02:00"),
+            ("last 1 seconds", "2024-01-25T15:22:28+02:00", "2024-01-25 15:22:27 +02:00"),
         ]);
     }
 
@@ -836,6 +847,9 @@ mod tests {
             ("+60 minutes", "2024-01-12T15:22:28+02:00", "2024-01-12 16:22:28 +02:00"),
             ("1 min ago", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
             ("5 minutes ago", "2024-01-12 15:22:28+02:00", "2024-01-12 15:17:28 +02:00"),
+            ("past 5 minutes", "2024-01-12 15:22:28+02:00", "2024-01-12 15:17:28 +02:00"),
+            ("prev 5 minutes", "2024-01-12 15:22:28+02:00", "2024-01-12 15:17:28 +02:00"),
+            ("last 5 minutes", "2024-01-12 15:22:28+02:00", "2024-01-12 15:17:28 +02:00"),
         ]);
     }
 
@@ -854,6 +868,9 @@ mod tests {
             ("+30 hours", "2024-01-12T15:22:28+02:00", "2024-01-13 21:22:28 +02:00"),
             ("1 hr ago", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
             ("1 hour ago", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
+            ("past 1 hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
+            ("prev 1 hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
+            ("last 1 hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
         ]);
     }
 
@@ -869,6 +886,9 @@ mod tests {
             ("+1d", "2024-01-12T15:22:28+02:00", "2024-01-13 15:22:28 +02:00"),
             ("+30 days", "2024-01-12T15:22:28+02:00", "2024-02-11 15:22:28 +02:00"),
             ("2 days ago", "2024-01-12T15:22:28+02:00", "2024-01-10 15:22:28 +02:00"),
+            ("past 2 days", "2024-01-12T15:22:28+02:00", "2024-01-10 15:22:28 +02:00"),
+            ("prev 2 days", "2024-01-12T15:22:28+02:00", "2024-01-10 15:22:28 +02:00"),
+            ("last 2 days", "2024-01-12T15:22:28+02:00", "2024-01-10 15:22:28 +02:00"),
         ]);
     }
 
@@ -895,6 +915,7 @@ mod tests {
             ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-21 14:22:28 +02:00"),
             ("+2 weeks", "2024-01-08T15:22:28+02:00", "2024-01-22 15:22:28 +02:00"),
             ("1 week ago", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
+            ("past 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
         ]);
     }
 
@@ -905,6 +926,8 @@ mod tests {
             ("prev week", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
             ("last week", "2024-01-25T15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
             ("next week", "2024-01-13 15:22:28+02:00", "2024-01-15 15:22:28 +02:00"),
+            ("prev 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-08 15:22:28 +02:00"),
+            ("last 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-08 15:22:28 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {
@@ -921,6 +944,8 @@ mod tests {
             ("prev week", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
             ("last week", "2024-01-25T15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
             ("next week", "2024-01-13 15:22:28+02:00", "2024-01-14 15:22:28 +02:00"),
+            ("prev 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-07 15:22:28 +02:00"),
+            ("last 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-07 15:22:28 +02:00"),
         ];
 
         for (from_string, current_time, expect_time) in expect {
@@ -957,6 +982,9 @@ mod tests {
             ("+1m", "2024-03-12T15:22:28+02:00", "2024-04-12 15:22:28 +02:00"),
             ("+13 months", "2023-12-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
             ("1 month ago", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
+            ("past 1 months", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
+            ("prev 1 months", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
+            ("last 1 months", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
             // Different number of days in each month
             ("-1m", "2022-05-31T15:22:28+02:00", "2022-04-30 15:22:28 +02:00"),
         ]);
@@ -974,6 +1002,9 @@ mod tests {
             ("+1y", "2024-01-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
             ("+10 years", "2024-01-12T15:22:28+02:00", "2034-01-12 15:22:28 +02:00"),
             ("2 years ago", "2024-01-12T15:22:28+02:00", "2022-01-12 15:22:28 +02:00"),
+            ("past 2 years", "2024-01-12T15:22:28+02:00", "2022-01-12 15:22:28 +02:00"),
+            ("prev 2 years", "2024-01-12T15:22:28+02:00", "2022-01-12 15:22:28 +02:00"),
+            ("last 2 years", "2024-01-12T15:22:28+02:00", "2022-01-12 15:22:28 +02:00"),
             // Non-leap years
             ("-1y", "2022-02-01T15:22:28+02:00", "2021-02-01 15:22:28 +02:00"),
             ("-1y", "2022-02-05T15:22:28+02:00", "2021-02-05 15:22:28 +02:00"),

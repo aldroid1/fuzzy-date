@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 47] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -16,17 +16,15 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // WEEKDAY OFFSETS
     (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::None)?.time_reset()),
     (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.time_reset()),
-    (&Pattern::LastWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.time_reset()),
     (&Pattern::NextWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Next)?.time_reset()),
     // MONTH OFFSETS
     (&Pattern::ThisMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::None)?.time_reset()),
     (&Pattern::PrevMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Prev)?.time_reset()),
-    (&Pattern::LastMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Prev)?.time_reset()),
     (&Pattern::NextMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Next)?.time_reset()),
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
     (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
-    (&Pattern::LastLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
+    (&Pattern::PrevNLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(1), 0 - v.get_int(0), r)),
     (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
     // NUMERIC OFFSET, MINUS
     (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
@@ -62,16 +60,6 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| {
-        c.offset_unit_keyword(v.get_unit(1), -1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
-            .time_reset()
-    }),
-    (&Pattern::FirstLongUnitOfLastLongUnit, |c, v, r| {
-        c.offset_unit_keyword(v.get_unit(1), -1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
-            .time_reset()
-    }),
-    (&Pattern::LastLongUnitOfLastLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), -1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
@@ -557,7 +545,7 @@ mod tests {
     #[test]
     fn test_custom_patterns() {
         let custom_finnish = vec![
-            ("viime [wday]", &Pattern::LastWday),
+            ("viime [wday]", &Pattern::PrevWday),
             ("edellinen [wday]", &Pattern::PrevWday),
             ("ensi [wday]", &Pattern::NextWday),
             ("seuraava [wday]", &Pattern::NextWday),
