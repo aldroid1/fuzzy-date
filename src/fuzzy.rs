@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 47] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 48] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -23,6 +23,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::NextMonth, |c, v, _| c.offset_month(v.get_int(0), convert::Change::Next)?.time_reset()),
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
+    (&Pattern::PastLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(0), -1, r)),
     (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
     (&Pattern::PrevNLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(1), 0 - v.get_int(0), r)),
     (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
