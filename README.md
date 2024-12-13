@@ -1,5 +1,8 @@
 # fuzzy-date
 
+[![PyPI version shields.io](https://img.shields.io/pypi/v/fuzzy-date.svg?color=blue)](https://pypi.python.org/pypi/fuzzy-date/) ‎
+[![PyPI download month](https://img.shields.io/pypi/dm/fuzzy-date.svg?color=blue)](https://pypistats.org/packages/fuzzy-date) ‎
+
 Python module to convert various time strings into datetime objects, written in Rust.
 
 ## Date conversion
