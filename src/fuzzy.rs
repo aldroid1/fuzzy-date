@@ -325,16 +325,16 @@ pub(crate) struct UnitLocale {
 impl UnitLocale {
     pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
         let mut mapping: HashMap<String, String> = HashMap::from([
-            (String::from("second"), String::from("")),
-            (String::from("seconds"), String::from("")),
-            (String::from("minute"), String::from("")),
-            (String::from("minutes"), String::from("")),
-            (String::from("hour"), String::from("")),
-            (String::from("hours"), String::from("")),
-            (String::from("day"), String::from("")),
-            (String::from("days"), String::from("")),
-            (String::from("week"), String::from("")),
-            (String::from("weeks"), String::from("")),
+            (String::from("second"), String::new()),
+            (String::from("seconds"), String::new()),
+            (String::from("minute"), String::new()),
+            (String::from("minutes"), String::new()),
+            (String::from("hour"), String::new()),
+            (String::from("hours"), String::new()),
+            (String::from("day"), String::new()),
+            (String::from("days"), String::new()),
+            (String::from("week"), String::new()),
+            (String::from("weeks"), String::new()),
         ]);
 
         mapping.extend(names);
@@ -414,7 +414,7 @@ pub(crate) fn convert(
 /// Turn seconds into a duration string
 pub(crate) fn to_duration(seconds: f64, units: &UnitLocale, max_unit: &str, min_unit: &str) -> String {
     let mut seconds = seconds;
-    let mut result: String = String::from("");
+    let mut result: String = String::new();
 
     let naming: HashMap<&str, i8> = HashMap::from([
         ("s", 1),

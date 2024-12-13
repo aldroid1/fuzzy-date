@@ -228,7 +228,7 @@ pub(crate) fn is_time_duration(pattern: &str) -> bool {
 
 /// Turn source string into a pattern, and list of extracted tokens
 pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String, Vec<Token>) {
-    let mut out_pattern: String = String::from("");
+    let mut out_pattern: String = String::new();
     let mut out_values = vec![];
 
     if source.len().lt(&1) {
@@ -237,12 +237,12 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
     let token_list = TokenList::new(custom);
     let last_index: usize = source.len() - 1;
-    let mut prev_char = String::from("");
+    let mut prev_char = String::new();
     let mut part_start = 0;
 
     for (part_index, part_char) in source.char_indices() {
         let mut part_chars = "";
-        let mut part_letter: String = String::from("");
+        let mut part_letter: String = String::new();
 
         let char_str: &str = &part_char.to_string();
 
@@ -301,7 +301,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
             continue;
         }
 
-        let mut combo_pattern = String::from("");
+        let mut combo_pattern = String::new();
 
         if number_value.is_some() {
             let number_token = number_value.unwrap();
@@ -339,8 +339,8 @@ fn parse_string_and_number(part_chars: &str) -> (String, String) {
     let prefixed_number: bool =
         TokenList::is_prefixed(&part_chars.char_indices().next().unwrap().1.to_string().as_str());
 
-    let mut curr_number = String::from("");
-    let mut curr_string = String::from("");
+    let mut curr_number = String::new();
+    let mut curr_string = String::new();
 
     for (_, curr_char) in part_chars.char_indices() {
         if prefixed_number.eq(&false) && curr_string.len() == 0 && curr_char.is_digit(10) {
