@@ -408,7 +408,7 @@ pub(crate) fn convert(
         ctx_vals.drop_used(pattern_match.split("[").count() - 1);
     }
 
-    Option::from(ctx_time.time)
+    Some(ctx_time.time)
 }
 
 /// Turn seconds into a duration string

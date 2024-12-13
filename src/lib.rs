@@ -669,27 +669,27 @@ fn gid_into_token(gid: u32) -> Option<Token> {
     let gid = gid as i64;
 
     if gid.ge(&101) && gid.le(&107) {
-        return Option::from(Token::new(TokenType::Weekday, gid - 100));
+        return Some(Token::new(TokenType::Weekday, gid - 100));
     }
 
     if gid.ge(&201) && gid.le(&212) {
-        return Option::from(Token::new(TokenType::Month, gid - 200));
+        return Some(Token::new(TokenType::Month, gid - 200));
     }
 
     if gid.ge(&301) && gid.le(&303) {
-        return Option::from(Token::new(TokenType::Unit, gid - 300));
+        return Some(Token::new(TokenType::Unit, gid - 300));
     }
 
     if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
-        return Option::from(Token::new(TokenType::ShortUnit, gid - 400));
+        return Some(Token::new(TokenType::ShortUnit, gid - 400));
     }
 
     if gid.ge(&501) && gid.le(&507) {
-        return Option::from(Token::new(TokenType::LongUnit, gid - 500));
+        return Some(Token::new(TokenType::LongUnit, gid - 500));
     }
 
     if gid.ge(&601) && gid.le(&602) {
-        return Option::from(Token::new(TokenType::Meridiem, gid - 600));
+        return Some(Token::new(TokenType::Meridiem, gid - 600));
     }
 
     None

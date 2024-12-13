@@ -199,7 +199,7 @@ impl TokenList {
         let lowercased: &str = &source.to_lowercase().to_string();
 
         match self.tokens.get(lowercased) {
-            Some(v) => Option::from(v.to_owned()),
+            Some(v) => Some(v.to_owned()),
             None => None,
         }
     }
@@ -381,11 +381,11 @@ fn parse_number(source: &str) -> Option<Token> {
     };
 
     if value.ge(&10000) {
-        return Option::from(Token::new(TokenType::Timestamp, value));
+        return Some(Token::new(TokenType::Timestamp, value));
     }
 
     if value.ge(&1000) {
-        return Option::from(Token::new(TokenType::Year, value));
+        return Some(Token::new(TokenType::Year, value));
     }
 
     let zeros = match value.eq(&0) {
@@ -393,7 +393,7 @@ fn parse_number(source: &str) -> Option<Token> {
         false => source.len() - source.trim_start_matches("0").len(),
     };
 
-    Option::from(Token::new_integer(value, zeros as u8))
+    Some(Token::new_integer(value, zeros as u8))
 }
 
 #[cfg(test)]
