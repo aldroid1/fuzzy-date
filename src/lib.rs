@@ -152,6 +152,8 @@ mod fuzzydate {
         #[classattr]
         const THIS_LONG_UNIT: &'static str = constants::PATTERN_THIS_LONG_UNIT;
         #[classattr]
+        const PAST_LONG_UNIT: &'static str = constants::PATTERN_PAST_LONG_UNIT;
+        #[classattr]
         const PREV_LONG_UNIT: &'static str = constants::PATTERN_PREV_LONG_UNIT;
         #[classattr]
         #[deprecated]
@@ -667,27 +669,27 @@ fn gid_into_token(gid: u32) -> Option<Token> {
     let gid = gid as i64;
 
     if gid.ge(&101) && gid.le(&107) {
-        return Option::from(Token::new(TokenType::Weekday, gid - 100));
+        return Some(Token::new(TokenType::Weekday, gid - 100));
     }
 
     if gid.ge(&201) && gid.le(&212) {
-        return Option::from(Token::new(TokenType::Month, gid - 200));
+        return Some(Token::new(TokenType::Month, gid - 200));
     }
 
     if gid.ge(&301) && gid.le(&303) {
-        return Option::from(Token::new(TokenType::Unit, gid - 300));
+        return Some(Token::new(TokenType::Unit, gid - 300));
     }
 
     if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
-        return Option::from(Token::new(TokenType::ShortUnit, gid - 400));
+        return Some(Token::new(TokenType::ShortUnit, gid - 400));
     }
 
     if gid.ge(&501) && gid.le(&507) {
-        return Option::from(Token::new(TokenType::LongUnit, gid - 500));
+        return Some(Token::new(TokenType::LongUnit, gid - 500));
     }
 
     if gid.ge(&601) && gid.le(&602) {
-        return Option::from(Token::new(TokenType::Meridiem, gid - 600));
+        return Some(Token::new(TokenType::Meridiem, gid - 600));
     }
 
     None
@@ -817,6 +819,7 @@ mod tests {
     fn test_offset_seconds() {
         assert_convert_from(vec![
             ("this second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
+            ("past second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:27 +02:00"),
             ("prev second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:27 +02:00"),
             ("last second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:27 +02:00"),
             ("next second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:29 +02:00"),
@@ -838,6 +841,7 @@ mod tests {
     fn test_offset_minutes() {
         assert_convert_from(vec![
             ("this minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
+            ("past minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
             ("prev minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
             ("last minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
             ("next minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:23:28 +02:00"),
@@ -857,6 +861,7 @@ mod tests {
     fn test_offset_hours() {
         assert_convert_from(vec![
             ("this hour", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
+            ("past hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
             ("prev hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
             ("last hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
             ("next hour", "2024-01-12T15:22:28+02:00", "2024-01-12 16:22:28 +02:00"),
@@ -878,6 +883,7 @@ mod tests {
     fn test_offset_days() {
         assert_convert_from(vec![
             ("this day", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
+            ("past day", "2024-01-12T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
             ("prev day", "2024-01-12T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
             ("last day", "2024-01-12T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
             ("next day", "2024-01-12T15:22:28+02:00", "2024-01-13 15:22:28 +02:00"),
@@ -915,6 +921,7 @@ mod tests {
             ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-21 14:22:28 +02:00"),
             ("+2 weeks", "2024-01-08T15:22:28+02:00", "2024-01-22 15:22:28 +02:00"),
             ("1 week ago", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
+            ("past week", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
             ("past 2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
         ]);
     }
@@ -974,6 +981,7 @@ mod tests {
     fn test_offset_months() {
         assert_convert_from(vec![
             ("this month", "2024-03-12T15:22:28+02:00", "2024-03-12 15:22:28 +02:00"),
+            ("past month", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
             ("prev month", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
             ("last month", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
             ("next month", "2024-12-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
@@ -994,6 +1002,7 @@ mod tests {
     fn test_offset_years() {
         assert_convert_from(vec![
             ("this year", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
+            ("past year", "2024-01-12T15:22:28+02:00", "2023-01-12 15:22:28 +02:00"),
             ("prev year", "2024-01-12T15:22:28+02:00", "2023-01-12 15:22:28 +02:00"),
             ("last year", "2024-01-12T15:22:28+02:00", "2023-01-12 15:22:28 +02:00"),
             ("next year", "2024-01-12T15:22:28+02:00", "2025-01-12 15:22:28 +02:00"),
@@ -1163,6 +1172,7 @@ mod tests {
             "7",
             "2020-01-07",
             "last week",
+            "past week",
             "1 hour ago",
             "1y",
             "+1 year",

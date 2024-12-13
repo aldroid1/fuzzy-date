@@ -17,6 +17,7 @@ pub(crate) const PATTERN_LAST_MONTH: &'static str = "last [month]";
 pub(crate) const PATTERN_NEXT_MONTH: &'static str = "next [month]";
 
 pub(crate) const PATTERN_THIS_LONG_UNIT: &'static str = "this [long_unit]";
+pub(crate) const PATTERN_PAST_LONG_UNIT: &'static str = "past [long_unit]";
 pub(crate) const PATTERN_PREV_LONG_UNIT: &'static str = "prev [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT: &'static str = "last [long_unit]";
 pub(crate) const PATTERN_NEXT_LONG_UNIT: &'static str = "next [long_unit]";
@@ -145,6 +146,7 @@ pub(crate) enum Pattern {
     NextMonth,
 
     ThisLongUnit,
+    PastLongUnit,
     PrevLongUnit,
     PrevNLongUnit,
     NextLongUnit,
@@ -218,6 +220,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::PrevMonth, PATTERN_LAST_MONTH),
         (Pattern::NextMonth, PATTERN_NEXT_MONTH),
         (Pattern::ThisLongUnit, PATTERN_THIS_LONG_UNIT),
+        (Pattern::PastLongUnit, PATTERN_PAST_LONG_UNIT),
         (Pattern::PrevLongUnit, PATTERN_PREV_LONG_UNIT),
         (Pattern::PrevLongUnit, PATTERN_LAST_LONG_UNIT),
         (Pattern::NextLongUnit, PATTERN_NEXT_LONG_UNIT),

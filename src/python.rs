@@ -47,7 +47,7 @@ mod test {
 
         Python::with_gil(|py| {
             let expect_value = Utc::now().format("%Y-%m-%d 00:00:00 +00:00").to_string();
-            let result_value = into_date(py, Option::from(None));
+            let result_value = into_date(py, None);
             assert_eq!(result_value.unwrap().to_string(), expect_value);
         });
 
@@ -63,7 +63,7 @@ mod test {
 
         Python::with_gil(|py| {
             let expect_value = Utc::now().format("%Y-%m-%d %H:").to_string();
-            let result_value = into_datetime(py, Option::from(None));
+            let result_value = into_datetime(py, None);
             assert!(result_value.unwrap().to_string().starts_with(expect_value.as_str()));
         });
 
@@ -75,20 +75,20 @@ mod test {
         Python::with_gil(|py| {
             let tz_offset = FixedOffset::east_opt(5 * 60 * 60).unwrap();
             let tz_bound: Bound<PyTzInfo> = tz_offset.into_pyobject(py).unwrap();
-            let test_value = PyDateTime::new(py, 2023, 4, 1, 15, 2, 1, 7, Option::from(&tz_bound));
+            let test_value = PyDateTime::new(py, 2023, 4, 1, 15, 2, 1, 7, Some(&tz_bound));
             assert_datetime(py, test_value, "2023-04-01 15:02:01.000007 +05:00");
         });
     }
 
     fn assert_date(py: Python, test_value: PyResult<Bound<PyDate>>, expect_value: &str) {
         let date_value: Bound<PyDate> = test_value.unwrap().into_pyobject(py).unwrap();
-        let result_value = into_date(py, Option::from(date_value));
+        let result_value = into_date(py, Some(date_value));
         assert_eq!(result_value.unwrap().to_string(), expect_value);
     }
 
     fn assert_datetime(py: Python, test_value: PyResult<Bound<PyDateTime>>, expect_value: &str) {
         let date_value: Bound<PyDateTime> = test_value.unwrap().into_pyobject(py).unwrap();
-        let result_value = into_datetime(py, Option::from(date_value));
+        let result_value = into_datetime(py, Some(date_value));
         assert_eq!(result_value.unwrap().to_string(), expect_value);
     }
 }

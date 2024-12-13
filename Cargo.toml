@@ -8,5 +8,5 @@ name = "fuzzydate"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4.38"
-pyo3 = { version = "0.23.1", features = ["chrono"] }
+chrono = "0.4.39"
+pyo3 = { version = "0.23.3", features = ["chrono"] }
