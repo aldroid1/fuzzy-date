@@ -12,7 +12,7 @@ const CONDITIONAL_CHARS: [&'static str; 1] = ["."];
 const IGNORED_CHARS: [&'static str; 1] = [","];
 
 const STANDARD_TOKENS: [(&'static str, Token); 141] = [
-    // Months, abberivated
+    // Months, abbreviated
     ("jan", Token { token: TokenType::Month, value: 1, zeros: 0 }),
     ("jan.", Token { token: TokenType::Month, value: 1, zeros: 0 }),
     ("feb", Token { token: TokenType::Month, value: 2, zeros: 0 }),
