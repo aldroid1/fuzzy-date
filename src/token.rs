@@ -929,12 +929,12 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize("10. heinäkuu 2023", custom_tokens.to_owned()),
+            tokenize("heinäkuu 10. 2023", custom_tokens.to_owned()),
             (
-                String::from("[nth] [month] [year]"),
+                String::from("[month] [nth] [year]"),
                 vec![
-                    Token::new(TokenType::Nth, 10),
                     Token::new(TokenType::Month, 7),
+                    Token::new(TokenType::Nth, 10),
                     Token::new(TokenType::Year, 2023)
                 ]
             ),
