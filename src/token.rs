@@ -11,30 +11,44 @@ const CONDITIONAL_CHARS: [&'static str; 1] = ["."];
 // Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [","];
 
-const STANDARD_TOKENS: [(&'static str, Token); 128] = [
-    // Months
+const STANDARD_TOKENS: [(&'static str, Token); 141] = [
+    // Months, abberivated
     ("jan", Token { token: TokenType::Month, value: 1, zeros: 0 }),
-    ("january", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("jan.", Token { token: TokenType::Month, value: 1, zeros: 0 }),
     ("feb", Token { token: TokenType::Month, value: 2, zeros: 0 }),
-    ("february", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("feb.", Token { token: TokenType::Month, value: 2, zeros: 0 }),
     ("mar", Token { token: TokenType::Month, value: 3, zeros: 0 }),
-    ("march", Token { token: TokenType::Month, value: 3, zeros: 0 }),
+    ("mar.", Token { token: TokenType::Month, value: 3, zeros: 0 }),
     ("apr", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("apr.", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("jun", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("jun.", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("jul", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("jul.", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("aug", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("aug.", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("sep", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sep.", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sept", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sept.", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("oct", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("oct.", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("nov", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("nov.", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("dec", Token { token: TokenType::Month, value: 12, zeros: 0 }),
+    ("dec.", Token { token: TokenType::Month, value: 12, zeros: 0 }),
+    // Months, full
+    ("january", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("february", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("march", Token { token: TokenType::Month, value: 3, zeros: 0 }),
     ("april", Token { token: TokenType::Month, value: 4, zeros: 0 }),
     ("may", Token { token: TokenType::Month, value: 5, zeros: 0 }),
-    ("jun", Token { token: TokenType::Month, value: 6, zeros: 0 }),
     ("june", Token { token: TokenType::Month, value: 6, zeros: 0 }),
-    ("jul", Token { token: TokenType::Month, value: 7, zeros: 0 }),
     ("july", Token { token: TokenType::Month, value: 7, zeros: 0 }),
-    ("aug", Token { token: TokenType::Month, value: 8, zeros: 0 }),
     ("august", Token { token: TokenType::Month, value: 8, zeros: 0 }),
-    ("sep", Token { token: TokenType::Month, value: 9, zeros: 0 }),
     ("september", Token { token: TokenType::Month, value: 9, zeros: 0 }),
-    ("oct", Token { token: TokenType::Month, value: 10, zeros: 0 }),
     ("october", Token { token: TokenType::Month, value: 10, zeros: 0 }),
-    ("nov", Token { token: TokenType::Month, value: 11, zeros: 0 }),
     ("november", Token { token: TokenType::Month, value: 11, zeros: 0 }),
-    ("dec", Token { token: TokenType::Month, value: 12, zeros: 0 }),
     ("december", Token { token: TokenType::Month, value: 12, zeros: 0 }),
     // Weekdays
     ("mon", Token { token: TokenType::Weekday, value: 1, zeros: 0 }),
@@ -310,10 +324,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
             continue;
         }
 
-        let string_token = token_list.find_token(&part_chars);
-
-        if string_token.is_some() {
-            let string_value = string_token.unwrap();
+        if let Some(string_value) = token_list.find_token(&part_chars) {
             out_values.push(string_value.clone());
             out_pattern.push_str(&string_value.token.as_pattern());
             out_pattern.push_str(&part_letter);
@@ -325,8 +336,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         // Just a number, or a special prefix
         if curr_number.len() > 0 && curr_string.len() == 0 {
-            if number_value.is_some() {
-                let number_token = number_value.unwrap();
+            if let Some(number_token) = number_value {
                 out_values.push(number_token.clone());
                 out_pattern.push_str(&number_token.token.as_pattern());
                 out_pattern.push_str(&part_letter);
@@ -343,18 +353,14 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         let mut combo_pattern = String::new();
 
-        if number_value.is_some() {
-            let number_token = number_value.unwrap();
+        if let Some(number_token) = number_value {
             out_values.push(number_token.clone());
             combo_pattern.push_str(&number_token.token.as_pattern());
         } else {
             combo_pattern.push_str(&curr_number);
         }
 
-        let string_value = token_list.find_token(&curr_string);
-
-        if string_value.is_some() {
-            let string_token = string_value.unwrap();
+        if let Some(string_token) = token_list.find_token(&curr_string) {
             out_values.push(string_token.clone());
             combo_pattern.push_str(&string_token.token.as_pattern());
         } else {
@@ -484,36 +490,56 @@ mod tests {
     }
 
     #[test]
-    fn test_months() {
+    fn test_months_full() {
         let expect: Vec<(&str, i64)> = vec![
             ("January", 1),
-            ("Jan", 1),
             ("February", 2),
-            ("Feb", 2),
             ("March", 3),
-            ("Mar", 3),
             ("April", 4),
-            ("Apr", 4),
             ("May", 5),
             ("June", 6),
-            ("Jun", 6),
             ("July", 7),
-            ("Jul", 7),
             ("August", 8),
-            ("Aug", 8),
             ("September", 9),
-            ("Sep", 9),
             ("October", 10),
-            ("Oct", 10),
             ("November", 11),
-            ("Nov", 11),
             ("December", 12),
+        ];
+
+        for (from_string, expect_value) in expect {
+            assert_eq!(
+                tokenize_str(from_string),
+                (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
+            );
+        }
+    }
+
+    #[test]
+    fn test_months_abbreviated() {
+        let expect: Vec<(&str, i64)> = vec![
+            ("Jan", 1),
+            ("Feb", 2),
+            ("Mar", 3),
+            ("Apr", 4),
+            ("Jun", 6),
+            ("Jun", 6),
+            ("Jul", 7),
+            ("Aug", 8),
+            ("Sep", 9),
+            ("Sept", 9),
+            ("Oct", 10),
+            ("Nov", 11),
             ("Dec", 12),
         ];
 
         for (from_string, expect_value) in expect {
             assert_eq!(
                 tokenize_str(from_string),
+                (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
+            );
+
+            assert_eq!(
+                tokenize_str(&format!("{}.", from_string)),
                 (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
             );
         }
