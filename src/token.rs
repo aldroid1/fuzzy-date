@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 // Boundary characters that always trigger treating
 // parsing collected characters into token(s)
@@ -10,6 +10,10 @@ const CONDITIONAL_CHARS: [&'static str; 1] = ["."];
 
 // Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [","];
+
+// Prefix characters before numbers that mean the value should
+// be treated as a timestamp
+const PREFIX_CHARS_TIMESTAMP: [&'static str; 1] = ["@"];
 
 const STANDARD_TOKENS: [(&'static str, Token); 141] = [
     // Months, abbreviated
@@ -163,6 +167,46 @@ const STANDARD_TOKENS: [(&'static str, Token); 141] = [
     ("p.m.", Token { token: TokenType::Meridiem, value: 2, zeros: 0 }),
 ];
 
+struct ParsedNumberValue {
+    is_timestamp: bool,
+    prefix: String,
+    number: String,
+}
+
+impl ParsedNumberValue {
+    fn new(prefix: String, value: String) -> Self {
+        Self { is_timestamp: PREFIX_CHARS_TIMESTAMP.contains(&prefix.as_str()), prefix: prefix, number: value }
+    }
+
+    fn is_only_number(&self) -> bool {
+        (self.prefix.is_empty() || self.is_timestamp) && !self.number.is_empty()
+    }
+
+    fn is_only_string(&self) -> bool {
+        !self.prefix.is_empty() && self.number.is_empty()
+    }
+
+    fn leading_zeros(&self) -> u8 {
+        let Some(value) = self.number_value() else { return 0 };
+
+        match value.gt(&0) {
+            true => (self.number.len() - self.number.trim_start_matches("0").len()) as u8,
+            false => 0,
+        }
+    }
+
+    fn number_value(&self) -> Option<i64> {
+        if self.number.is_empty() {
+            return None;
+        }
+
+        match self.number.parse::<i64>() {
+            Ok(n) => Some(n),
+            Err(_) => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub(crate) enum TokenType {
     Integer,
@@ -234,10 +278,6 @@ impl TokenList {
         tokens.extend(custom.to_owned());
 
         Self { tokens: tokens }
-    }
-
-    fn is_prefixed(value: &str) -> bool {
-        HashSet::from(["@"]).contains(value)
     }
 
     fn find_token(&self, source: &str) -> Option<Token> {
@@ -317,7 +357,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         if part_chars.eq("") {
-            if out_values.len() == 0 || !&part_letter.eq(" ") {
+            if out_values.is_empty() || !&part_letter.eq(" ") {
                 out_pattern.push_str(&part_letter);
             }
 
@@ -331,13 +371,21 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
             continue;
         }
 
-        let (curr_string, curr_number) = parse_string_and_number(part_chars);
-        let number_value = parse_number(&curr_number);
+        let parsed_number = parse_string_and_number(part_chars);
 
         // Just a number, or a special prefix
-        if curr_number.len() > 0 && curr_string.len() == 0 {
-            if let Some(number_token) = number_value {
+        if parsed_number.is_only_number() {
+            if let Some(number_token) = create_integer_token(&parsed_number) {
                 out_values.push(number_token.clone());
+
+                // When timestamp parsing has failed, keep the prefix
+                if parsed_number.is_timestamp
+                    && number_token.token.ne(&TokenType::Timestamp)
+                    && !parsed_number.prefix.is_empty()
+                {
+                    out_pattern.push_str(&parsed_number.prefix);
+                }
+
                 out_pattern.push_str(&number_token.token.as_pattern());
                 out_pattern.push_str(&part_letter);
             }
@@ -345,7 +393,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         // Unknown string only, include as-is
-        if curr_number.len() == 0 && curr_string.len() > 0 {
+        if parsed_number.is_only_string() {
             out_pattern.push_str(&part_chars);
             out_pattern.push_str(&part_letter);
             continue;
@@ -353,18 +401,18 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         let mut combo_pattern = String::new();
 
-        if let Some(number_token) = number_value {
+        if let Some(number_token) = create_integer_token(&parsed_number) {
             out_values.push(number_token.clone());
             combo_pattern.push_str(&number_token.token.as_pattern());
         } else {
-            combo_pattern.push_str(&curr_number);
+            combo_pattern.push_str(&parsed_number.number);
         }
 
-        if let Some(string_token) = token_list.find_token(&curr_string) {
+        if let Some(string_token) = token_list.find_token(&parsed_number.prefix) {
             out_values.push(string_token.clone());
             combo_pattern.push_str(&string_token.token.as_pattern());
         } else {
-            combo_pattern.push_str(&curr_string);
+            combo_pattern.push_str(&parsed_number.prefix);
         }
 
         out_pattern.push_str(&combo_pattern);
@@ -376,30 +424,30 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
 /// Check that character is a boundary for value
 fn is_value_boundary(prev_char: &String) -> bool {
-    prev_char.len() == 0 || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
+    prev_char.is_empty() || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
 }
 
 /// Parse a string that consists of a number+string parts, such as "1d"
 /// or the supported reverse cases, such as "@123456789
-fn parse_string_and_number(part_chars: &str) -> (String, String) {
-    let prefixed_number: bool =
-        TokenList::is_prefixed(&part_chars.char_indices().next().unwrap().1.to_string().as_str());
+fn parse_string_and_number(part_chars: &str) -> ParsedNumberValue {
+    let first_char = part_chars.char_indices().next().unwrap().1.to_string();
+    let is_timestamp = ParsedNumberValue::new(first_char, String::new()).is_timestamp;
 
     let mut curr_number = String::new();
     let mut curr_string = String::new();
 
     for (_, curr_char) in part_chars.char_indices() {
-        if prefixed_number.eq(&false) && curr_string.len() == 0 && curr_char.is_digit(10) {
+        if !is_timestamp && curr_string.is_empty() && curr_char.is_digit(10) {
             curr_number.push(curr_char);
             continue;
         }
 
-        if prefixed_number.eq(&true) && curr_number.len() == 0 && curr_char.is_digit(10) {
+        if is_timestamp && curr_number.is_empty() && curr_char.is_digit(10) {
             curr_number.push(curr_char);
             continue;
         }
 
-        if prefixed_number.eq(&true) && curr_number.len() > 0 {
+        if is_timestamp && !curr_number.is_empty() {
             curr_number.push(curr_char);
             continue;
         }
@@ -407,39 +455,27 @@ fn parse_string_and_number(part_chars: &str) -> (String, String) {
         curr_string.push(curr_char);
     }
 
-    if prefixed_number.eq(&true) && curr_number.len() > 0 && TokenList::is_prefixed(curr_string.as_str()) {
-        curr_string = "".to_string();
-    }
-
-    (curr_string, curr_number)
+    ParsedNumberValue::new(curr_string, curr_number)
 }
 
 /// Parse a numeric string into an integer token, refining token
 /// type based on the size of the integer
-fn parse_number(source: &str) -> Option<Token> {
-    if source.len() == 0 {
+fn create_integer_token(parsed: &ParsedNumberValue) -> Option<Token> {
+    let Some(number_value) = parsed.number_value() else {
         return None;
-    }
-
-    let value: i64 = match source.parse::<i64>() {
-        Ok(v) => v,
-        Err(_) => return None,
     };
 
-    if value.ge(&10000) {
-        return Some(Token::new(TokenType::Timestamp, value));
+    // Only treat large integer values as timestamps when they were
+    // parsed with a timestamp prefix character
+    if parsed.is_timestamp && number_value.ge(&10_000) {
+        return Some(Token::new(TokenType::Timestamp, number_value));
     }
 
-    if value.ge(&1000) {
-        return Some(Token::new(TokenType::Year, value));
+    if number_value.ge(&1_000) && number_value.lt(&10_000) {
+        return Some(Token::new(TokenType::Year, number_value));
     }
 
-    let zeros = match value.eq(&0) {
-        true => 0,
-        false => source.len() - source.trim_start_matches("0").len(),
-    };
-
-    Some(Token::new_integer(value, zeros as u8))
+    Some(Token::new_integer(number_value, parsed.leading_zeros()))
 }
 
 #[cfg(test)]
@@ -832,23 +868,37 @@ mod tests {
     }
 
     #[test]
-    fn test_strings() {
-        assert_eq!(
-            tokenize_str("@1705072948"),
-            (String::from("[timestamp]"), vec![Token::new(TokenType::Timestamp, 1705072948)])
-        );
-
-        assert_eq!(
-            tokenize_str("@1705072948.0"),
+    fn test_timestamps() {
+        let expect = vec![
+            ("@1705072948", "[timestamp]", vec![Token::new(TokenType::Timestamp, 1705072948)]),
             (
-                String::from("[timestamp].[int]"),
+                "@1705072948.0",
+                "[timestamp].[int]",
                 vec![
                     Token::new(TokenType::Timestamp, 1705072948),
                     Token::new(TokenType::Integer, 0),
-                ]
-            )
-        );
+                ],
+            ),
+            ("@1", "@[int]", vec![Token::new(TokenType::Integer, 1)]),
+            ("1705072948", "[int]", vec![Token::new(TokenType::Integer, 1705072948)]),
+            (
+                "1705072948.0",
+                "[int].[int]",
+                vec![
+                    Token::new(TokenType::Integer, 1705072948),
+                    Token::new(TokenType::Integer, 0),
+                ],
+            ),
+            ("20120201", "[int]", vec![Token::new(TokenType::Integer, 20120201)]),
+        ];
 
+        for (from_string, expect_string, expect_tokens) in expect {
+            assert_eq!(tokenize_str(from_string), (expect_string.to_string(), expect_tokens));
+        }
+    }
+
+    #[test]
+    fn test_strings() {
         assert_eq!(
             tokenize_str("2023-07-01"),
             (
