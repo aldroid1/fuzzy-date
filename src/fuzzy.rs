@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 48] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 49] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -75,6 +75,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
+    // 20230104
+    (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
     // @1705072948, @1705072948.452
     (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
     (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_ms(1))),
@@ -156,6 +158,12 @@ impl CallValues {
         self.tokens[index].value
     }
 
+    fn get_string(&self, index: usize) -> String {
+        let value = self.tokens[index].value;
+        let zeros = self.tokens[index].zeros;
+        format!("{}{}", "0".repeat(zeros as usize), value)
+    }
+
     /// Get value with the assumption that it should represent milliseconds,
     /// and thus the number of zeros before the number is meaningful. If there
     /// are too many zeros, we use -1 to break out on millisecond value
@@ -201,6 +209,11 @@ struct FuzzyDate {
 impl FuzzyDate {
     fn new(time: DateTime<FixedOffset>) -> Self {
         FuzzyDate { time: time }
+    }
+
+    /// Set time to specific data from basic ISO8601 date string
+    fn date_iso8601(&self, value: String) -> Result<Self, ()> {
+        Ok(Self { time: convert::date_iso8601(self.time, value)? })
     }
 
     /// Set time to specific timestamp
@@ -391,7 +404,7 @@ pub(crate) fn convert(
 ) -> Option<DateTime<FixedOffset>> {
     let call_list = find_pattern_calls(&pattern, custom_patterns);
 
-    if call_list.len().eq(&0) {
+    if call_list.is_empty() {
         return None;
     }
 
@@ -510,23 +523,28 @@ fn find_pattern_calls(
         }
     }
 
-    let mut result = vec![];
+    let mut result = Vec::new();
     let mut search = pattern;
     let prefix = if pattern.starts_with("-") { "-" } else { "+" };
 
-    while search.len().gt(&0) {
-        let mut calls: Vec<(&str, &Pattern)> = vec![];
+    while !search.is_empty() {
+        let mut calls: Vec<(&str, &Pattern)> = Vec::new();
 
         for (map_pattern, map_type) in &pattern_map {
-            if search.starts_with(&map_pattern.as_str())
-                || format!("{}{}", prefix, search).starts_with(&map_pattern.as_str())
-            {
+            if map_type.exact_only() {
+                continue;
+            }
+
+            let is_match = search.starts_with(&map_pattern.as_str())
+                || format!("{}{}", prefix, search).starts_with(&map_pattern.as_str());
+
+            if is_match {
                 calls.push((&map_pattern, map_type));
             }
         }
 
-        if calls.len().eq(&0) {
-            return vec![];
+        if calls.is_empty() {
+            return Vec::new();
         }
 
         calls.sort_by(|a, b| b.0.cmp(a.0));
