@@ -10,6 +10,27 @@ pub(crate) enum Change {
     None,
 }
 
+/// Move datetime into specified year, month and day from a basic ISO8601 value
+pub(crate) fn date_iso8601(from_time: DateTime<FixedOffset>, value: String) -> Result<DateTime<FixedOffset>, ()> {
+    if value.len().ne(&8) {
+        return Err(());
+    }
+
+    let Ok(year) = value[0..4].parse::<i64>() else {
+        return Err(());
+    };
+
+    let Ok(month) = value[4..6].parse::<i64>() else {
+        return Err(());
+    };
+
+    let Ok(day) = value[6..8].parse::<i64>() else {
+        return Err(());
+    };
+
+    date_ymd(from_time, year, month, day)
+}
+
 /// Get timestamp for specified timestamp, always in UTC
 pub(crate) fn date_stamp(sec: i64, ms: i64) -> DateTime<FixedOffset> {
     let nano_sec = (ms * 1_000_000) as u32;
@@ -244,6 +265,40 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_date_iso8601_success() {
+        let from_time = into_datetime("2022-01-31T15:22:28+02:00");
+
+        let expect = vec![
+            ("00900101", "0090-01-01 15:22:28 +02:00"),
+            ("10000101", "1000-01-01 15:22:28 +02:00"),
+            ("20220225", "2022-02-25 15:22:28 +02:00"),
+            ("20240229", "2024-02-29 15:22:28 +02:00"),
+        ];
+
+        for (from_value, expect_value) in expect {
+            assert_eq!(date_iso8601(from_time, from_value.to_string()).unwrap().to_string(), expect_value);
+        }
+    }
+
+    #[test]
+    fn test_date_iso8601_failure() {
+        let from_time = into_datetime("2022-01-31T15:22:28+02:00");
+
+        let expect = vec![
+            "2022025",  // Value is too short
+            "00000025", // Year is 0
+            "20220025", // Month is 0
+            "20220200", // Day is 0
+            "20241310", // Invalid month
+            "20240230", // Non-existent date
+        ];
+
+        for from_value in expect {
+            assert!(date_iso8601(from_time, from_value.to_string()).is_err());
+        }
+    }
+
+    #[test]
     fn test_date_stamp() {
         assert_eq!(date_stamp(0, 0).to_string(), "1970-01-01 00:00:00 +00:00");
         assert_eq!(date_stamp(-100, 0).to_string(), "1969-12-31 23:58:20 +00:00");
@@ -256,7 +311,6 @@ mod tests {
         let from_time = into_datetime("2022-01-31T15:22:28+02:00");
 
         assert_eq!(date_ymd(from_time, 2022, 2, 25).unwrap().to_string(), "2022-02-25 15:22:28 +02:00",);
-
         assert_eq!(date_ymd(from_time, 2024, 2, 29).unwrap().to_string(), "2024-02-29 15:22:28 +02:00",);
 
         assert!(date_ymd(from_time, 2024, 13, 10).is_err());
