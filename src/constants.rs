@@ -56,14 +56,17 @@ pub(crate) const PATTERN_DATE_MDY: &'static str = "[int]/[int]/[year]";
 
 pub(crate) const PATTERN_DATE_MONTH_DAY: &'static str = "[month] [int]";
 pub(crate) const PATTERN_DATE_MONTH_DAY_YEAR: &'static str = "[month] [int] [year]";
+pub(crate) const PATTERN_DATE_MONTH_DAY_YEAR_DASHED: &'static str = "[month]-[int]-[year]";
 pub(crate) const PATTERN_DATE_MONTH_NTH: &'static str = "[month] [nth]";
 pub(crate) const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [year]";
 pub(crate) const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
+pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR_DASHED: &'static str = "[int]-[month]-[year]";
 pub(crate) const PATTERN_DATE_NTH_MONTH: &'static str = "[nth] [month]";
 pub(crate) const PATTERN_DATE_NTH_MONTH_YEAR: &'static str = "[nth] [month] [year]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
+pub(crate) const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
 
 pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
@@ -250,14 +253,17 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::Timestamp, PATTERN_TIMESTAMP),
         (Pattern::TimestampFloat, PATTERN_TIMESTAMP_FLOAT),
         (Pattern::DateYmd, PATTERN_DATE_YMD),
+        (Pattern::DateYmd, PATTERN_DATE_YEAR_MONTH_DAY_DASHED),
         (Pattern::DateDmy, PATTERN_DATE_DMY),
         (Pattern::DateMdy, PATTERN_DATE_MDY),
         (Pattern::DateMonthDay, PATTERN_DATE_MONTH_DAY),
         (Pattern::DateMonthDayYear, PATTERN_DATE_MONTH_DAY_YEAR),
+        (Pattern::DateMonthDayYear, PATTERN_DATE_MONTH_DAY_YEAR_DASHED),
         (Pattern::DateMonthNth, PATTERN_DATE_MONTH_NTH),
         (Pattern::DateMonthNthYear, PATTERN_DATE_MONTH_NTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_DAY_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_DAY_MONTH_YEAR),
+        (Pattern::DateDayMonthYear, PATTERN_DATE_DAY_MONTH_YEAR_DASHED),
         (Pattern::DateDayMonth, PATTERN_DATE_NTH_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_MONTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_NTH_OF_MONTH),
