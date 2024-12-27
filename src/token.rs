@@ -11,30 +11,44 @@ const CONDITIONAL_CHARS: [&'static str; 1] = ["."];
 // Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [","];
 
-const STANDARD_TOKENS: [(&'static str, Token); 97] = [
-    // Months
+const STANDARD_TOKENS: [(&'static str, Token); 141] = [
+    // Months, abbreviated
     ("jan", Token { token: TokenType::Month, value: 1, zeros: 0 }),
-    ("january", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("jan.", Token { token: TokenType::Month, value: 1, zeros: 0 }),
     ("feb", Token { token: TokenType::Month, value: 2, zeros: 0 }),
-    ("february", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("feb.", Token { token: TokenType::Month, value: 2, zeros: 0 }),
     ("mar", Token { token: TokenType::Month, value: 3, zeros: 0 }),
-    ("march", Token { token: TokenType::Month, value: 3, zeros: 0 }),
+    ("mar.", Token { token: TokenType::Month, value: 3, zeros: 0 }),
     ("apr", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("apr.", Token { token: TokenType::Month, value: 4, zeros: 0 }),
+    ("jun", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("jun.", Token { token: TokenType::Month, value: 6, zeros: 0 }),
+    ("jul", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("jul.", Token { token: TokenType::Month, value: 7, zeros: 0 }),
+    ("aug", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("aug.", Token { token: TokenType::Month, value: 8, zeros: 0 }),
+    ("sep", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sep.", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sept", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("sept.", Token { token: TokenType::Month, value: 9, zeros: 0 }),
+    ("oct", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("oct.", Token { token: TokenType::Month, value: 10, zeros: 0 }),
+    ("nov", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("nov.", Token { token: TokenType::Month, value: 11, zeros: 0 }),
+    ("dec", Token { token: TokenType::Month, value: 12, zeros: 0 }),
+    ("dec.", Token { token: TokenType::Month, value: 12, zeros: 0 }),
+    // Months, full
+    ("january", Token { token: TokenType::Month, value: 1, zeros: 0 }),
+    ("february", Token { token: TokenType::Month, value: 2, zeros: 0 }),
+    ("march", Token { token: TokenType::Month, value: 3, zeros: 0 }),
     ("april", Token { token: TokenType::Month, value: 4, zeros: 0 }),
     ("may", Token { token: TokenType::Month, value: 5, zeros: 0 }),
-    ("jun", Token { token: TokenType::Month, value: 6, zeros: 0 }),
     ("june", Token { token: TokenType::Month, value: 6, zeros: 0 }),
-    ("jul", Token { token: TokenType::Month, value: 7, zeros: 0 }),
     ("july", Token { token: TokenType::Month, value: 7, zeros: 0 }),
-    ("aug", Token { token: TokenType::Month, value: 8, zeros: 0 }),
     ("august", Token { token: TokenType::Month, value: 8, zeros: 0 }),
-    ("sep", Token { token: TokenType::Month, value: 9, zeros: 0 }),
     ("september", Token { token: TokenType::Month, value: 9, zeros: 0 }),
-    ("oct", Token { token: TokenType::Month, value: 10, zeros: 0 }),
     ("october", Token { token: TokenType::Month, value: 10, zeros: 0 }),
-    ("nov", Token { token: TokenType::Month, value: 11, zeros: 0 }),
     ("november", Token { token: TokenType::Month, value: 11, zeros: 0 }),
-    ("dec", Token { token: TokenType::Month, value: 12, zeros: 0 }),
     ("december", Token { token: TokenType::Month, value: 12, zeros: 0 }),
     // Weekdays
     ("mon", Token { token: TokenType::Weekday, value: 1, zeros: 0 }),
@@ -52,6 +66,37 @@ const STANDARD_TOKENS: [(&'static str, Token); 97] = [
     ("sun", Token { token: TokenType::Weekday, value: 7, zeros: 0 }),
     ("sunday", Token { token: TokenType::Weekday, value: 7, zeros: 0 }),
     // Nth
+    ("1.", Token { token: TokenType::Nth, value: 1, zeros: 0 }),
+    ("2.", Token { token: TokenType::Nth, value: 2, zeros: 0 }),
+    ("3.", Token { token: TokenType::Nth, value: 3, zeros: 0 }),
+    ("4.", Token { token: TokenType::Nth, value: 4, zeros: 0 }),
+    ("5.", Token { token: TokenType::Nth, value: 5, zeros: 0 }),
+    ("6.", Token { token: TokenType::Nth, value: 6, zeros: 0 }),
+    ("7.", Token { token: TokenType::Nth, value: 7, zeros: 0 }),
+    ("8.", Token { token: TokenType::Nth, value: 8, zeros: 0 }),
+    ("9.", Token { token: TokenType::Nth, value: 9, zeros: 0 }),
+    ("10.", Token { token: TokenType::Nth, value: 10, zeros: 0 }),
+    ("11.", Token { token: TokenType::Nth, value: 11, zeros: 0 }),
+    ("12.", Token { token: TokenType::Nth, value: 12, zeros: 0 }),
+    ("13.", Token { token: TokenType::Nth, value: 13, zeros: 0 }),
+    ("14.", Token { token: TokenType::Nth, value: 14, zeros: 0 }),
+    ("15.", Token { token: TokenType::Nth, value: 15, zeros: 0 }),
+    ("16.", Token { token: TokenType::Nth, value: 16, zeros: 0 }),
+    ("17.", Token { token: TokenType::Nth, value: 17, zeros: 0 }),
+    ("18.", Token { token: TokenType::Nth, value: 18, zeros: 0 }),
+    ("19.", Token { token: TokenType::Nth, value: 19, zeros: 0 }),
+    ("20.", Token { token: TokenType::Nth, value: 20, zeros: 0 }),
+    ("21.", Token { token: TokenType::Nth, value: 21, zeros: 0 }),
+    ("22.", Token { token: TokenType::Nth, value: 22, zeros: 0 }),
+    ("23.", Token { token: TokenType::Nth, value: 23, zeros: 0 }),
+    ("24.", Token { token: TokenType::Nth, value: 24, zeros: 0 }),
+    ("25.", Token { token: TokenType::Nth, value: 25, zeros: 0 }),
+    ("26.", Token { token: TokenType::Nth, value: 26, zeros: 0 }),
+    ("27.", Token { token: TokenType::Nth, value: 27, zeros: 0 }),
+    ("28.", Token { token: TokenType::Nth, value: 28, zeros: 0 }),
+    ("29.", Token { token: TokenType::Nth, value: 29, zeros: 0 }),
+    ("30.", Token { token: TokenType::Nth, value: 30, zeros: 0 }),
+    ("31.", Token { token: TokenType::Nth, value: 31, zeros: 0 }),
     ("1st", Token { token: TokenType::Nth, value: 1, zeros: 0 }),
     ("2nd", Token { token: TokenType::Nth, value: 2, zeros: 0 }),
     ("3rd", Token { token: TokenType::Nth, value: 3, zeros: 0 }),
@@ -240,23 +285,32 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
     let mut prev_char = String::new();
     let mut part_start = 0;
 
-    for (part_index, part_char) in source.char_indices() {
+    let source_letters = source
+        .char_indices()
+        .into_iter()
+        .map(|v| (v.0, v.1.to_string()))
+        .collect::<Vec<(usize, String)>>();
+
+    for (list_index, (part_index, part_char)) in source_letters.iter().enumerate() {
         let mut part_chars = "";
         let mut part_letter: String = String::new();
 
-        let char_str: &str = &part_char.to_string();
+        let curr_char: &str = &part_char;
+        let next_char = source_letters.get(list_index + 1).unwrap_or(&(0, String::new())).1.to_owned();
 
-        if BOUNDARY_CHARS.contains(&char_str)
-            || (CONDITIONAL_CHARS.contains(&char_str) && is_value_boundary(&prev_char))
+        if BOUNDARY_CHARS.contains(&curr_char)
+            || (CONDITIONAL_CHARS.contains(&curr_char)
+                && is_value_boundary(&prev_char)
+                && is_value_boundary(&next_char))
         {
-            part_chars = &source[part_start..part_index];
-            part_letter.push_str(&char_str);
+            part_chars = &source[part_start..*part_index];
+            part_letter.push_str(&curr_char);
             part_start = part_index + 1;
         } else if part_index.eq(&last_index) {
             part_chars = &source[part_start..part_index + 1];
         }
 
-        prev_char = char_str.to_owned();
+        prev_char = curr_char.to_owned();
 
         if IGNORED_CHARS.contains(&part_letter.as_str()) {
             part_letter = String::from(" ");
@@ -270,10 +324,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
             continue;
         }
 
-        let string_token = token_list.find_token(&part_chars);
-
-        if string_token.is_some() {
-            let string_value = string_token.unwrap();
+        if let Some(string_value) = token_list.find_token(&part_chars) {
             out_values.push(string_value.clone());
             out_pattern.push_str(&string_value.token.as_pattern());
             out_pattern.push_str(&part_letter);
@@ -285,8 +336,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         // Just a number, or a special prefix
         if curr_number.len() > 0 && curr_string.len() == 0 {
-            if number_value.is_some() {
-                let number_token = number_value.unwrap();
+            if let Some(number_token) = number_value {
                 out_values.push(number_token.clone());
                 out_pattern.push_str(&number_token.token.as_pattern());
                 out_pattern.push_str(&part_letter);
@@ -303,18 +353,14 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         let mut combo_pattern = String::new();
 
-        if number_value.is_some() {
-            let number_token = number_value.unwrap();
+        if let Some(number_token) = number_value {
             out_values.push(number_token.clone());
             combo_pattern.push_str(&number_token.token.as_pattern());
         } else {
             combo_pattern.push_str(&curr_number);
         }
 
-        let string_value = token_list.find_token(&curr_string);
-
-        if string_value.is_some() {
-            let string_token = string_value.unwrap();
+        if let Some(string_token) = token_list.find_token(&curr_string) {
             out_values.push(string_token.clone());
             combo_pattern.push_str(&string_token.token.as_pattern());
         } else {
@@ -444,36 +490,56 @@ mod tests {
     }
 
     #[test]
-    fn test_months() {
+    fn test_months_full() {
         let expect: Vec<(&str, i64)> = vec![
             ("January", 1),
-            ("Jan", 1),
             ("February", 2),
-            ("Feb", 2),
             ("March", 3),
-            ("Mar", 3),
             ("April", 4),
-            ("Apr", 4),
             ("May", 5),
             ("June", 6),
-            ("Jun", 6),
             ("July", 7),
-            ("Jul", 7),
             ("August", 8),
-            ("Aug", 8),
             ("September", 9),
-            ("Sep", 9),
             ("October", 10),
-            ("Oct", 10),
             ("November", 11),
-            ("Nov", 11),
             ("December", 12),
+        ];
+
+        for (from_string, expect_value) in expect {
+            assert_eq!(
+                tokenize_str(from_string),
+                (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
+            );
+        }
+    }
+
+    #[test]
+    fn test_months_abbreviated() {
+        let expect: Vec<(&str, i64)> = vec![
+            ("Jan", 1),
+            ("Feb", 2),
+            ("Mar", 3),
+            ("Apr", 4),
+            ("Jun", 6),
+            ("Jun", 6),
+            ("Jul", 7),
+            ("Aug", 8),
+            ("Sep", 9),
+            ("Sept", 9),
+            ("Oct", 10),
+            ("Nov", 11),
             ("Dec", 12),
         ];
 
         for (from_string, expect_value) in expect {
             assert_eq!(
                 tokenize_str(from_string),
+                (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
+            );
+
+            assert_eq!(
+                tokenize_str(&format!("{}.", from_string)),
                 (String::from("[month]"), vec![Token::new(TokenType::Month, expect_value)])
             );
         }
@@ -519,6 +585,13 @@ mod tests {
             assert_eq!(
                 tokenize_str(from_string),
                 (String::from("[nth]"), vec![Token::new(TokenType::Nth, expect_value)])
+            );
+        }
+
+        for from_day in 1..=31 {
+            assert_eq!(
+                tokenize_str(&format!("{}. ", from_day)),
+                (String::from("[nth]"), vec![Token::new(TokenType::Nth, from_day)])
             );
         }
     }
@@ -720,6 +793,45 @@ mod tests {
     }
 
     #[test]
+    fn test_nth_dates() {
+        assert_eq!(
+            tokenize_str("February 7th 2023"),
+            (
+                String::from("[month] [nth] [year]"),
+                vec![
+                    Token::new(TokenType::Month, 2),
+                    Token::new(TokenType::Nth, 7),
+                    Token::new(TokenType::Year, 2023),
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("February 7. 2023"),
+            (
+                String::from("[month] [nth] [year]"),
+                vec![
+                    Token::new(TokenType::Month, 2),
+                    Token::new(TokenType::Nth, 7),
+                    Token::new(TokenType::Year, 2023),
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("7. February 2023"),
+            (
+                String::from("[nth] [month] [year]"),
+                vec![
+                    Token::new(TokenType::Nth, 7),
+                    Token::new(TokenType::Month, 2),
+                    Token::new(TokenType::Year, 2023),
+                ]
+            )
+        );
+    }
+
+    #[test]
     fn test_strings() {
         assert_eq!(
             tokenize_str("@1705072948"),
@@ -819,18 +931,6 @@ mod tests {
         );
 
         assert_eq!(
-            tokenize_str("February 7th 2023"),
-            (
-                String::from("[month] [nth] [year]"),
-                vec![
-                    Token::new(TokenType::Month, 2),
-                    Token::new(TokenType::Nth, 7),
-                    Token::new(TokenType::Year, 2023),
-                ]
-            )
-        );
-
-        assert_eq!(
             tokenize_str("next Monday midnight"),
             (String::from("next [wday] midnight"), vec![Token::new(TokenType::Weekday, 1)])
         );
@@ -838,19 +938,32 @@ mod tests {
 
     #[test]
     fn test_custom_tokens() {
-        let monday_examples = HashMap::from([
+        let custom_tokens = HashMap::from([
             (String::from("maanantai"), Token::new(TokenType::Weekday, 1)),
             (String::from("måndag"), Token::new(TokenType::Weekday, 1)),
+            (String::from("heinäkuu"), Token::new(TokenType::Month, 7)),
         ]);
 
         assert_eq!(
-            tokenize("next Maanantai", monday_examples.to_owned()),
+            tokenize("next Maanantai", custom_tokens.to_owned()),
             (String::from("next [wday]"), vec![Token::new(TokenType::Weekday, 1)]),
         );
 
         assert_eq!(
-            tokenize("next Måndag", monday_examples.to_owned()),
+            tokenize("next Måndag", custom_tokens.to_owned()),
             (String::from("next [wday]"), vec![Token::new(TokenType::Weekday, 1)]),
+        );
+
+        assert_eq!(
+            tokenize("heinäkuu 10. 2023", custom_tokens.to_owned()),
+            (
+                String::from("[month] [nth] [year]"),
+                vec![
+                    Token::new(TokenType::Month, 7),
+                    Token::new(TokenType::Nth, 10),
+                    Token::new(TokenType::Year, 2023)
+                ]
+            ),
         );
     }
 
