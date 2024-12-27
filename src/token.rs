@@ -357,7 +357,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         if part_chars.eq("") {
-            if out_values.len() == 0 || !&part_letter.eq(" ") {
+            if out_values.is_empty() || !&part_letter.eq(" ") {
                 out_pattern.push_str(&part_letter);
             }
 
@@ -424,7 +424,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
 /// Check that character is a boundary for value
 fn is_value_boundary(prev_char: &String) -> bool {
-    prev_char.len() == 0 || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
+    prev_char.is_empty() || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
 }
 
 /// Parse a string that consists of a number+string parts, such as "1d"
@@ -437,17 +437,17 @@ fn parse_string_and_number(part_chars: &str) -> ParsedNumberValue {
     let mut curr_string = String::new();
 
     for (_, curr_char) in part_chars.char_indices() {
-        if is_timestamp.eq(&false) && curr_string.len() == 0 && curr_char.is_digit(10) {
+        if !is_timestamp && curr_string.is_empty() && curr_char.is_digit(10) {
             curr_number.push(curr_char);
             continue;
         }
 
-        if is_timestamp.eq(&true) && curr_number.len() == 0 && curr_char.is_digit(10) {
+        if is_timestamp && curr_number.is_empty() && curr_char.is_digit(10) {
             curr_number.push(curr_char);
             continue;
         }
 
-        if is_timestamp.eq(&true) && curr_number.len() > 0 {
+        if is_timestamp && !curr_number.is_empty() {
             curr_number.push(curr_char);
             continue;
         }
