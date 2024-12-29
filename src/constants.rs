@@ -211,10 +211,6 @@ impl Pattern {
     pub(crate) fn is_valid(value: &str) -> bool {
         patterns().iter().find(|&v| v.1 == value).is_some()
     }
-
-    pub(crate) fn exact_only(&self) -> bool {
-        self.eq(&Self::Integer)
-    }
 }
 
 fn patterns() -> Vec<(Pattern, &'static str)> {

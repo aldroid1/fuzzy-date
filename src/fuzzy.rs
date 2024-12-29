@@ -3,7 +3,7 @@ use crate::convert;
 use crate::token::Token;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
-use std::cmp::PartialEq;
+use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
 const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 49] = [
@@ -531,10 +531,6 @@ fn find_pattern_calls(
         let mut calls: Vec<(&str, &Pattern)> = Vec::new();
 
         for (map_pattern, map_type) in &pattern_map {
-            if map_type.exact_only() {
-                continue;
-            }
-
             let is_match = search.starts_with(&map_pattern.as_str())
                 || format!("{}{}", prefix, search).starts_with(&map_pattern.as_str());
 
@@ -547,7 +543,13 @@ fn find_pattern_calls(
             return Vec::new();
         }
 
-        calls.sort_by(|a, b| b.0.cmp(a.0));
+        if calls.len().gt(&1) {
+            calls.sort_by(|a, b| match b.0.len().cmp(&a.0.len()) {
+                Ordering::Equal => a.0.cmp(b.0),
+                v => v,
+            });
+        }
+
         let (best_match, best_type) = calls.first().unwrap();
 
         search = &search[cmp::min(best_match.len(), search.len())..].trim_start();
