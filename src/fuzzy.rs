@@ -248,16 +248,25 @@ impl FuzzyDate {
 
     /// Move time within unit range
     fn offset_range_unit(&self, target: TimeUnit, unit: TimeUnit, change: convert::Change) -> Result<Self, ()> {
-        if !(target.eq(&TimeUnit::Days) && unit.eq(&TimeUnit::Months)) {
-            return Err(());
+        if target.eq(&TimeUnit::Days) && unit.eq(&TimeUnit::Years) {
+            if change.eq(&convert::Change::Last) {
+                let last_day = convert::into_month_day(self.time.year(), 12, 31);
+                return self.date_ymd(self.time.year() as i64, 12, last_day as i64);
+            }
+
+            return self.date_ymd(self.time.year() as i64, 1, 1);
         }
 
-        let new_day: u32 = match change.eq(&convert::Change::Last) {
-            true => convert::into_month_day(self.time.year(), self.time.month(), 32),
-            false => 1,
-        };
+        if target.eq(&TimeUnit::Days) && unit.eq(&TimeUnit::Months) {
+            if change.eq(&convert::Change::Last) {
+                let last_day = convert::into_month_day(self.time.year(), self.time.month(), 31);
+                return Ok(Self { time: self.time.with_day(last_day).unwrap() });
+            }
 
-        Ok(Self { time: self.time.with_day(new_day).unwrap() })
+            return Ok(Self { time: self.time.with_day(1).unwrap() });
+        }
+
+        Err(())
     }
 
     /// Move time exactly by specified number of units
