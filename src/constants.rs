@@ -38,8 +38,11 @@ pub(crate) const PATTERN_LONG_UNIT_AGO: &'static str = "[int] [long_unit] ago";
 
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_MONTH: &'static str = "first [long_unit] of [month]";
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR: &'static str = "first [long_unit] of [month] [year]";
+pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_YEAR: &'static str = "first [long_unit] of [year]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_MONTH: &'static str = "last [long_unit] of [month]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR: &'static str = "last [long_unit] of [month] [year]";
+pub(crate) const PATTERN_LAST_LONG_UNIT_OF_YEAR: &'static str = "last [long_unit] of [year]";
+
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "first [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "last [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = "first [long_unit] of prev [long_unit]";
@@ -174,18 +177,17 @@ pub(crate) enum Pattern {
     LongUnitAgo,
 
     FirstLongUnitOfMonth,
-    LastLongUnitOfMonth,
-
     FirstLongUnitOfMonthYear,
-    LastLongUnitOfMonthYear,
-
+    FirstLongUnitOfYear,
     FirstLongUnitOfThisLongUnit,
-    LastLongUnitOfThisLongUnit,
-
     FirstLongUnitOfPrevLongUnit,
-    LastLongUnitOfPrevLongUnit,
-
     FirstLongUnitOfNextLongUnit,
+
+    LastLongUnitOfMonth,
+    LastLongUnitOfMonthYear,
+    LastLongUnitOfYear,
+    LastLongUnitOfThisLongUnit,
+    LastLongUnitOfPrevLongUnit,
     LastLongUnitOfNextLongUnit,
 
     Timestamp,
@@ -252,8 +254,10 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::LongUnitAgo, PATTERN_LONG_UNIT_AGO),
         (Pattern::FirstLongUnitOfMonth, PATTERN_FIRST_LONG_UNIT_OF_MONTH),
         (Pattern::FirstLongUnitOfMonthYear, PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR),
+        (Pattern::FirstLongUnitOfYear, PATTERN_FIRST_LONG_UNIT_OF_YEAR),
         (Pattern::LastLongUnitOfMonth, PATTERN_LAST_LONG_UNIT_OF_MONTH),
         (Pattern::LastLongUnitOfMonthYear, PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR),
+        (Pattern::LastLongUnitOfYear, PATTERN_LAST_LONG_UNIT_OF_YEAR),
         (Pattern::FirstLongUnitOfThisLongUnit, PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT),
         (Pattern::LastLongUnitOfThisLongUnit, PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT),
         (Pattern::FirstLongUnitOfPrevLongUnit, PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT),

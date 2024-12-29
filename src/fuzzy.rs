@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 53] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -47,12 +47,20 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::First)?
             .time_reset()
     }),
+    (&Pattern::FirstLongUnitOfYear, |c, v, _| {
+        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 1, convert::Change::First)?
+            .time_reset()
+    }),
     (&Pattern::LastLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfMonthYear, |c, v, _| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::Last)?
+            .time_reset()
+    }),
+    (&Pattern::LastLongUnitOfYear, |c, v, _| {
+        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 12, convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, _| {

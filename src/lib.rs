@@ -187,9 +187,13 @@ mod fuzzydate {
         #[classattr]
         const FIRST_LONG_UNIT_OF_MONTH_YEAR: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR;
         #[classattr]
+        const FIRST_LONG_UNIT_OF_YEAR: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_YEAR;
+        #[classattr]
         const LAST_LONG_UNIT_OF_MONTH: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH;
         #[classattr]
         const LAST_LONG_UNIT_OF_MONTH_YEAR: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR;
+        #[classattr]
+        const LAST_LONG_UNIT_OF_YEAR: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_YEAR;
 
         #[classattr]
         const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
@@ -851,6 +855,9 @@ mod tests {
             ("last day of prev year", "2024-03-12T15:22:28+02:00", "2023-12-31 00:00:00 +02:00"),
             ("last day of last year", "2024-03-12T15:22:28+02:00", "2023-12-31 00:00:00 +02:00"),
             ("last day of next year", "2024-02-12T15:22:28+02:00", "2025-12-31 00:00:00 +02:00"),
+            // Exact year
+            ("first day of 2025", "2024-02-12T15:22:28+02:00", "2025-01-01 00:00:00 +02:00"),
+            ("last day of 2025", "2024-02-12T15:22:28+02:00", "2025-12-31 00:00:00 +02:00"),
         ]);
     }
 
