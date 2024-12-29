@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 53] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 55] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -93,6 +93,9 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
+    // April, April 2023
+    (&Pattern::Month, |c, v, _| c.date_ym(c.year(), v.get_int(0))?.time_reset()),
+    (&Pattern::MonthYear, |c, v, _| c.date_ymd(v.get_int(1), v.get_int(0), 1)?.time_reset()),
     // @1705072948, @1705072948.452
     (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
     (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_ms(1))),
@@ -235,6 +238,12 @@ impl FuzzyDate {
     /// Set time to specific timestamp
     fn date_stamp(&self, sec: i64, ms: i64) -> Result<Self, ()> {
         Ok(Self { time: convert::date_stamp(sec, ms) })
+    }
+
+    /// Set time to specific year and month
+    fn date_ym(&self, year: i64, month: i64) -> Result<Self, ()> {
+        let month_day = convert::into_month_day(year as i32, month as u32, self.time.day());
+        Ok(Self { time: convert::date_ymd(self.time, year, month, month_day as i64)? })
     }
 
     /// Set time to specific year, month and day
