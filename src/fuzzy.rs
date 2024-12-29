@@ -621,9 +621,8 @@ fn is_pattern_match(searches: &Vec<String>, pattern: &String) -> bool {
         // Next character in the source string must be a pattern delimiter, to prevent
         // overlapping different patterns. For example "[month] [int][meridiem]" could
         // otherwise first match to "[month] [int]" rather than to first "[month]" and
-        // to "[int][meridiem]" separately. Technically we should check for any
-        // supported delimiter, but the token boundary character is the clearest to
-        // identify.
+        // then to "[int][meridiem]". Technically we should check for any supported
+        // delimiter, but the token boundary character is the clearest to identify.
         if search[pattern.len()..pattern.len() + 1].ne("[") {
             return true;
         }
