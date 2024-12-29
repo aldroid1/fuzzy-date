@@ -47,6 +47,8 @@ pub(crate) const PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "last 
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "first [long_unit] of next [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "last [long_unit] of next [long_unit]";
 
+pub(crate) const PATTERN_INTEGER: &'static str = "[int]";
+
 pub(crate) const PATTERN_TIMESTAMP: &'static str = "[timestamp]";
 pub(crate) const PATTERN_TIMESTAMP_FLOAT: &'static str = "[timestamp].[int]";
 
@@ -136,6 +138,8 @@ pub(crate) const UNIT_WEEKS: &'static str = "weeks";
 
 #[derive(PartialEq, Eq, Hash)]
 pub(crate) enum Pattern {
+    Integer,
+
     Now,
     Today,
     Midnight,
@@ -211,6 +215,7 @@ impl Pattern {
 
 fn patterns() -> Vec<(Pattern, &'static str)> {
     vec![
+        (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Now, PATTERN_NOW),
         (Pattern::Today, PATTERN_TODAY),
         (Pattern::Midnight, PATTERN_MIDNIGHT),
