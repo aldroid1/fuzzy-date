@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 49] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 51] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -43,8 +43,16 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
             .time_reset()
     }),
+    (&Pattern::FirstLongUnitOfMonthYear, |c, v, _| {
+        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::First)?
+            .time_reset()
+    }),
     (&Pattern::LastLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::Last)?
+            .time_reset()
+    }),
+    (&Pattern::LastLongUnitOfMonthYear, |c, v, _| {
+        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, _| {
@@ -239,7 +247,7 @@ impl FuzzyDate {
     /// Move time within month range
     fn offset_range_month(&self, target: TimeUnit, month: i64, change: convert::Change) -> Result<Self, ()> {
         if target.eq(&TimeUnit::Days) {
-            let new_time = convert::offset_range_month(self.time, month, change)?;
+            let new_time = convert::offset_range_year_month(self.time, self.time.year() as i64, month, change)?;
             return Ok(Self { time: new_time });
         }
 
@@ -294,6 +302,22 @@ impl FuzzyDate {
         };
 
         Ok(Self { time: new_time })
+    }
+
+    /// Move time within year and month range
+    fn offset_range_year_month(
+        &self,
+        target: TimeUnit,
+        year: i64,
+        month: i64,
+        change: convert::Change,
+    ) -> Result<Self, ()> {
+        if target.eq(&TimeUnit::Days) {
+            let new_time = convert::offset_range_year_month(self.time, year, month, change)?;
+            return Ok(Self { time: new_time });
+        }
+
+        Err(())
     }
 
     /// Set time to specific hour, minute and second using 12-hour clock

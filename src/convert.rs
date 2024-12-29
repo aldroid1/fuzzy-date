@@ -137,19 +137,20 @@ pub(crate) fn offset_months(from_time: DateTime<FixedOffset>, amount: i64) -> Da
         .unwrap()
 }
 
-/// Move datetime into first or last of the specified month
-pub(crate) fn offset_range_month(
+/// Move datetime into first or last of the specified year and month
+pub(crate) fn offset_range_year_month(
     from_time: DateTime<FixedOffset>,
+    year: i64,
     month: i64,
     change: Change,
 ) -> Result<DateTime<FixedOffset>, ()> {
     if change.eq(&Change::First) {
-        return date_ymd(from_time, from_time.year() as i64, month, 1);
+        return date_ymd(from_time, year, month, 1);
     }
 
     if change.eq(&Change::Last) {
-        let last_day: u32 = into_month_day(from_time.year(), month as u32, 32);
-        return date_ymd(from_time, from_time.year() as i64, month, last_day as i64);
+        let last_day: u32 = into_month_day(year as i32, month as u32, 32);
+        return date_ymd(from_time, year, month, last_day as i64);
     }
 
     Ok(from_time)
@@ -393,15 +394,19 @@ mod tests {
     }
 
     #[test]
-    fn test_offset_range_months() {
-        let expect: Vec<(&str, i64, Change, &str)> = vec![
-            ("2024-01-31T15:22:28+02:00", 2, Change::None, "2024-01-31 15:22:28 +02:00"),
-            ("2024-01-31T15:22:28+02:00", 2, Change::First, "2024-02-01 15:22:28 +02:00"),
-            ("2024-01-31T15:22:28+02:00", 2, Change::Last, "2024-02-29 15:22:28 +02:00"),
+    fn test_offset_range_year_months() {
+        let expect: Vec<(&str, i64, i64, Change, &str)> = vec![
+            ("2024-01-31T15:22:28+02:00", 2024, 2, Change::None, "2024-01-31 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2024, 2, Change::First, "2024-02-01 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2024, 2, Change::Last, "2024-02-29 15:22:28 +02:00"),
+            // Change year
+            ("2024-01-31T15:22:28+02:00", 2025, 2, Change::None, "2024-01-31 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2025, 2, Change::First, "2025-02-01 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2025, 2, Change::Last, "2025-02-28 15:22:28 +02:00"),
         ];
 
-        for (from_time, new_month, change, expect_time) in expect {
-            let result_time = offset_range_month(into_datetime(from_time), new_month, change);
+        for (from_time, new_year, new_month, change, expect_time) in expect {
+            let result_time = offset_range_year_month(into_datetime(from_time), new_year, new_month, change);
             assert_eq!(result_time.unwrap().to_string(), expect_time);
         }
     }
