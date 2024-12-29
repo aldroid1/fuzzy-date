@@ -75,12 +75,12 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
             .time_reset()
     }),
-    // 20230104
+    // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
     // @1705072948, @1705072948.452
     (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
     (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_ms(1))),
-    // 2023-01-01, 30.1.2023, 1/30/2023
+    // 2023-01-30, 30.1.2023, 1/30/2023
     (&Pattern::DateYmd, |c, v, _| c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.time_reset()),
     (&Pattern::DateDmy, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
     (&Pattern::DateMdy, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
