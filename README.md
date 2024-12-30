@@ -61,7 +61,7 @@ import fuzzydate as fd
 fd.to_duration(3840.0)                       # 1hr 4min
 fd.to_duration(3840.0, units='long')         # 1 hour 4 minutes
 fd.to_duration(3840.0, units='short')        # 1h 4min
-fd.to_duration(3840.0, max'min', min='min')  # 64min
+fd.to_duration(3840.0, max='min', min='min') # 64min
 ```
 
 ## Localization
