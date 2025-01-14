@@ -124,7 +124,7 @@ pip install fuzzy-date
 - Combination dates `01-April-2023`, `April-01-2023`, `2023-April-01`
 - Day and month `April 1st`, `April 1`, `1 April`, `1. April`, `1st of April`
 - Month and year `April`, `April 2023`
-- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`, `2023-04-01 12:00:00.410`
+- Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`, `2023-04-01T12:00:00`, `2023-04-01 12:00:00.410`, `2023-04-01T12:00.410`
 - Time of day `2pm`, `2:00 pm`
 
 ## Methods

@@ -6,7 +6,7 @@ const BOUNDARY_CHARS: [&'static str; 6] = [" ", "-", "/", "+", ":", ","];
 
 // Conditional boundary characters, that are boundaries
 // when between numbers, but not between characters
-const CONDITIONAL_CHARS: [&'static str; 1] = ["."];
+const CONDITIONAL_CHARS: [&'static str; 2] = [".", "T"];
 
 // Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [","];
@@ -898,19 +898,7 @@ mod tests {
     }
 
     #[test]
-    fn test_strings() {
-        assert_eq!(
-            tokenize_str("2023-07-01"),
-            (
-                String::from("[year]-[int]-[int]"),
-                vec![
-                    Token::new(TokenType::Year, 2023),
-                    Token::new_integer(7, 1),
-                    Token::new_integer(1, 1),
-                ]
-            )
-        );
-
+    fn test_datetimes() {
         assert_eq!(
             tokenize_str("2023-12-07 15:02"),
             (
@@ -921,6 +909,35 @@ mod tests {
                     Token::new_integer(7, 1),
                     Token::new_integer(15, 0),
                     Token::new_integer(2, 1),
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("2023-12-07T15:02"),
+            (
+                String::from("[year]-[int]-[int]T[int]:[int]"),
+                vec![
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                ]
+            )
+        );
+
+        assert_eq!(
+            tokenize_str("2023-12-07T15:02.100"),
+            (
+                String::from("[year]-[int]-[int]T[int]:[int].[int]"),
+                vec![
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(12, 0),
+                    Token::new_integer(7, 1),
+                    Token::new_integer(15, 0),
+                    Token::new_integer(2, 1),
+                    Token::new_integer(100, 0),
                 ]
             )
         );
@@ -951,6 +968,21 @@ mod tests {
                     Token::new_integer(7, 1),
                     Token::new_integer(15, 0),
                     Token::new_integer(2, 1),
+                    Token::new_integer(1, 1),
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_strings() {
+        assert_eq!(
+            tokenize_str("2023-07-01"),
+            (
+                String::from("[year]-[int]-[int]"),
+                vec![
+                    Token::new(TokenType::Year, 2023),
+                    Token::new_integer(7, 1),
                     Token::new_integer(1, 1),
                 ]
             )
