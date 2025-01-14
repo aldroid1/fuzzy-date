@@ -77,6 +77,9 @@ pub(crate) const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
 pub(crate) const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
 
+pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
+pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS_MS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int].[int]";
+
 pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
@@ -292,7 +295,9 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_OF_MONTH_YEAR),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
+        (Pattern::DateTimeYmdHms, PATTERN_DATETIME_ISO_YMD_HMS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
+        (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_ISO_YMD_HMS_MS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
