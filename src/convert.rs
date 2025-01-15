@@ -304,7 +304,6 @@ pub(crate) fn time_hms(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::array::from_fn;
 
     #[test]
     fn test_date_iso8601_success() {
