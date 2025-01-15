@@ -215,6 +215,19 @@ mod fuzzydate {
         const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
 
         #[classattr]
+        const FIRST_WDAY_OF_MONTH: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH;
+        #[classattr]
+        const FIRST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH_YEAR;
+        #[classattr]
+        const FIRST_WDAY_OF_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_YEAR;
+        #[classattr]
+        const LAST_WDAY_OF_MONTH: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH;
+        #[classattr]
+        const LAST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH_YEAR;
+        #[classattr]
+        const LAST_WDAY_OF_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_YEAR;
+
+        #[classattr]
         const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;
         #[classattr]
         const TIMESTAMP_FLOAT: &'static str = constants::PATTERN_TIMESTAMP_FLOAT;
@@ -856,6 +869,20 @@ mod tests {
         assert_convert_from(vec![
             ("first day of January 2027", "2024-05-12T15:22:28+02:00", "2027-01-01 00:00:00 +02:00"),
             ("last day of February 2025", "2026-05-12T15:22:28+02:00", "2025-02-28 00:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
+    fn test_wdau_ranges() {
+        assert_convert_from(vec![
+            ("first mon of Feb", "2024-05-12T15:22:28+02:00", "2024-02-05 00:00:00 +02:00"),
+            ("first tue of 2025", "2024-05-12T15:22:28+02:00", "2025-01-07 00:00:00 +02:00"),
+            ("first wed of Jan 2025", "2026-05-12T15:22:28+02:00", "2025-01-01 00:00:00 +02:00"),
+            ("first tue of Jan 2025", "2026-05-12T15:22:28+02:00", "2025-01-07 00:00:00 +02:00"),
+            ("last mon of Feb", "2024-05-12T15:22:28+02:00", "2024-02-26 00:00:00 +02:00"),
+            ("last fri of 2025", "2024-05-12T15:22:28+02:00", "2025-12-26 00:00:00 +02:00"),
+            ("last fri of Jan 2025", "2026-05-12T15:22:28+02:00", "2025-01-31 00:00:00 +02:00"),
+            ("last sat of Jan 2025", "2026-05-12T15:22:28+02:00", "2025-01-25 00:00:00 +02:00"),
         ]);
     }
 

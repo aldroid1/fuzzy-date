@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 55] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 61] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -38,7 +38,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // NUMERIC OFFSET, PLUS
     (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
     (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
-    // FIRST/LAST OFFSETS
+    // FIRST/LAST RELATIVE OFFSETS
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
             .time_reset()
@@ -89,6 +89,31 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), 1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
+            .time_reset()
+    }),
+    // FIRST/LAST WEEKDAY OFFSETS
+    (&Pattern::FirstWdayOfMonthYear, |c, v, _| {
+        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), convert::Change::First)?
+            .time_reset()
+    }),
+    (&Pattern::FirstWdayOfMonth, |c, v, _| {
+        c.offset_range_year_month_wday(c.year(), v.get_int(1), v.get_int(0), convert::Change::First)?
+            .time_reset()
+    }),
+    (&Pattern::FirstWdayOfYear, |c, v, _| {
+        c.offset_range_year_month_wday(v.get_int(1), 1, v.get_int(0), convert::Change::First)?
+            .time_reset()
+    }),
+    (&Pattern::LastWdayOfMonthYear, |c, v, _| {
+        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), convert::Change::Last)?
+            .time_reset()
+    }),
+    (&Pattern::LastWdayOfMonth, |c, v, _| {
+        c.offset_range_year_month_wday(c.year(), v.get_int(1), v.get_int(0), convert::Change::Last)?
+            .time_reset()
+    }),
+    (&Pattern::LastWdayOfYear, |c, v, _| {
+        c.offset_range_year_month_wday(v.get_int(1), 12, v.get_int(0), convert::Change::Last)?
             .time_reset()
     }),
     // 20230130
@@ -335,6 +360,18 @@ impl FuzzyDate {
         }
 
         Err(())
+    }
+
+    /// Move time to a weekday within year and month range
+    pub(crate) fn offset_range_year_month_wday(
+        &self,
+        year: i64,
+        month: i64,
+        wday: i64,
+        change: convert::Change,
+    ) -> Result<Self, ()> {
+        let new_time = convert::offset_range_year_month_wday(self.time, year, month, wday, change)?;
+        Ok(Self { time: new_time })
     }
 
     /// Set time to specific hour, minute and second using 12-hour clock
