@@ -196,19 +196,6 @@ mod fuzzydate {
         const LAST_LONG_UNIT_OF_YEAR: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_YEAR;
 
         #[classattr]
-        const FIRST_WDAY_OF_MONTH: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH;
-        #[classattr]
-        const FIRST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH_YEAR;
-        #[classattr]
-        const FIRST_WDAY_OF_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_YEAR;
-        #[classattr]
-        const LAST_WDAY_OF_MONTH: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH;
-        #[classattr]
-        const LAST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH_YEAR;
-        #[classattr]
-        const LAST_WDAY_OF_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_YEAR;
-
-        #[classattr]
         const FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT;
         #[classattr]
         const LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT;
@@ -226,6 +213,19 @@ mod fuzzydate {
         const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
         #[classattr]
         const LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = constants::PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT;
+
+        #[classattr]
+        const FIRST_WDAY_OF_MONTH: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH;
+        #[classattr]
+        const FIRST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_MONTH_YEAR;
+        #[classattr]
+        const FIRST_WDAY_OF_YEAR: &'static str = constants::PATTERN_FIRST_WDAY_OF_YEAR;
+        #[classattr]
+        const LAST_WDAY_OF_MONTH: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH;
+        #[classattr]
+        const LAST_WDAY_OF_MONTH_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_MONTH_YEAR;
+        #[classattr]
+        const LAST_WDAY_OF_YEAR: &'static str = constants::PATTERN_LAST_WDAY_OF_YEAR;
 
         #[classattr]
         const TIMESTAMP: &'static str = constants::PATTERN_TIMESTAMP;

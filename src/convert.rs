@@ -64,6 +64,16 @@ pub(crate) fn date_ymd(
     Ok(new_time)
 }
 
+/// Return time set to the last day of given year and month
+pub(crate) fn into_last_of_month(
+    from_time: DateTime<FixedOffset>,
+    year: i64,
+    month: i64,
+) -> Result<DateTime<FixedOffset>, ()> {
+    let last_day = into_month_day(from_time.year(), month as u32, 31) as i64;
+    date_ymd(from_time, year, month, last_day)
+}
+
 /// Return either the day given if given month has enough days
 /// to use it, or the last day of the month
 pub(crate) fn into_month_day(year: i32, month: u32, day: u32) -> u32 {
@@ -149,8 +159,7 @@ pub(crate) fn offset_range_year_month(
     }
 
     if change.eq(&Change::Last) {
-        let last_day: u32 = into_month_day(year as i32, month as u32, 32);
-        return date_ymd(from_time, year, month, last_day as i64);
+        return into_last_of_month(from_time, year, month)
     }
 
     Ok(from_time)
@@ -175,17 +184,16 @@ pub(crate) fn offset_range_year_month_wday(
     }
 
     if change.eq(&Change::Last) {
-        let last_day = into_month_day(from_time.year(), month as u32, 31) as i64;
-        let from_time = date_ymd(from_time, year, month, last_day)?;
+        let from_time = into_last_of_month(from_time, year, month)?;
         let last_wday = from_time.weekday().num_days_from_monday() as i64 + 1;
         let move_days = match wday.gt(&last_wday) {
-            true => Duration::weeks(1) - Duration::days(wday - last_wday),
+            true => Duration::weeks(1) + Duration::days(last_wday - wday),
             false => Duration::days(last_wday - wday),
         };
         return Ok(from_time - move_days);
     }
 
-    Err(())
+    Ok(from_time)
 }
 
 /// Move datetime into previous or upcoming weekday
@@ -296,6 +304,7 @@ pub(crate) fn time_hms(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::array::from_fn;
 
     #[test]
     fn test_date_iso8601_success() {
@@ -348,6 +357,19 @@ mod tests {
 
         assert!(date_ymd(from_time, 2024, 13, 10).is_err());
         assert!(date_ymd(from_time, 2024, 2, 30).is_err());
+    }
+
+    #[test]
+    fn test_into_last_of_month() {
+        let expect: Vec<(&str, i64, i64, &str)> = vec![
+            ("2024-01-01T15:02:11+02:00", 2024, 2, "2024-02-29 15:02:11 +02:00"),
+            ("2024-01-01T15:02:11+02:00", 2025, 12, "2025-12-31 15:02:11 +02:00"),
+        ];
+
+        for (from_time, new_year, new_month, expect_time) in expect {
+            let result = into_last_of_month(into_datetime(from_time), new_year, new_month);
+            assert_eq!(result.unwrap().to_string(), expect_time);
+        }
     }
 
     #[test]
@@ -439,6 +461,23 @@ mod tests {
 
         for (from_time, new_year, new_month, change, expect_time) in expect {
             let result_time = offset_range_year_month(into_datetime(from_time), new_year, new_month, change);
+            assert_eq!(result_time.unwrap().to_string(), expect_time);
+        }
+    }
+
+    #[test]
+    fn test_offset_range_year_month_wdays() {
+        let monday = 1;
+
+        let expect: Vec<(&str, i64, i64, i64, Change, &str)> = vec![
+            ("2024-01-31T15:22:28+02:00", 2024, 2, monday, Change::None, "2024-01-31 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2024, 2, monday, Change::First, "2024-02-05 15:22:28 +02:00"),
+            ("2024-01-31T15:22:28+02:00", 2024, 2, monday, Change::Last, "2024-02-26 15:22:28 +02:00"),
+        ];
+
+        for (from_time, new_year, new_month, new_wday, change, expect_time) in expect {
+            let from_time = into_datetime(from_time);
+            let result_time = offset_range_year_month_wday(from_time, new_year, new_month, new_wday, change);
             assert_eq!(result_time.unwrap().to_string(), expect_time);
         }
     }
