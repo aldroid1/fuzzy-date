@@ -70,7 +70,7 @@ pub(crate) fn into_last_of_month(
     year: i64,
     month: i64,
 ) -> Result<DateTime<FixedOffset>, ()> {
-    let last_day = into_month_day(from_time.year(), month as u32, 31) as i64;
+    let last_day = into_month_day(year as i32, month as u32, 31) as i64;
     date_ymd(from_time, year, month, last_day)
 }
 
@@ -159,7 +159,7 @@ pub(crate) fn offset_range_year_month(
     }
 
     if change.eq(&Change::Last) {
-        return into_last_of_month(from_time, year, month)
+        return into_last_of_month(from_time, year, month);
     }
 
     Ok(from_time)
