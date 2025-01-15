@@ -612,7 +612,7 @@ fn find_pattern_calls(
 
     let mut result = Vec::new();
     let mut search = pattern;
-    let prefix = if pattern.starts_with("-") { "-" } else { "+" };
+    let prefix = if pattern.starts_with("-") || pattern.ends_with(" ago") { "-" } else { "+" };
 
     while !search.is_empty() {
         let mut calls: Vec<(&str, &Pattern)> = Vec::new();
