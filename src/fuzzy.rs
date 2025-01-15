@@ -595,9 +595,9 @@ fn find_pattern_calls(
         }
     }
 
-    for (custom_pattern, closure_pattern) in custom {
-        if pattern_map.contains_key(&closure_pattern) {
-            pattern_map.insert(custom_pattern.to_owned(), pattern_map.get(&closure_pattern).unwrap());
+    for (custom_pattern, closure_pattern) in custom.iter() {
+        if pattern_map.contains_key(closure_pattern) {
+            pattern_map.insert(custom_pattern.to_owned(), pattern_map.get(closure_pattern).unwrap());
         }
     }
 
@@ -612,7 +612,7 @@ fn find_pattern_calls(
 
     let mut result = Vec::new();
     let mut search = pattern;
-    let prefix = if pattern.starts_with("-") || pattern.ends_with(" ago") { "-" } else { "+" };
+    let prefix = find_pattern_prefix(pattern, custom);
 
     while !search.is_empty() {
         let mut calls: Vec<(&str, &Pattern)> = Vec::new();
@@ -642,6 +642,35 @@ fn find_pattern_calls(
     }
 
     result
+}
+
+/// Figure out whether unit lengths in pattern are negative or positive
+fn find_pattern_prefix(pattern: &str, custom: HashMap<String, String>) -> &'static str {
+    if pattern.starts_with("-") {
+        return "-";
+    }
+
+    if pattern.starts_with("+") || !pattern.contains("unit]") {
+        return "+";
+    }
+
+    // Check whether the pattern ending matches with an "ago" pattern in a
+    // from both internal and custom patterns, to prefer using minus patterns
+    for pattern_type in vec![Pattern::LongUnitAgo, Pattern::UnitAgo] {
+        for pattern_value in Pattern::values(&pattern_type) {
+            if pattern.ends_with(pattern_value) {
+                return "-";
+            }
+
+            for (custom_pattern, closure_pattern) in custom.iter() {
+                if closure_pattern.eq(pattern_value) && pattern.ends_with(custom_pattern) {
+                    return "-";
+                }
+            }
+        }
+    }
+
+    "+"
 }
 
 /// Check if the pattern string matches to any of the given strings
@@ -681,6 +710,7 @@ mod tests {
             ("edellinen [wday]", &Pattern::PrevWday),
             ("ensi [wday]", &Pattern::NextWday),
             ("seuraava [wday]", &Pattern::NextWday),
+            ("[int] [long_unit] sitten", &Pattern::LongUnitAgo),
         ];
 
         let result_value = convert_custom("viime [wday]", vec![1], "2024-01-19T15:22:28+02:00", &custom_finnish);
@@ -694,6 +724,15 @@ mod tests {
 
         let result_value = convert_custom("seuraava [wday]", vec![1], "2024-01-19T15:22:28+02:00", &custom_finnish);
         assert_eq!(result_value, "2024-01-22 00:00:00 +02:00");
+
+        let token_values = vec![1, 4, 1, 3]; // 1d 1h
+        let result_value = convert_custom(
+            "[int] [long_unit] [int] [long_unit] sitten",
+            token_values,
+            "2024-01-19T15:22:28+02:00",
+            &custom_finnish,
+        );
+        assert_eq!(result_value, "2024-01-18 14:22:28 +02:00");
     }
 
     fn convert_custom(pattern: &str, values: Vec<i64>, current_time: &str, custom: &Vec<(&str, &Pattern)>) -> String {
