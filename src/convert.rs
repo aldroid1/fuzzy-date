@@ -156,6 +156,38 @@ pub(crate) fn offset_range_year_month(
     Ok(from_time)
 }
 
+/// Move datetime into first or last weekday of specified year and month
+pub(crate) fn offset_range_year_month_wday(
+    from_time: DateTime<FixedOffset>,
+    year: i64,
+    month: i64,
+    wday: i64,
+    change: Change,
+) -> Result<DateTime<FixedOffset>, ()> {
+    if change.eq(&Change::First) {
+        let from_time = date_ymd(from_time, year, month, 1)?;
+        let first_wday = from_time.weekday().num_days_from_monday() as i64 + 1;
+        let move_days = match wday.lt(&first_wday) {
+            true => Duration::weeks(1) + Duration::days(wday - first_wday),
+            false => Duration::days(wday - first_wday),
+        };
+        return Ok(from_time + move_days);
+    }
+
+    if change.eq(&Change::Last) {
+        let last_day = into_month_day(from_time.year(), month as u32, 31) as i64;
+        let from_time = date_ymd(from_time, year, month, last_day)?;
+        let last_wday = from_time.weekday().num_days_from_monday() as i64 + 1;
+        let move_days = match wday.gt(&last_wday) {
+            true => Duration::weeks(1) - Duration::days(wday - last_wday),
+            false => Duration::days(last_wday - wday),
+        };
+        return Ok(from_time - move_days);
+    }
+
+    Err(())
+}
+
 /// Move datetime into previous or upcoming weekday
 pub(crate) fn offset_weekday(
     from_time: DateTime<FixedOffset>,

@@ -43,6 +43,13 @@ pub(crate) const PATTERN_LAST_LONG_UNIT_OF_MONTH: &'static str = "last [long_uni
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR: &'static str = "last [long_unit] of [month] [year]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_YEAR: &'static str = "last [long_unit] of [year]";
 
+pub(crate) const PATTERN_FIRST_WDAY_OF_MONTH: &'static str = "first [wday] of [month]";
+pub(crate) const PATTERN_FIRST_WDAY_OF_MONTH_YEAR: &'static str = "first [wday] of [month] [year]";
+pub(crate) const PATTERN_FIRST_WDAY_OF_YEAR: &'static str = "first [wday] of [year]";
+pub(crate) const PATTERN_LAST_WDAY_OF_MONTH: &'static str = "last [wday] of [month]";
+pub(crate) const PATTERN_LAST_WDAY_OF_MONTH_YEAR: &'static str = "last [wday] of [month] [year]";
+pub(crate) const PATTERN_LAST_WDAY_OF_YEAR: &'static str = "last [wday] of [year]";
+
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "first [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "last [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = "first [long_unit] of prev [long_unit]";
@@ -190,12 +197,20 @@ pub(crate) enum Pattern {
     FirstLongUnitOfPrevLongUnit,
     FirstLongUnitOfNextLongUnit,
 
+    FirstWdayOfMonth,
+    FirstWdayOfMonthYear,
+    FirstWdayOfYear,
+
     LastLongUnitOfMonth,
     LastLongUnitOfMonthYear,
     LastLongUnitOfYear,
     LastLongUnitOfThisLongUnit,
     LastLongUnitOfPrevLongUnit,
     LastLongUnitOfNextLongUnit,
+
+    LastWdayOfMonth,
+    LastWdayOfMonthYear,
+    LastWdayOfYear,
 
     Timestamp,
     TimestampFloat,
@@ -268,6 +283,12 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::FirstLongUnitOfPrevLongUnit, PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT),
         (Pattern::FirstLongUnitOfPrevLongUnit, PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT),
         (Pattern::FirstLongUnitOfNextLongUnit, PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT),
+        (Pattern::FirstWdayOfMonth, PATTERN_FIRST_WDAY_OF_MONTH),
+        (Pattern::FirstWdayOfMonthYear, PATTERN_FIRST_WDAY_OF_MONTH_YEAR),
+        (Pattern::FirstWdayOfYear, PATTERN_FIRST_WDAY_OF_YEAR),
+        (Pattern::LastWdayOfMonth, PATTERN_LAST_WDAY_OF_MONTH),
+        (Pattern::LastWdayOfMonthYear, PATTERN_LAST_WDAY_OF_MONTH_YEAR),
+        (Pattern::LastWdayOfYear, PATTERN_LAST_WDAY_OF_YEAR),
         (Pattern::LastLongUnitOfMonth, PATTERN_LAST_LONG_UNIT_OF_MONTH),
         (Pattern::LastLongUnitOfYear, PATTERN_LAST_LONG_UNIT_OF_YEAR),
         (Pattern::LastLongUnitOfMonthYear, PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR),
