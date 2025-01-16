@@ -78,6 +78,7 @@ pub(crate) const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [yea
 pub(crate) const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR_DASHED: &'static str = "[int]-[month]-[year]";
+pub(crate) const PATTERN_DATE_RFC2822: &'static str = "[wday] [int] [month] [year]";
 pub(crate) const PATTERN_DATE_NTH_MONTH: &'static str = "[nth] [month]";
 pub(crate) const PATTERN_DATE_NTH_MONTH_YEAR: &'static str = "[nth] [month] [year]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
@@ -91,6 +92,7 @@ pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [in
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
+pub(crate) const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
@@ -224,10 +226,12 @@ pub(crate) enum Pattern {
     DateMonthNthYear,
     DateDayMonth,
     DateDayMonthYear,
+    DateRfc2822,
     DateTimeYmdHm,
     DateTimeYmdHms,
     DateTimeYmdHmsMs,
 
+    TimeHms,
     TimeMeridiemH,
     TimeMeridiemHm,
 }
@@ -314,11 +318,13 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_MONTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_NTH_OF_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_OF_MONTH_YEAR),
+        (Pattern::DateRfc2822, PATTERN_DATE_RFC2822),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_ISO_YMD_HMS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_ISO_YMD_HMS_MS),
+        (Pattern::TimeHms, PATTERN_TIME_HMS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
