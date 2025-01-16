@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 61] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 63] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -136,6 +136,12 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::DateMonthDayYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
     (&Pattern::DateMonthNthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
     (&Pattern::DateDayMonthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
+    // Thu, 7 Dec 2023
+    (&Pattern::DateRfc2822, |c, v, _| {
+        c.date_ymd(v.get_int(3), v.get_int(2), v.get_int(1))?
+            .ensure_wday(v.get_int(0))?
+            .time_reset()
+    }),
     // 2023-12-07 15:02, 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
     (&Pattern::DateTimeYmdHm, |c, v, _| {
         c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
@@ -153,6 +159,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             v.get_ms(6),
         )
     }),
+    // 3:00:00
+    (&Pattern::TimeHms, |c, v, _| c.time_hms(v.get_int(0), v.get_int(1), v.get_int(2), c.milli_fractions())),
     // 3pm, 3:00 pm
     (&Pattern::TimeMeridiemH, |c, v, _| c.time_12h(v.get_int(0), 0, 0, v.get_int(1))),
     (&Pattern::TimeMeridiemHm, |c, v, _| c.time_12h(v.get_int(0), v.get_int(1), 0, v.get_int(2))),
@@ -274,6 +282,19 @@ impl FuzzyDate {
     /// Set time to specific year, month and day
     fn date_ymd(&self, year: i64, month: i64, day: i64) -> Result<Self, ()> {
         Ok(Self { time: convert::date_ymd(self.time, year, month, day)? })
+    }
+
+    /// Ensure that the date has specified weekday
+    pub(crate) fn ensure_wday(&self, wday: i64) -> Result<Self, ()> {
+        match self.time.weekday().number_from_monday().eq(&(wday as u32)) {
+            true => Ok(Self { time: self.time }),
+            false => Err(()),
+        }
+    }
+
+    /// Current number of milliseconds since the last second
+    fn milli_fractions(&self) -> i64 {
+        self.time.timestamp_subsec_millis() as i64
     }
 
     /// Move time into previous or upcoming month

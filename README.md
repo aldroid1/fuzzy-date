@@ -120,13 +120,13 @@ pip install fuzzy-date
 
 - Unix timestamp `@1680307200`
 - Numeric dates `2023-04-01`, `20230401`, `04/01/2023`, `01.04.2023`
-- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`, `1. April 2023`
+- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`, `1. April 2023`, `Sat, 1 April 2023`
 - Combination dates `01-April-2023`, `April-01-2023`, `2023-April-01`
 - Day and month `April 1st`, `April 1`, `1 April`, `1. April`, `1st of April`
 - Month and year `April`, `April 2023`
 - Datetime formats `2023-04-01 12:00`, `2023-04-01 12:00:00`, `2023-04-01 12:00:00.410`, `2023-04-01T12:00:00`,
-  `2023-04-01T12:00.410`
-- Time of day `2pm`, `2:00 pm`
+  `2023-04-01T12:00.410`, `Sat, 1 April 2023 12:00:00` 
+- Time of day `14:00:00`, `2pm`, `2:00 pm`
 
 ## Methods
 
