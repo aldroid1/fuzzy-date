@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::HashMap;
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 63] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 64] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -137,8 +137,14 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::DateMonthNthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.time_reset()),
     (&Pattern::DateDayMonthYear, |c, v, _| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.time_reset()),
     // Thu, 7 Dec 2023
-    (&Pattern::DateRfc2822, |c, v, _| {
+    (&Pattern::DateWdayDayMonthYear, |c, v, _| {
         c.date_ymd(v.get_int(3), v.get_int(2), v.get_int(1))?
+            .ensure_wday(v.get_int(0))?
+            .time_reset()
+    }),
+    // Thu, Dec 7th 2023
+    (&Pattern::DateWdayMontNthYear, |c, v, _| {
+        c.date_ymd(v.get_int(3), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .time_reset()
     }),
