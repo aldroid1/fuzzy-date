@@ -78,12 +78,16 @@ pub(crate) const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [yea
 pub(crate) const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
 pub(crate) const PATTERN_DATE_DAY_MONTH_YEAR_DASHED: &'static str = "[int]-[month]-[year]";
-pub(crate) const PATTERN_DATE_RFC2822: &'static str = "[wday] [int] [month] [year]";
 pub(crate) const PATTERN_DATE_NTH_MONTH: &'static str = "[nth] [month]";
 pub(crate) const PATTERN_DATE_NTH_MONTH_YEAR: &'static str = "[nth] [month] [year]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
 pub(crate) const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
+
+pub(crate) const PATTERN_DATE_WDAY_DAY_MONTH_YEAR: &'static str = "[wday] [int] [month] [year]";
+pub(crate) const PATTERN_DATE_WDAY_MONTH_NTH_YEAR: &'static str = "[wday] [month] [nth] [year]";
+pub(crate) const PATTERN_DATE_WDAY_NTH_MONTH_YEAR: &'static str = "[wday] [nth] [month] [year]";
+pub(crate) const PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR: &'static str = "[wday] [nth] of [month] [year]";
 
 pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
 pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS_MS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int].[int]";
@@ -226,10 +230,12 @@ pub(crate) enum Pattern {
     DateMonthNthYear,
     DateDayMonth,
     DateDayMonthYear,
-    DateRfc2822,
     DateTimeYmdHm,
     DateTimeYmdHms,
     DateTimeYmdHmsMs,
+
+    DateWdayDayMonthYear,
+    DateWdayMontNthYear,
 
     TimeHms,
     TimeMeridiemH,
@@ -318,12 +324,15 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_MONTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_NTH_OF_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_OF_MONTH_YEAR),
-        (Pattern::DateRfc2822, PATTERN_DATE_RFC2822),
         (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_ISO_YMD_HMS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_ISO_YMD_HMS_MS),
+        (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_DAY_MONTH_YEAR),
+        (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_MONTH_YEAR),
+        (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR),
+        (Pattern::DateWdayMontNthYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
