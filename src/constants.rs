@@ -84,9 +84,15 @@ pub(crate) const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
 pub(crate) const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
 pub(crate) const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
 
+pub(crate) const PATTERN_DATE_WDAY_DAY_MONTH: &'static str = "[wday] [int] [month]";
 pub(crate) const PATTERN_DATE_WDAY_DAY_MONTH_YEAR: &'static str = "[wday] [int] [month] [year]";
+pub(crate) const PATTERN_DATE_WDAY_MONTH_DAY: &'static str = "[wday] [month] [int]";
+pub(crate) const PATTERN_DATE_WDAY_MONTH_NTH: &'static str = "[wday] [month] [nth]";
 pub(crate) const PATTERN_DATE_WDAY_MONTH_NTH_YEAR: &'static str = "[wday] [month] [nth] [year]";
+pub(crate) const PATTERN_DATE_WDAY_MONTH_YEAR: &'static str = "[wday] [month] [int] [year]";
+pub(crate) const PATTERN_DATE_WDAY_NTH_MONTH: &'static str = "[wday] [nth] [month]";
 pub(crate) const PATTERN_DATE_WDAY_NTH_MONTH_YEAR: &'static str = "[wday] [nth] [month] [year]";
+pub(crate) const PATTERN_DATE_WDAY_NTH_OF_MONTH: &'static str = "[wday] [nth] of [month]";
 pub(crate) const PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR: &'static str = "[wday] [nth] of [month] [year]";
 
 pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
@@ -234,8 +240,10 @@ pub(crate) enum Pattern {
     DateTimeYmdHms,
     DateTimeYmdHmsMs,
 
+    DateWdayDayMonth,
     DateWdayDayMonthYear,
-    DateWdayMontNthYear,
+    DateWdayMontDay,
+    DateWdayMontDayYear,
 
     TimeHms,
     TimeMeridiemH,
@@ -329,10 +337,16 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_ISO_YMD_HMS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_ISO_YMD_HMS_MS),
+        (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_DAY_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_DAY_MONTH_YEAR),
+        (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_NTH_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_MONTH_YEAR),
+        (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_NTH_OF_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR),
-        (Pattern::DateWdayMontNthYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
+        (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_DAY),
+        (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_NTH),
+        (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
+        (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),

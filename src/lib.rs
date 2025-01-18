@@ -764,6 +764,7 @@ mod tests {
             ("2023-12-07 15:02:01.04", "2023-12-07 15:02:01.040 +00:00"),
             ("2023-12-07T15:02:01", "2023-12-07 15:02:01 +00:00"),
             ("2023-12-07T15:02:01.04", "2023-12-07 15:02:01.040 +00:00"),
+            ("Wed, July 23 2008", "2008-07-23 00:00:00 +00:00"),
             ("Wed, 23 July 2008", "2008-07-23 00:00:00 +00:00"),
             ("Wed, 23rd July 2008", "2008-07-23 00:00:00 +00:00"),
             ("Wed, 23rd of July 2008", "2008-07-23 00:00:00 +00:00"),
@@ -781,6 +782,10 @@ mod tests {
     #[test]
     fn test_fixed_day_month() {
         let expect: Vec<(&str, &str, &str)> = vec![
+            ("Sat, Dec 7", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("Sat, Dec 7th", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("Sat, 7th of Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
+            ("Sat, 7 Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("Dec 7", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("December 7th", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
             ("7 Dec", "2024-01-12T15:22:28+02:00", "2024-12-07 00:00:00 +02:00"),
@@ -1163,10 +1168,12 @@ mod tests {
             "first minute of Jan",       // Not supported
             "7 of Jan",                  // Missing nth supported
             "Tue, 23 July 2008",         // Wrong weekday
+            "Tue, 7 Dec",         // Wrong weekday
             "23:61:00",                  // Invalid time of day
         ];
 
-        let current_time = Utc::now().fixed_offset();
+        let current_time = "2024-01-12T15:22:28+02:00";
+        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
 
         for from_string in expect {
             let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
