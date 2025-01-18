@@ -1,7 +1,9 @@
 # fuzzy-date
 
-[![PyPI version shields.io](https://img.shields.io/pypi/v/fuzzy-date.svg?color=blue)](https://pypi.python.org/pypi/fuzzy-date/) ‎
-[![PyPI download month](https://img.shields.io/pypi/dm/fuzzy-date.svg?color=blue)](https://pypistats.org/packages/fuzzy-date) ‎
+[![PyPI version shields.io](https://img.shields.io/pypi/v/fuzzy-date.svg?color=blue)](https://pypi.python.org/pypi/fuzzy-date/)
+‎
+[![PyPI download month](https://img.shields.io/pypi/dm/fuzzy-date.svg?color=blue)](https://pypistats.org/packages/fuzzy-date)
+‎
 
 Python module to convert various time strings into datetime objects, written in Rust.
 
@@ -119,13 +121,15 @@ pip install fuzzy-date
 ### Fixed
 
 - Unix timestamp `@1680307200`
-- Numeric dates `2023-04-01`, `20230401`, `04/01/2023`, `01.04.2023`
-- Textual dates `April 1st 2023`, `April 1 2023`, `1 April 2023`, `1. April 2023`
-- Dates with weekday `Sat, 1 April 2023`, `Sat, 1st of April 2023`, `Sat, April 1st 2023`
-- Dates with month `01-April-2023`, `April-01-2023`, `2023-April-01`
-- Day and month `April 1st`, `April 1`, `1 April`, `1. April`, `1st of April`
+- Dates
+    - Numeric `2023-04-01`, `20230401`, `04/01/2023`, `01.04.2023`
+    - Textual `April 1st 2023`, `April 1 2023`, `1 April 2023`, `1. April 2023`
+    - Combined `01-April-2023`, `April-01-2023`, `2023-April-01`
+- Day and month
+    - Textual `April 1st`, `April 1`, `1 April`, `1. April`, `1st of April`
+    - With weekday `Sat, 1 April`, `Sat, 1st of April`, `Sat, April 1st`, `Sat, April 1`
 - Month and year `April`, `April 2023`
-- Datetime formats `2023-04-01T12:00:00`, `2023-04-01T12:00.410`
+- Datetime `2023-04-01T12:00:00`, `2023-04-01T12:00.410`
 - Time of day `14:00:00`, `2pm`, `2:00 pm`
 
 ## Methods

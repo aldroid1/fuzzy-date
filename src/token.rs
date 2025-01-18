@@ -269,11 +269,10 @@ struct TokenList {
 
 impl TokenList {
     fn new(custom: HashMap<String, Token>) -> Self {
-        let mut tokens = HashMap::new();
-
-        for (keyword, token) in STANDARD_TOKENS {
-            tokens.insert(keyword.to_string(), token);
-        }
+        let mut tokens = STANDARD_TOKENS
+            .iter()
+            .map(|(k, t)| (k.to_string(), t.to_owned()))
+            .collect::<HashMap<String, Token>>();
 
         tokens.extend(custom.to_owned());
 
