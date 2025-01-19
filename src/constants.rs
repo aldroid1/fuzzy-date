@@ -1,5 +1,7 @@
 // PATTERNS
 
+use std::collections::HashMap;
+
 pub(crate) const PATTERN_NOW: &'static str = "now";
 pub(crate) const PATTERN_TODAY: &'static str = "today";
 pub(crate) const PATTERN_MIDNIGHT: &'static str = "midnight";
@@ -166,7 +168,7 @@ pub(crate) const UNIT_SECONDS: &'static str = "seconds";
 pub(crate) const UNIT_WEEK: &'static str = "week";
 pub(crate) const UNIT_WEEKS: &'static str = "weeks";
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub(crate) enum Pattern {
     Integer,
     Month,
@@ -253,6 +255,15 @@ pub(crate) enum Pattern {
 }
 
 impl Pattern {
+    /// Hashmap of string patterns mapped to constant values
+    pub(crate) fn value_patterns(only_patterns: Vec<&Pattern>) -> HashMap<String, Pattern> {
+        patterns()
+            .iter()
+            .filter(|&v| only_patterns.contains(&&v.0))
+            .map(|v| (v.1.to_string(), v.0.to_owned()))
+            .collect::<HashMap<String, Pattern>>()
+    }
+
     pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
         patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1).collect()
     }

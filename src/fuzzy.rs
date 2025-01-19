@@ -625,28 +625,23 @@ fn find_pattern_calls(
     pattern: &str,
     custom: HashMap<String, String>,
 ) -> Vec<(String, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>)> {
-    let mut closure_map = HashMap::new();
-    let mut pattern_map = HashMap::new();
+    let closure_map: HashMap<&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>> =
+        HashMap::from(FUZZY_PATTERNS);
 
-    for (pattern_type, closure_function) in FUZZY_PATTERNS {
-        closure_map.insert(pattern_type, closure_function);
-        for pattern_value in Pattern::values(pattern_type) {
-            pattern_map.insert(pattern_value.to_string(), pattern_type.to_owned());
-        }
-    }
+    let pattern_keys = closure_map.keys().map(|v| v.to_owned()).collect::<Vec<&Pattern>>();
+    let mut pattern_map = Pattern::value_patterns(pattern_keys);
 
     for (custom_pattern, closure_pattern) in custom.iter() {
-        if pattern_map.contains_key(closure_pattern) {
-            pattern_map.insert(custom_pattern.to_owned(), pattern_map.get(closure_pattern).unwrap());
+        if let Some(pattern_constant) = pattern_map.get(closure_pattern) {
+            pattern_map.insert(custom_pattern.to_owned(), pattern_constant.to_owned());
         }
     }
 
     for prefix in vec!["", "+"] {
         let try_pattern = format!("{}{}", prefix, pattern);
 
-        if pattern_map.contains_key(&try_pattern) {
-            let pattern_type = pattern_map.get(&try_pattern).unwrap();
-            return vec![(try_pattern.to_string(), *closure_map.get(pattern_type).unwrap())];
+        if let Some(pattern_type) = pattern_map.get(&try_pattern) {
+            return vec![(try_pattern.to_owned(), *closure_map.get(pattern_type).unwrap())];
         }
     }
 
