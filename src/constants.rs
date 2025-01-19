@@ -1,5 +1,7 @@
 // PATTERNS
 
+use std::collections::HashMap;
+
 pub(crate) const PATTERN_NOW: &'static str = "now";
 pub(crate) const PATTERN_TODAY: &'static str = "today";
 pub(crate) const PATTERN_MIDNIGHT: &'static str = "midnight";
@@ -103,6 +105,7 @@ pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [i
 pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
 pub(crate) const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
+pub(crate) const PATTERN_TIME_HMS_MS: &'static str = "[int]:[int]:[int].[int]";
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
@@ -165,7 +168,7 @@ pub(crate) const UNIT_SECONDS: &'static str = "seconds";
 pub(crate) const UNIT_WEEK: &'static str = "week";
 pub(crate) const UNIT_WEEKS: &'static str = "weeks";
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub(crate) enum Pattern {
     Integer,
     Month,
@@ -246,11 +249,21 @@ pub(crate) enum Pattern {
     DateWdayMontDayYear,
 
     TimeHms,
+    TimeHmsMs,
     TimeMeridiemH,
     TimeMeridiemHm,
 }
 
 impl Pattern {
+    /// Hashmap of string patterns mapped to constant values
+    pub(crate) fn value_patterns(only_patterns: Vec<&Pattern>) -> HashMap<String, Pattern> {
+        patterns()
+            .iter()
+            .filter(|&v| only_patterns.contains(&&v.0))
+            .map(|v| (v.1.to_string(), v.0.to_owned()))
+            .collect::<HashMap<String, Pattern>>()
+    }
+
     pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
         patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1).collect()
     }
@@ -348,6 +361,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
+        (Pattern::TimeHmsMs, PATTERN_TIME_HMS_MS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
