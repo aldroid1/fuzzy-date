@@ -103,6 +103,7 @@ pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [i
 pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
 pub(crate) const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
+pub(crate) const PATTERN_TIME_HMS_MS: &'static str = "[int]:[int]:[int].[int]";
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
@@ -246,6 +247,7 @@ pub(crate) enum Pattern {
     DateWdayMontDayYear,
 
     TimeHms,
+    TimeHmsMs,
     TimeMeridiemH,
     TimeMeridiemHm,
 }
@@ -348,6 +350,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
+        (Pattern::TimeHmsMs, PATTERN_TIME_HMS_MS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
