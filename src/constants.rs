@@ -8,6 +8,7 @@ pub(crate) const PATTERN_MIDNIGHT: &'static str = "midnight";
 pub(crate) const PATTERN_YESTERDAY: &'static str = "yesterday";
 pub(crate) const PATTERN_TOMORROW: &'static str = "tomorrow";
 
+pub(crate) const PATTERN_WDAY: &'static str = "[wday]";
 pub(crate) const PATTERN_THIS_WDAY: &'static str = "this [wday]";
 pub(crate) const PATTERN_PREV_WDAY: &'static str = "prev [wday]";
 pub(crate) const PATTERN_LAST_WDAY: &'static str = "last [wday]";
@@ -283,6 +284,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::Midnight, PATTERN_MIDNIGHT),
         (Pattern::Yesterday, PATTERN_YESTERDAY),
         (Pattern::Tomorrow, PATTERN_TOMORROW),
+        (Pattern::ThisWday, PATTERN_WDAY),
         (Pattern::ThisWday, PATTERN_THIS_WDAY),
         (Pattern::PrevWday, PATTERN_PREV_WDAY),
         (Pattern::PrevWday, PATTERN_LAST_WDAY),
