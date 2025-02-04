@@ -169,7 +169,7 @@ pub(crate) const UNIT_SECONDS: &'static str = "seconds";
 pub(crate) const UNIT_WEEK: &'static str = "week";
 pub(crate) const UNIT_WEEKS: &'static str = "weeks";
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub(crate) enum Pattern {
     Integer,
     Month,
@@ -181,6 +181,7 @@ pub(crate) enum Pattern {
     Yesterday,
     Tomorrow,
 
+    Wday,
     ThisWday,
     PrevWday,
     NextWday,
@@ -284,7 +285,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::Midnight, PATTERN_MIDNIGHT),
         (Pattern::Yesterday, PATTERN_YESTERDAY),
         (Pattern::Tomorrow, PATTERN_TOMORROW),
-        (Pattern::ThisWday, PATTERN_WDAY),
+        (Pattern::Wday, PATTERN_WDAY),
         (Pattern::ThisWday, PATTERN_THIS_WDAY),
         (Pattern::PrevWday, PATTERN_PREV_WDAY),
         (Pattern::PrevWday, PATTERN_LAST_WDAY),

@@ -1004,7 +1004,8 @@ mod tests {
     #[test]
     fn test_offset_weekdays() {
         assert_convert_from(vec![
-            ("Sunday", "2024-01-19T15:22:28+02:00", "2024-01-21 00:00:00 +02:00"),
+            ("Monday", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
+            ("this MONDAY", "2024-05-12T15:22:28+02:00", "2024-05-06 00:00:00 +02:00"),
             ("this Sunday", "2024-01-19T15:22:28+02:00", "2024-01-21 00:00:00 +02:00"),
             ("prev Sunday", "2024-01-19T15:22:28+02:00", "2024-01-14 00:00:00 +02:00"),
             ("last Mon", "2024-01-19T15:22:28+02:00", "2024-01-15 00:00:00 +02:00"),
@@ -1150,6 +1151,27 @@ mod tests {
     }
 
     #[test]
+    fn test_combinations_weekday_rules() {
+        assert_convert_from(vec![
+            // Weekday is processed after long unit
+            ("monday next week", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
+            ("tuesday next week", "2024-05-12T15:22:28+02:00", "2024-05-14 00:00:00 +02:00"),
+            ("monday this week", "2024-05-12T15:22:28+02:00", "2024-05-06 00:00:00 +02:00"),
+            ("tuesday last week", "2024-05-12T15:22:28+02:00", "2024-04-30 00:00:00 +02:00"),
+            ("tuesday past week", "2024-05-12T15:22:28+02:00", "2024-05-07 00:00:00 +02:00"),
+            ("last week monday", "2024-05-12T15:22:28+02:00", "2024-04-29 00:00:00 +02:00"),
+            ("this week thursday", "2024-05-12T15:22:28+02:00", "2024-05-09 00:00:00 +02:00"),
+            ("next week monday", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
+            ("next week thursday", "2024-05-12T15:22:28+02:00", "2024-05-16 00:00:00 +02:00"),
+            // Other combinations are not affected
+            ("sunday", "2024-05-12T15:22:28+02:00", "2024-05-12 00:00:00 +02:00"),
+            ("monday", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
+            ("monday next month", "2024-05-12T15:22:28+02:00", "2024-06-17 00:00:00 +02:00"),
+            ("monday 2pm", "2024-05-12T15:22:28+02:00", "2024-05-13 14:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
     fn test_unsupported() {
         let expect: Vec<&str> = vec![
             "",                          // Not parsed
@@ -1170,7 +1192,7 @@ mod tests {
             "first minute of Jan",       // Not supported
             "7 of Jan",                  // Missing nth supported
             "Tue, 23 July 2008",         // Wrong weekday
-            "Tue, 7 Dec",         // Wrong weekday
+            "Tue, 7 Dec",                // Wrong weekday
             "23:61:00",                  // Invalid time of day
         ];
 
@@ -1350,7 +1372,7 @@ mod tests {
     fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-            let result_time = convert_str(from_string, &current_time, false, HashMap::new(), HashMap::new());
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
