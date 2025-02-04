@@ -18,6 +18,7 @@ fd.to_datetime('1 hour ago')             # 2023-04-01 11:00:00+00:00
 fd.to_datetime('last week')              # 2023-03-20 12:00:00+00:00
 fd.to_datetime('past 2 weeks')           # 2023-03-18 12:00:00+00:00
 fd.to_datetime('-1 week')                # 2023-03-25 12:00:00+00:00
+fd.to_datetime('tuesday next week')      # 2023-04-04 00:00:00+00:00
 fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
 fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
 fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
