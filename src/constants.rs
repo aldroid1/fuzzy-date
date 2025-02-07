@@ -273,6 +273,21 @@ impl Pattern {
     pub(crate) fn is_valid(value: &str) -> bool {
         patterns().iter().find(|&v| v.1 == value).is_some()
     }
+
+    pub(crate) fn sort_index(&self) -> usize {
+        match self {
+            Pattern::ThisLongUnit => 1,
+            Pattern::PastLongUnit => 1,
+            Pattern::PrevLongUnit => 1,
+            Pattern::NextLongUnit => 1,
+            Pattern::Wday => 2,
+            Pattern::TimeHms => 3,
+            Pattern::TimeHmsMs => 3,
+            Pattern::TimeMeridiemH => 3,
+            Pattern::TimeMeridiemHm => 3,
+            _ => 0,
+        }
+    }
 }
 
 fn patterns() -> Vec<(Pattern, &'static str)> {

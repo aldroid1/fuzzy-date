@@ -223,15 +223,17 @@ struct CallPattern {
 
 impl PartialOrd<Self> for CallPattern {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.pattern_type.eq(&Pattern::Wday) || other.pattern_type.eq(&Pattern::Wday) {
-            let check = Vec::from([Pattern::PrevLongUnit, Pattern::NextLongUnit, Pattern::ThisLongUnit]);
-
-            if check.contains(&self.pattern_type) {
-                return Some(Ordering::Less);
+        if other.pattern_type.eq(&Pattern::Wday) {
+            let sort_index = self.pattern_type.sort_index();
+            if sort_index.gt(&0) {
+                return Some(sort_index.cmp(&other.pattern_type.sort_index()));
             }
+        }
 
-            if check.contains(&other.pattern_type) {
-                return Some(Ordering::Greater);
+        if self.pattern_type.eq(&Pattern::Wday) {
+            let sort_index = other.pattern_type.sort_index();
+            if sort_index.gt(&0) {
+                return Some(self.pattern_type.sort_index().cmp(&sort_index));
             }
         }
 
