@@ -264,7 +264,7 @@ struct CallPattern {
     pattern_type: Pattern,
     pattern_match: String,
     callback: fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>,
-    value_index: usize,
+    value_offset: usize,
 }
 
 struct CallValues {
@@ -616,7 +616,7 @@ pub(crate) fn convert(
     let mut ctx_vals = CallValues::from_tokens(tokens);
 
     for item in call_sequence.calls {
-        ctx_vals.position = item.value_index;
+        ctx_vals.position = item.value_offset;
         ctx_time = match (item.callback)(ctx_time, &ctx_vals, &rules) {
             Ok(value) => value,
             Err(_) => return None,
@@ -717,7 +717,7 @@ fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<Cal
                 pattern_type: pattern_type.to_owned(),
                 pattern_match: try_pattern.to_owned(),
                 callback: *closure_map.get(pattern_type).unwrap(),
-                value_index: 0,
+                value_offset: 0,
             }]);
         }
     }
@@ -725,7 +725,7 @@ fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<Cal
     let prefix = find_pattern_prefix(pattern, custom);
 
     let mut result = Vec::new();
-    let mut value_index = 0;
+    let mut value_offset = 0;
     let mut search = pattern;
 
     while !search.is_empty() {
@@ -757,10 +757,10 @@ fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<Cal
             pattern_type: (*best_type).to_owned(),
             pattern_match: best_match.to_string(),
             callback: *closure_map.get(best_type).unwrap(),
-            value_index: value_index,
+            value_offset: value_offset,
         });
 
-        value_index += best_match.split("[").count() - 1;
+        value_offset += best_match.split("[").count() - 1;
     }
 
     result
