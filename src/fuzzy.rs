@@ -4,9 +4,9 @@ use crate::token::Token;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
 use std::cmp::{Ordering, PartialEq};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 67] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 68] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -14,6 +14,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::Yesterday, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, -1, r)?.time_reset()),
     (&Pattern::Tomorrow, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, 1, r)?.time_reset()),
     // WEEKDAY OFFSETS
+    (&Pattern::Wday, |c, v, _| c.offset_current_weekday(v.get_int(0))?.time_reset()),
     (&Pattern::ThisWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::None)?.time_reset()),
     (&Pattern::PrevWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.time_reset()),
     (&Pattern::NextWday, |c, v, _| c.offset_weekday(v.get_int(0), convert::Change::Next)?.time_reset()),
@@ -212,24 +213,77 @@ impl TimeUnit {
     }
 }
 
+struct CallSequence {
+    calls: Vec<CallPattern>,
+    patterns: HashSet<Pattern>,
+}
+
+impl CallSequence {
+    fn new(calls: Vec<CallPattern>) -> Self {
+        let patterns = calls.iter().map(|v| v.pattern_type.to_owned()).collect();
+        Self { calls: calls, patterns: patterns }
+    }
+
+    fn sort(&mut self) {
+        if self.patterns.contains(&Pattern::Wday) {
+            let order = Self::wday_allowed();
+            self.calls.sort_by(|a, b| {
+                let a_index = order.get(&a.pattern_type).unwrap();
+                let b_index = order.get(&b.pattern_type).unwrap();
+                a_index.cmp(b_index)
+            })
+        }
+    }
+
+    fn validate(&self) -> bool {
+        if self.patterns.contains(&Pattern::Wday) {
+            let allowed: HashSet<Pattern> = Self::wday_allowed().keys().cloned().collect();
+            return self.patterns.difference(&allowed).count().eq(&0);
+        }
+
+        true
+    }
+
+    fn wday_allowed() -> HashMap<Pattern, usize> {
+        HashMap::from([
+            (Pattern::ThisLongUnit, 1),
+            (Pattern::PastLongUnit, 1),
+            (Pattern::PrevLongUnit, 1),
+            (Pattern::NextLongUnit, 1),
+            (Pattern::Wday, 2),
+            (Pattern::TimeHms, 3),
+            (Pattern::TimeHmsMs, 3),
+            (Pattern::TimeMeridiemH, 3),
+            (Pattern::TimeMeridiemHm, 3),
+        ])
+    }
+}
+
+#[allow(dead_code)]
+struct CallPattern {
+    pattern_type: Pattern,
+    pattern_match: String,
+    callback: fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>,
+    value_offset: usize,
+}
+
 struct CallValues {
+    position: usize,
     tokens: Vec<Token>,
 }
 
 impl CallValues {
     fn from_tokens(tokens: Vec<Token>) -> Self {
-        Self { tokens: tokens }
-    }
-
-    fn drop_used(&mut self, used: usize) {
-        self.tokens = self.tokens[used..].to_owned();
+        Self { position: 0, tokens: tokens }
     }
 
     fn get_int(&self, index: usize) -> i64 {
+        let index = self.position + index;
         self.tokens[index].value
     }
 
     fn get_string(&self, index: usize) -> String {
+        let index = self.position + index;
         let value = self.tokens[index].value;
         let zeros = self.tokens[index].zeros;
         format!("{}{}", "0".repeat(zeros as usize), value)
@@ -240,6 +294,7 @@ impl CallValues {
     /// are too many zeros, we use -1 to break out on millisecond value
     /// validation.
     fn get_ms(&self, index: usize) -> i64 {
+        let index = self.position + index;
         let value = self.tokens[index].value;
         let zeros = self.tokens[index].zeros;
 
@@ -314,6 +369,14 @@ impl FuzzyDate {
     /// Current number of milliseconds since the last second
     fn milli_fractions(&self) -> i64 {
         self.time.timestamp_subsec_millis() as i64
+    }
+
+    /// Move time into current or upcoming weekday
+    fn offset_current_weekday(&self, new_weekday: i64) -> Result<Self, ()> {
+        match self.weekday().eq(&new_weekday) {
+            true => Ok(Self { time: self.time }),
+            false => self.offset_weekday(new_weekday, convert::Change::Next),
+        }
     }
 
     /// Move time into previous or upcoming month
@@ -429,6 +492,11 @@ impl FuzzyDate {
         self.time_hms(0, 0, 0, 0)
     }
 
+    /// Current weekday, matching to token values
+    fn weekday(&self) -> i64 {
+        self.time.weekday().num_days_from_monday() as i64 + 1
+    }
+
     /// Current year
     fn year(&self) -> i64 {
         self.time.year() as i64
@@ -530,22 +598,29 @@ pub(crate) fn convert(
     custom_patterns: HashMap<String, String>,
 ) -> Option<DateTime<FixedOffset>> {
     let call_list = find_pattern_calls(&pattern, custom_patterns);
+    let mut call_sequence = CallSequence::new(call_list);
 
-    if call_list.is_empty() {
+    if call_sequence.calls.is_empty() {
         return None;
     }
+
+    if !call_sequence.validate() {
+        return None;
+    }
+
+    call_sequence.sort();
 
     let rules = Rules { week_start_mon: week_start_mon };
 
     let mut ctx_time = FuzzyDate::new(current_time.to_owned());
     let mut ctx_vals = CallValues::from_tokens(tokens);
 
-    for (pattern_match, pattern_call) in call_list {
-        ctx_time = match pattern_call(ctx_time, &ctx_vals, &rules) {
+    for item in call_sequence.calls {
+        ctx_vals.position = item.value_offset;
+        ctx_time = match (item.callback)(ctx_time, &ctx_vals, &rules) {
             Ok(value) => value,
             Err(_) => return None,
         };
-        ctx_vals.drop_used(pattern_match.split("[").count() - 1);
     }
 
     Some(ctx_time.time)
@@ -621,10 +696,7 @@ pub(crate) fn to_duration(seconds: f64, units: &UnitLocale, max_unit: &str, min_
 }
 
 /// Find closure calls that match the pattern exactly, or partially
-fn find_pattern_calls(
-    pattern: &str,
-    custom: HashMap<String, String>,
-) -> Vec<(String, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>)> {
+fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<CallPattern> {
     let closure_map: HashMap<&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>> =
         HashMap::from(FUZZY_PATTERNS);
 
@@ -641,13 +713,20 @@ fn find_pattern_calls(
         let try_pattern = format!("{}{}", prefix, pattern);
 
         if let Some(pattern_type) = pattern_map.get(&try_pattern) {
-            return vec![(try_pattern.to_owned(), *closure_map.get(pattern_type).unwrap())];
+            return Vec::from([CallPattern {
+                pattern_type: pattern_type.to_owned(),
+                pattern_match: try_pattern.to_owned(),
+                callback: *closure_map.get(pattern_type).unwrap(),
+                value_offset: 0,
+            }]);
         }
     }
 
-    let mut result = Vec::new();
-    let mut search = pattern;
     let prefix = find_pattern_prefix(pattern, custom);
+
+    let mut result = Vec::new();
+    let mut value_offset = 0;
+    let mut search = pattern;
 
     while !search.is_empty() {
         let mut calls: Vec<(&str, &Pattern)> = Vec::new();
@@ -673,7 +752,15 @@ fn find_pattern_calls(
         let (best_match, best_type) = calls.first().unwrap();
 
         search = &search[cmp::min(best_match.len(), search.len())..].trim_start();
-        result.push((best_match.to_string(), *closure_map.get(best_type).unwrap()));
+
+        result.push(CallPattern {
+            pattern_type: (*best_type).to_owned(),
+            pattern_match: best_match.to_string(),
+            callback: *closure_map.get(best_type).unwrap(),
+            value_offset: value_offset,
+        });
+
+        value_offset += best_match.split("[").count() - 1;
     }
 
     result
