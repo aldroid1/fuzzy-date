@@ -4,7 +4,7 @@ use crate::token::Token;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
 use std::cmp::{Ordering, PartialEq};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 68] = [
     // KEYWORDS
@@ -213,32 +213,58 @@ impl TimeUnit {
     }
 }
 
-#[derive(Eq, Ord, PartialEq)]
+struct CallSequence {
+    calls: Vec<CallPattern>,
+    patterns: HashSet<Pattern>,
+}
+
+impl CallSequence {
+    fn new(calls: Vec<CallPattern>) -> Self {
+        let patterns = calls.iter().map(|v| v.pattern_type.to_owned()).collect();
+        Self { calls: calls, patterns: patterns }
+    }
+
+    fn sort(&mut self) {
+        if self.patterns.contains(&Pattern::Wday) {
+            let order = Self::wday_allowed();
+            self.calls.sort_by(|a, b| {
+                let a_index = order.get(&a.pattern_type).unwrap();
+                let b_index = order.get(&b.pattern_type).unwrap();
+                a_index.cmp(b_index)
+            })
+        }
+    }
+
+    fn validate(&self) -> bool {
+        if self.patterns.contains(&Pattern::Wday) {
+            let allowed: HashSet<Pattern> = Self::wday_allowed().keys().cloned().collect();
+            return self.patterns.difference(&allowed).count().eq(&0);
+        }
+
+        true
+    }
+
+    fn wday_allowed() -> HashMap<Pattern, usize> {
+        HashMap::from([
+            (Pattern::ThisLongUnit, 1),
+            (Pattern::PastLongUnit, 1),
+            (Pattern::PrevLongUnit, 1),
+            (Pattern::NextLongUnit, 1),
+            (Pattern::Wday, 2),
+            (Pattern::TimeHms, 3),
+            (Pattern::TimeHmsMs, 3),
+            (Pattern::TimeMeridiemH, 3),
+            (Pattern::TimeMeridiemHm, 3),
+        ])
+    }
+}
+
+#[allow(dead_code)]
 struct CallPattern {
     pattern_type: Pattern,
     pattern_match: String,
     callback: fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>,
     value_index: usize,
-}
-
-impl PartialOrd<Self> for CallPattern {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if other.pattern_type.eq(&Pattern::Wday) {
-            let sort_index = self.pattern_type.sort_index();
-            if sort_index.gt(&0) {
-                return Some(sort_index.cmp(&other.pattern_type.sort_index()));
-            }
-        }
-
-        if self.pattern_type.eq(&Pattern::Wday) {
-            let sort_index = other.pattern_type.sort_index();
-            if sort_index.gt(&0) {
-                return Some(self.pattern_type.sort_index().cmp(&sort_index));
-            }
-        }
-
-        Some(Ordering::Equal)
-    }
 }
 
 struct CallValues {
@@ -572,17 +598,24 @@ pub(crate) fn convert(
     custom_patterns: HashMap<String, String>,
 ) -> Option<DateTime<FixedOffset>> {
     let call_list = find_pattern_calls(&pattern, custom_patterns);
+    let mut call_sequence = CallSequence::new(call_list);
 
-    if call_list.is_empty() {
+    if call_sequence.calls.is_empty() {
         return None;
     }
+
+    if !call_sequence.validate() {
+        return None;
+    }
+
+    call_sequence.sort();
 
     let rules = Rules { week_start_mon: week_start_mon };
 
     let mut ctx_time = FuzzyDate::new(current_time.to_owned());
     let mut ctx_vals = CallValues::from_tokens(tokens);
 
-    for item in call_list {
+    for item in call_sequence.calls {
         ctx_vals.position = item.value_index;
         ctx_time = match (item.callback)(ctx_time, &ctx_vals, &rules) {
             Ok(value) => value,
@@ -729,8 +762,6 @@ fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<Cal
 
         value_index += best_match.split("[").count() - 1;
     }
-
-    result.sort();
 
     result
 }
