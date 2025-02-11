@@ -69,6 +69,9 @@ pub(crate) const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
 pub(crate) const PATTERN_TIMESTAMP: &'static str = "[timestamp]";
 pub(crate) const PATTERN_TIMESTAMP_FLOAT: &'static str = "[timestamp].[int]";
 
+pub(crate) const PATTERN_WEEK: &'static str = "[long_unit] [int]";
+pub(crate) const PATTERN_WEEK_YEAR: &'static str = "[long_unit] [int] [year]";
+
 pub(crate) const PATTERN_YEAR_WEEK: &'static str = "[year]-W[int]";
 pub(crate) const PATTERN_YW: &'static str = "[year]W[int]";
 
@@ -235,6 +238,8 @@ pub(crate) enum Pattern {
     Timestamp,
     TimestampFloat,
 
+    Week,
+    WeekYear,
     YearWeek,
 
     DateYmd,
@@ -337,6 +342,8 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::LastLongUnitOfNextLongUnit, PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT),
         (Pattern::Timestamp, PATTERN_TIMESTAMP),
         (Pattern::TimestampFloat, PATTERN_TIMESTAMP_FLOAT),
+        (Pattern::Week, PATTERN_WEEK),
+        (Pattern::WeekYear, PATTERN_WEEK_YEAR),
         (Pattern::YearWeek, PATTERN_YW),
         (Pattern::YearWeek, PATTERN_YEAR_WEEK),
         (Pattern::DateYmd, PATTERN_DATE_YMD),

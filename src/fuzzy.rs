@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 69] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 71] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -119,7 +119,19 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
-    // 2023-W15
+    // Week 13
+    (&Pattern::Week, |c, v, r| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
+            .date_yw(c.year(), v.get_int(1), r)?
+            .time_reset()
+    }),
+    // Week 13 2023
+    (&Pattern::WeekYear, |c, v, r| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
+            .date_yw(v.get_int(2), v.get_int(1), r)?
+            .time_reset()
+    }),
+    // 2023-W13
     (&Pattern::YearWeek, |c, v, r| c.date_yw(v.get_int(0), v.get_int(1), r)?.time_reset()),
     // April, April 2023
     (&Pattern::Month, |c, v, _| c.date_ym(c.year(), v.get_int(0))?.time_reset()),
@@ -363,6 +375,14 @@ impl FuzzyDate {
     /// Set time to specific year, month and day
     fn date_ymd(&self, year: i64, month: i64, day: i64) -> Result<Self, ()> {
         Ok(Self { time: convert::date_ymd(self.time, year, month, day)? })
+    }
+
+    /// Ensure that given value matches to allowed unit
+    fn ensure_unit(&self, given: TimeUnit, accept: TimeUnit) -> Result<Self, ()> {
+        match given.eq(&accept) {
+            true => Ok(Self { time: self.time }),
+            false => Err(()),
+        }
     }
 
     /// Ensure that the date has specified weekday
