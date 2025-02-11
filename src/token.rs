@@ -6,7 +6,7 @@ const BOUNDARY_CHARS: [&'static str; 6] = [" ", "-", "/", "+", ":", ","];
 
 // Conditional boundary characters, that are boundaries
 // when between numbers, but not between characters
-const CONDITIONAL_CHARS: [&'static str; 2] = [".", "T"];
+const CONDITIONAL_CHARS: [&'static str; 3] = [".", "T", "W"];
 
 // Characters that get muted from the pattern string
 const IGNORED_CHARS: [&'static str; 1] = [","];
@@ -339,8 +339,8 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 
         if BOUNDARY_CHARS.contains(&curr_char)
             || (CONDITIONAL_CHARS.contains(&curr_char)
-                && is_value_boundary(&prev_char)
-                && is_value_boundary(&next_char))
+                && is_value_boundary(&prev_char, "-")
+                && is_value_boundary(&next_char, ""))
         {
             part_chars = &source[part_start..*part_index];
             part_letter.push_str(&curr_char);
@@ -422,8 +422,8 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
 }
 
 /// Check that character is a boundary for value
-fn is_value_boundary(prev_char: &String) -> bool {
-    prev_char.is_empty() || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
+fn is_value_boundary(prev_char: &String, allow_chars: &str) -> bool {
+    prev_char.is_empty() || allow_chars.contains(prev_char) || prev_char.char_indices().nth(0).unwrap().1.is_digit(10)
 }
 
 /// Parse a string that consists of a number+string parts, such as "1d"
@@ -970,6 +970,19 @@ mod tests {
                     Token::new_integer(1, 1),
                 ]
             )
+        );
+    }
+
+    #[test]
+    fn test_week_numbers() {
+        assert_eq!(
+            tokenize_str("2025W07"),
+            (String::from("[year]W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1),])
+        );
+
+        assert_eq!(
+            tokenize_str("2025-W07"),
+            (String::from("[year]-W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1),])
         );
     }
 
