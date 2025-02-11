@@ -835,7 +835,7 @@ mod tests {
 
     #[test]
     fn test_keywords() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("now", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("midnight", "2024-01-12T15:22:28+02:00", "2024-01-12 00:00:00 +02:00"),
             ("yesterday", "2024-01-12T15:22:28+02:00", "2024-01-11 00:00:00 +02:00"),
@@ -844,8 +844,40 @@ mod tests {
     }
 
     #[test]
+    fn test_fixed_week_mon() {
+        assert_convert_from_mon(vec![
+            // ISO8601
+            ("2023W01", "2024-05-12T15:22:28+02:00", "2023-01-02 00:00:00 +02:00"),
+            ("2023W13", "2024-05-12T15:22:28+02:00", "2023-03-27 00:00:00 +02:00"),
+            ("2023-W13", "2024-05-12T15:22:28+02:00", "2023-03-27 00:00:00 +02:00"),
+            ("2023-W52", "2024-05-12T15:22:28+02:00", "2023-12-25 00:00:00 +02:00"),
+            ("2020-W53", "2024-05-12T15:22:28+02:00", "2020-12-28 00:00:00 +02:00"),
+            // Textual
+            ("Week 53", "2020-05-12T15:22:28+02:00", "2020-12-28 00:00:00 +02:00"),
+            ("Week 1, 2023", "2024-05-12T15:22:28+02:00", "2023-01-02 00:00:00 +02:00"),
+            ("Week 13, 2023", "2024-05-12T15:22:28+02:00", "2023-03-27 00:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
+    fn test_fixed_week_sun() {
+        assert_convert_from_sun(vec![
+            // ISO8601
+            ("2023W01", "2024-05-12T15:22:28+02:00", "2023-01-01 00:00:00 +02:00"),
+            ("2023W13", "2024-05-12T15:22:28+02:00", "2023-03-26 00:00:00 +02:00"),
+            ("2023-W13", "2024-05-12T15:22:28+02:00", "2023-03-26 00:00:00 +02:00"),
+            ("2023-W52", "2024-05-12T15:22:28+02:00", "2023-12-24 00:00:00 +02:00"),
+            ("2020-W53", "2024-05-12T15:22:28+02:00", "2020-12-27 00:00:00 +02:00"),
+            // Textual
+            ("Week 53", "2020-05-12T15:22:28+02:00", "2020-12-27 00:00:00 +02:00"),
+            ("Week 1, 2023", "2024-05-12T15:22:28+02:00", "2023-01-01 00:00:00 +02:00"),
+            ("Week 13, 2023", "2024-05-12T15:22:28+02:00", "2023-03-26 00:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
     fn test_month() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("Jan", "2024-05-12T15:22:28+02:00", "2024-01-12 00:00:00 +02:00"),
             ("February", "2024-12-30T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
         ]);
@@ -853,7 +885,7 @@ mod tests {
 
     #[test]
     fn test_month_year() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("Jan 2023", "2024-05-12T15:22:28+02:00", "2023-01-01 00:00:00 +02:00"),
             ("February 2025", "2024-12-30T15:22:28+02:00", "2025-02-01 00:00:00 +02:00"),
         ]);
@@ -861,7 +893,7 @@ mod tests {
 
     #[test]
     fn test_month_ranges() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             // First
             ("first day of January", "2024-05-12T15:22:28+02:00", "2024-01-01 00:00:00 +02:00"),
             ("first day of this month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
@@ -879,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_month_year_ranges() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("first day of January 2027", "2024-05-12T15:22:28+02:00", "2027-01-01 00:00:00 +02:00"),
             ("last day of February 2025", "2026-05-12T15:22:28+02:00", "2025-02-28 00:00:00 +02:00"),
         ]);
@@ -887,7 +919,7 @@ mod tests {
 
     #[test]
     fn test_wdau_ranges() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("first mon of Feb", "2024-05-12T15:22:28+02:00", "2024-02-05 00:00:00 +02:00"),
             ("first tue of 2025", "2024-05-12T15:22:28+02:00", "2025-01-07 00:00:00 +02:00"),
             ("first wed of Jan 2025", "2026-05-12T15:22:28+02:00", "2025-01-01 00:00:00 +02:00"),
@@ -901,7 +933,7 @@ mod tests {
 
     #[test]
     fn test_year_ranges() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             // First
             ("first day of this year", "2024-02-12T15:22:28+02:00", "2024-01-01 00:00:00 +02:00"),
             ("first day of prev year", "2024-03-12T15:22:28+02:00", "2023-01-01 00:00:00 +02:00"),
@@ -920,7 +952,7 @@ mod tests {
 
     #[test]
     fn test_offset_seconds() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("past second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:27 +02:00"),
             ("prev second", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:27 +02:00"),
@@ -942,7 +974,7 @@ mod tests {
 
     #[test]
     fn test_offset_minutes() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("past minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
             ("prev minute", "2024-01-12T15:22:28+02:00", "2024-01-12 15:21:28 +02:00"),
@@ -962,7 +994,7 @@ mod tests {
 
     #[test]
     fn test_offset_hours() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this hour", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("past hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
             ("prev hour", "2024-01-12T15:22:28+02:00", "2024-01-12 14:22:28 +02:00"),
@@ -984,7 +1016,7 @@ mod tests {
 
     #[test]
     fn test_offset_days() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this day", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("past day", "2024-01-12T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
             ("prev day", "2024-01-12T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
@@ -1003,7 +1035,7 @@ mod tests {
 
     #[test]
     fn test_offset_weekdays() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("Monday", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
             ("this MONDAY", "2024-05-12T15:22:28+02:00", "2024-05-06 00:00:00 +02:00"),
             ("this Sunday", "2024-01-19T15:22:28+02:00", "2024-01-21 00:00:00 +02:00"),
@@ -1020,7 +1052,7 @@ mod tests {
 
     #[test]
     fn test_offset_weeks_exact() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("-1w", "2024-01-25T15:22:28+02:00", "2024-01-18 15:22:28 +02:00"),
             ("-2 weeks", "2024-01-25T15:22:28+02:00", "2024-01-11 15:22:28 +02:00"),
             ("+1w", "2024-01-14T14:22:28+02:00", "2024-01-21 14:22:28 +02:00"),
@@ -1069,7 +1101,7 @@ mod tests {
 
     #[test]
     fn test_offset_month() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this April", "2024-01-19T15:22:28+02:00", "2024-04-19 00:00:00 +02:00"),
             ("prev April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
             ("last April", "2024-01-19T15:22:28+02:00", "2023-04-19 00:00:00 +02:00"),
@@ -1084,7 +1116,7 @@ mod tests {
 
     #[test]
     fn test_offset_months() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this month", "2024-03-12T15:22:28+02:00", "2024-03-12 15:22:28 +02:00"),
             ("past month", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
             ("prev month", "2024-03-12T15:22:28+02:00", "2024-02-12 15:22:28 +02:00"),
@@ -1105,7 +1137,7 @@ mod tests {
 
     #[test]
     fn test_offset_years() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("this year", "2024-01-12T15:22:28+02:00", "2024-01-12 15:22:28 +02:00"),
             ("past year", "2024-01-12T15:22:28+02:00", "2023-01-12 15:22:28 +02:00"),
             ("prev year", "2024-01-12T15:22:28+02:00", "2023-01-12 15:22:28 +02:00"),
@@ -1130,7 +1162,7 @@ mod tests {
 
     #[test]
     fn test_combinations() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("@1705072948.544 2pm", "2024-01-12T15:22:28+02:00", "2024-01-12 14:00:00 +00:00"),
             ("dec 2pm", "2024-01-12T15:22:28+02:00", "2024-12-12 14:00:00 +02:00"),
             ("dec 12.3.2023", "2024-01-12T15:22:28+02:00", "2023-03-12 00:00:00 +02:00"),
@@ -1152,7 +1184,7 @@ mod tests {
 
     #[test]
     fn test_combinations_weekday_rules() {
-        assert_convert_from(vec![
+        assert_convert_from_mon(vec![
             ("sunday", "2024-05-12T15:22:28+02:00", "2024-05-12 00:00:00 +02:00"),
             ("monday", "2024-05-12T15:22:28+02:00", "2024-05-13 00:00:00 +02:00"),
             // Weekday is processed after long unit
@@ -1182,6 +1214,8 @@ mod tests {
             "2024-12-01 7",              // Unknown part
             "+1day",                     // Not recognized
             "0000-01-12 15:22",          // Year invalid
+            "2024-W0",                   // Week invalid
+            "2025-W53",                  // Week invalid
             "1982-04-32",                // Date invalid
             "1982-04-01 15:61",          // Time invalid
             "1995-07-01 12:00:00.10000", // Milliseconds invalid
@@ -1190,6 +1224,7 @@ mod tests {
             "1995-07-01 12:00:00.0010",  // Milliseconds invalid
             "1995-07-01 12:00:00.0230",  // Milliseconds invalid
             "2023-12-07t15:02:01",       // Lowercase T not supported
+            "2023w01",                   // Lowercase W not supported
             "Feb 29th 2023",             // Day out of range
             "first day of this week",    // Not supported
             "first minute of Jan",       // Not supported
@@ -1198,6 +1233,7 @@ mod tests {
             "Tue, 7 Dec",                // Wrong weekday
             "23:61:00",                  // Invalid time of day
             "tuesday 2023-05-01",        // Invalid use of weekday
+            "month 7, 2023",             // Invalid unit for syntax
         ];
 
         let current_time = "2024-01-12T15:22:28+02:00";
@@ -1373,10 +1409,18 @@ mod tests {
         assert!(gid_into_token(603).is_none());
     }
 
-    fn assert_convert_from(expect: Vec<(&str, &str, &str)>) {
+    fn assert_convert_from_mon(expect: Vec<(&str, &str, &str)>) {
         for (from_string, current_time, expect_time) in expect {
             let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
             let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+        }
+    }
+
+    fn assert_convert_from_sun(expect: Vec<(&str, &str, &str)>) {
+        for (from_string, current_time, expect_time) in expect {
+            let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+            let result_time = convert_str(from_string, &current_time, false, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
