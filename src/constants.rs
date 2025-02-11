@@ -38,6 +38,8 @@ pub(crate) const PATTERN_PLUS_SHORT_UNIT: &'static str = "+[int][short_unit]";
 pub(crate) const PATTERN_PLUS_LONG_UNIT: &'static str = "+[int] [long_unit]";
 pub(crate) const PATTERN_UNIT_AGO: &'static str = "[int] [unit] ago";
 pub(crate) const PATTERN_LONG_UNIT_AGO: &'static str = "[int] [long_unit] ago";
+pub(crate) const PATTERN_LONG_UNIT_INT: &'static str = "[long_unit] [int]";
+pub(crate) const PATTERN_LONG_UNIT_INT_YEAR: &'static str = "[long_unit] [int] [year]";
 
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_MONTH: &'static str = "first [long_unit] of [month]";
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR: &'static str = "first [long_unit] of [month] [year]";
@@ -68,9 +70,6 @@ pub(crate) const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
 
 pub(crate) const PATTERN_TIMESTAMP: &'static str = "[timestamp]";
 pub(crate) const PATTERN_TIMESTAMP_FLOAT: &'static str = "[timestamp].[int]";
-
-pub(crate) const PATTERN_WEEK: &'static str = "[long_unit] [int]";
-pub(crate) const PATTERN_WEEK_YEAR: &'static str = "[long_unit] [int] [year]";
 
 pub(crate) const PATTERN_YEAR_WEEK: &'static str = "[year]-W[int]";
 pub(crate) const PATTERN_YW: &'static str = "[year]W[int]";
@@ -211,7 +210,10 @@ pub(crate) enum Pattern {
     PlusLongUnit,
 
     UnitAgo,
+
     LongUnitAgo,
+    LongUnitInt,
+    LongUnitIntYear,
 
     FirstLongUnitOfMonth,
     FirstLongUnitOfMonthYear,
@@ -238,8 +240,6 @@ pub(crate) enum Pattern {
     Timestamp,
     TimestampFloat,
 
-    Week,
-    WeekYear,
     YearWeek,
 
     DateYmd,
@@ -320,6 +320,8 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::PlusLongUnit, PATTERN_PLUS_LONG_UNIT),
         (Pattern::UnitAgo, PATTERN_UNIT_AGO),
         (Pattern::LongUnitAgo, PATTERN_LONG_UNIT_AGO),
+        (Pattern::LongUnitInt, PATTERN_LONG_UNIT_INT),
+        (Pattern::LongUnitIntYear, PATTERN_LONG_UNIT_INT_YEAR),
         (Pattern::FirstLongUnitOfMonth, PATTERN_FIRST_LONG_UNIT_OF_MONTH),
         (Pattern::FirstLongUnitOfMonthYear, PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR),
         (Pattern::FirstLongUnitOfYear, PATTERN_FIRST_LONG_UNIT_OF_YEAR),
@@ -342,8 +344,6 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::LastLongUnitOfNextLongUnit, PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT),
         (Pattern::Timestamp, PATTERN_TIMESTAMP),
         (Pattern::TimestampFloat, PATTERN_TIMESTAMP_FLOAT),
-        (Pattern::Week, PATTERN_WEEK),
-        (Pattern::WeekYear, PATTERN_WEEK_YEAR),
         (Pattern::YearWeek, PATTERN_YW),
         (Pattern::YearWeek, PATTERN_YEAR_WEEK),
         (Pattern::DateYmd, PATTERN_DATE_YMD),

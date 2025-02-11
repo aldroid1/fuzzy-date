@@ -39,6 +39,17 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // NUMERIC OFFSET, PLUS
     (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
     (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
+    // EXACT UNIT
+    (&Pattern::LongUnitInt, |c, v, r| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
+            .date_yw(c.year(), v.get_int(1), r)?
+            .time_reset()
+    }),
+    (&Pattern::LongUnitIntYear, |c, v, r| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
+            .date_yw(v.get_int(2), v.get_int(1), r)?
+            .time_reset()
+    }),
     // FIRST/LAST RELATIVE OFFSETS
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
@@ -119,18 +130,6 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
-    // Week 13
-    (&Pattern::Week, |c, v, r| {
-        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
-            .date_yw(c.year(), v.get_int(1), r)?
-            .time_reset()
-    }),
-    // Week 13 2023
-    (&Pattern::WeekYear, |c, v, r| {
-        c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
-            .date_yw(v.get_int(2), v.get_int(1), r)?
-            .time_reset()
-    }),
     // 2023-W13
     (&Pattern::YearWeek, |c, v, r| c.date_yw(v.get_int(0), v.get_int(1), r)?.time_reset()),
     // April, April 2023
