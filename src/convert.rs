@@ -64,6 +64,30 @@ pub(crate) fn date_ymd(
     Ok(new_time)
 }
 
+/// Move datetime into specified year and week
+pub(crate) fn date_yw(
+    from_time: DateTime<FixedOffset>,
+    year: i64,
+    week: i64,
+    start_day: i8,
+) -> Result<DateTime<FixedOffset>, ()> {
+    if week.lt(&1) || week.gt(&53) {
+        return Err(());
+    }
+
+    let iso_week = match NaiveDate::from_isoywd_opt(year as i32, week as u32, chrono::Weekday::Mon) {
+        Some(v) => v,
+        None => return Err(()),
+    };
+
+    let new_time = date_ymd(from_time, iso_week.year() as i64, iso_week.month() as i64, iso_week.day() as i64)?;
+
+    match start_day {
+        1 => Ok(new_time),
+        _ => Ok(offset_weekday(new_time, start_day as i64, Change::Prev)),
+    }
+}
+
 /// Return time set to the last day of given year and month
 pub(crate) fn into_last_of_month(
     from_time: DateTime<FixedOffset>,
@@ -356,6 +380,19 @@ mod tests {
 
         assert!(date_ymd(from_time, 2024, 13, 10).is_err());
         assert!(date_ymd(from_time, 2024, 2, 30).is_err());
+    }
+
+    #[test]
+    fn test_date_yw() {
+        let from_time = into_datetime("2022-01-31T15:22:28+02:00");
+
+        assert_eq!(date_yw(from_time, 2020, 53, 1).unwrap().to_string(), "2020-12-28 15:22:28 +02:00",);
+        assert_eq!(date_yw(from_time, 2020, 53, 7).unwrap().to_string(), "2020-12-27 15:22:28 +02:00",);
+        assert_eq!(date_yw(from_time, 2025, 1, 1).unwrap().to_string(), "2024-12-30 15:22:28 +02:00",);
+        assert_eq!(date_yw(from_time, 2025, 1, 7).unwrap().to_string(), "2024-12-29 15:22:28 +02:00",);
+
+        assert!(date_yw(from_time, 2020, 0, 1).is_err());
+        assert!(date_yw(from_time, 2020, 54, 1).is_err());
     }
 
     #[test]
