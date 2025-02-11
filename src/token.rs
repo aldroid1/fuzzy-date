@@ -977,12 +977,12 @@ mod tests {
     fn test_week_numbers() {
         assert_eq!(
             tokenize_str("2025W07"),
-            (String::from("[year]W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1),])
+            (String::from("[year]W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1)])
         );
 
         assert_eq!(
             tokenize_str("2025-W07"),
-            (String::from("[year]-W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1),])
+            (String::from("[year]-W[int]"), vec![Token::new(TokenType::Year, 2025), Token::new_integer(7, 1)])
         );
     }
 
