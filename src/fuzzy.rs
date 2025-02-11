@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 68] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 69] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -119,6 +119,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
+    // 2023-W15
+    (&Pattern::YearWeek, |c, v, r| c.date_yw(v.get_int(0), v.get_int(1), r)?.time_reset()),
     // April, April 2023
     (&Pattern::Month, |c, v, _| c.date_ym(c.year(), v.get_int(0))?.time_reset()),
     (&Pattern::MonthYear, |c, v, _| c.date_ymd(v.get_int(1), v.get_int(0), 1)?.time_reset()),
@@ -345,6 +347,11 @@ impl FuzzyDate {
     /// Set time to specific timestamp
     fn date_stamp(&self, sec: i64, ms: i64) -> Result<Self, ()> {
         Ok(Self { time: convert::date_stamp(sec, ms) })
+    }
+
+    /// Set time to specific year and week number
+    fn date_yw(&self, year: i64, week: i64, rules: &Rules) -> Result<Self, ()> {
+        Ok(Self { time: convert::date_yw(self.time, year, week, rules.week_start_day())? })
     }
 
     /// Set time to specific year and month
