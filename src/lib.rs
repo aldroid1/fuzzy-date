@@ -919,7 +919,7 @@ mod tests {
     }
 
     #[test]
-    fn test_wdau_ranges() {
+    fn test_wday_ranges() {
         assert_convert_from_mon(vec![
             ("first mon of Feb", "2024-05-12T15:22:28+02:00", "2024-02-05 00:00:00 +02:00"),
             ("first tue of 2025", "2024-05-12T15:22:28+02:00", "2025-01-07 00:00:00 +02:00"),
@@ -1208,6 +1208,19 @@ mod tests {
     }
 
     #[test]
+    fn test_combinations_year_rules() {
+        assert_convert_from_mon(vec![
+            ("2015", "2024-02-12T15:22:28+02:00", "2015-02-12 15:22:28 +02:00"),
+            ("2023", "2024-02-29T15:22:28+02:00", "2023-02-28 15:22:28 +02:00"),
+            // Month and day is is processed after year
+            ("2015, Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 00:00:00 +02:00"),
+            // Time of day is processed after month and day
+            ("2015 2pm Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 14:00:00 +02:00"),
+            ("2015 12:00:00 Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 12:00:00 +02:00"),
+        ]);
+    }
+
+    #[test]
     fn test_unsupported() {
         let expect: Vec<&str> = vec![
             "",                          // Not parsed
@@ -1235,6 +1248,7 @@ mod tests {
             "Fri Dec 07 02:00:00 2023",  // Wrong weekday
             "23:61:00",                  // Invalid time of day
             "tuesday 2023-05-01",        // Invalid use of weekday
+            "next month 2015",           // Invalid use of year
             "month 7, 2023",             // Invalid unit for syntax
         ];
 
