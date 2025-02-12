@@ -130,6 +130,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // 20230130
     (&Pattern::Integer, |c, v, _| c.date_iso8601(v.get_string(0))?.time_reset()),
+    // 2023
+    (&Pattern::Year, |c, v, _| c.date_ym(v.get_int(0), c.month())),
     // 2023-W13
     (&Pattern::YearWeek, |c, v, r| c.date_yw(v.get_int(0), v.get_int(1), r)?.time_reset()),
     // April, April 2023
@@ -167,12 +169,6 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.date_ymd(c.year(), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .time_reset()
-    }),
-    // Thu Dec 07 02:00:00 2023
-    (&Pattern::DateWdayMontDayHmsYear, |c, v, _| {
-        c.date_ymd(v.get_int(6), v.get_int(1), v.get_int(2))?
-            .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)?
-            .ensure_wday(v.get_int(0))
     }),
     // Thu, Dec 7th 2023
     (&Pattern::DateWdayMontDayYear, |c, v, _| {
@@ -244,37 +240,65 @@ impl CallSequence {
     }
 
     fn sort(&mut self) {
-        if self.patterns.contains(&Pattern::Wday) {
-            let order = Self::wday_allowed();
-            self.calls.sort_by(|a, b| {
-                let a_index = order.get(&a.pattern_type).unwrap();
-                let b_index = order.get(&b.pattern_type).unwrap();
-                a_index.cmp(b_index)
-            })
+        let order = self.get_allowed();
+
+        if order.is_empty() {
+            return;
         }
+
+        let order = order
+            .iter()
+            .enumerate()
+            .map(|(i, v)| (v.to_owned(), i + 1))
+            .collect::<HashMap<Pattern, usize>>();
+
+        self.calls.sort_by(|a, b| {
+            let a_index = order.get(&a.pattern_type).unwrap();
+            let b_index = order.get(&b.pattern_type).unwrap();
+            a_index.cmp(b_index)
+        })
     }
 
     fn validate(&self) -> bool {
-        if self.patterns.contains(&Pattern::Wday) {
-            let allowed: HashSet<Pattern> = Self::wday_allowed().keys().cloned().collect();
-            return self.patterns.difference(&allowed).count().eq(&0);
+        let allowed = self.get_allowed();
+
+        if allowed.is_empty() {
+            return true;
         }
 
-        true
+        let allowed = HashSet::from_iter(allowed.iter().cloned());
+        self.patterns.difference(&allowed).count().eq(&0)
     }
 
-    fn wday_allowed() -> HashMap<Pattern, usize> {
-        HashMap::from([
-            (Pattern::ThisLongUnit, 1),
-            (Pattern::PastLongUnit, 1),
-            (Pattern::PrevLongUnit, 1),
-            (Pattern::NextLongUnit, 1),
-            (Pattern::Wday, 2),
-            (Pattern::TimeHms, 3),
-            (Pattern::TimeHmsMs, 3),
-            (Pattern::TimeMeridiemH, 3),
-            (Pattern::TimeMeridiemHm, 3),
-        ])
+    fn get_allowed(&self) -> Vec<Pattern> {
+        if self.patterns.contains(&Pattern::Wday) {
+            return Self::allowed_wday();
+        }
+
+        if self.patterns.contains(&Pattern::Year) {
+            return Self::allowed_year();
+        }
+
+        Vec::new()
+    }
+
+    fn allowed_wday() -> Vec<Pattern> {
+        let mut result = Vec::from([
+            Pattern::ThisLongUnit,
+            Pattern::PastLongUnit,
+            Pattern::PrevLongUnit,
+            Pattern::NextLongUnit,
+            Pattern::Wday,
+        ]);
+        result.extend(Pattern::time_of_days());
+        result
+    }
+
+    fn allowed_year() -> Vec<Pattern> {
+        let mut result = Vec::from([Pattern::Year]);
+        result.extend(Pattern::year_month_dates());
+        result.extend(Pattern::time_of_days());
+        result
     }
 }
 
@@ -401,6 +425,11 @@ impl FuzzyDate {
     /// Current number of milliseconds since the last second
     fn milli_fractions(&self) -> i64 {
         self.time.timestamp_subsec_millis() as i64
+    }
+
+    /// Current month
+    fn month(&self) -> i64 {
+        self.time.month() as i64
     }
 
     /// Move time into current or upcoming weekday

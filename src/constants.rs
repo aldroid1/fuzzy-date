@@ -71,6 +71,8 @@ pub(crate) const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
 pub(crate) const PATTERN_TIMESTAMP: &'static str = "[timestamp]";
 pub(crate) const PATTERN_TIMESTAMP_FLOAT: &'static str = "[timestamp].[int]";
 
+pub(crate) const PATTERN_YEAR: &'static str = "[year]";
+
 pub(crate) const PATTERN_YEAR_WEEK: &'static str = "[year]-W[int]";
 pub(crate) const PATTERN_YW: &'static str = "[year]W[int]";
 
@@ -241,6 +243,7 @@ pub(crate) enum Pattern {
     Timestamp,
     TimestampFloat,
 
+    Year,
     YearWeek,
 
     DateYmd,
@@ -259,7 +262,6 @@ pub(crate) enum Pattern {
     DateWdayDayMonth,
     DateWdayDayMonthYear,
     DateWdayMontDay,
-    DateWdayMontDayHmsYear,
     DateWdayMontDayYear,
 
     TimeHms,
@@ -269,6 +271,15 @@ pub(crate) enum Pattern {
 }
 
 impl Pattern {
+    pub(crate) fn time_of_days() -> [Self; 4] {
+        [
+            Self::TimeHms,
+            Self::TimeHmsMs,
+            Self::TimeMeridiemH,
+            Self::TimeMeridiemHm,
+        ]
+    }
+
     /// Hashmap of string patterns mapped to constant values
     pub(crate) fn value_patterns(only_patterns: Vec<&Pattern>) -> HashMap<String, Pattern> {
         patterns()
@@ -276,6 +287,16 @@ impl Pattern {
             .filter(|&v| only_patterns.contains(&&v.0))
             .map(|v| (v.1.to_string(), v.0.to_owned()))
             .collect::<HashMap<String, Pattern>>()
+    }
+
+    pub(crate) fn year_month_dates() -> [Self; 5] {
+        [
+            Self::DateMonthDay,
+            Self::DateMonthNth,
+            Self::DateDayMonth,
+            Self::DateWdayDayMonth,
+            Self::DateWdayMontDay,
+        ]
     }
 
     pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
@@ -346,6 +367,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::LastLongUnitOfNextLongUnit, PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT),
         (Pattern::Timestamp, PATTERN_TIMESTAMP),
         (Pattern::TimestampFloat, PATTERN_TIMESTAMP_FLOAT),
+        (Pattern::Year, PATTERN_YEAR),
         (Pattern::YearWeek, PATTERN_YW),
         (Pattern::YearWeek, PATTERN_YEAR_WEEK),
         (Pattern::DateYmd, PATTERN_DATE_YMD),
@@ -376,7 +398,6 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_NTH_OF_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR),
         (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_DAY),
-        (Pattern::DateWdayMontDayHmsYear, PATTERN_DATE_WDAY_MONTH_DAY_HMS_YEAR),
         (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_NTH),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
