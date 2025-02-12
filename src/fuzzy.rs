@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 71] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 72] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -167,6 +167,12 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.date_ymd(c.year(), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .time_reset()
+    }),
+    // Thu Dec 07 02:00:00 2023
+    (&Pattern::DateWdayMontDayHmsYear, |c, v, _| {
+        c.date_ymd(v.get_int(6), v.get_int(1), v.get_int(2))?
+            .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)?
+            .ensure_wday(v.get_int(0))
     }),
     // Thu, Dec 7th 2023
     (&Pattern::DateWdayMontDayYear, |c, v, _| {

@@ -768,7 +768,7 @@ mod tests {
             ("Wed, 23 July 2008", "2008-07-23 00:00:00 +00:00"),
             ("Wed, 23rd July 2008", "2008-07-23 00:00:00 +00:00"),
             ("Wed, 23rd of July 2008", "2008-07-23 00:00:00 +00:00"),
-            ("Wed, July 23rd 2008", "2008-07-23 00:00:00 +00:00"),
+            ("Thu Dec 07 02:00:00 2023", "2023-12-07 02:00:00 +00:00"),
         ];
 
         let current_time = Utc::now().fixed_offset();
@@ -1231,6 +1231,7 @@ mod tests {
             "7 of Jan",                  // Missing nth supported
             "Tue, 23 July 2008",         // Wrong weekday
             "Tue, 7 Dec",                // Wrong weekday
+            "Fri Dec 07 02:00:00 2023",  // Wrong weekday
             "23:61:00",                  // Invalid time of day
             "tuesday 2023-05-01",        // Invalid use of weekday
             "month 7, 2023",             // Invalid unit for syntax
