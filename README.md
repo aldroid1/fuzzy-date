@@ -133,7 +133,7 @@ pip install fuzzy-date
     - Numeric `2023W13`, `2023-W13`
     - Textual `Week 13`, `Week 13, 2023`
 - Month and year `April`, `April 2023`
-- Datetime `2023-04-01T12:00:00`, `2023-04-01T12:00.410`
+- Datetime `2023-04-01T12:00:00`, `2023-04-01T12:00.410`, `Sat Apr 01 12:00:00 2023`
 - Time of day `14:00:00`, `14:00:00.410`, `2pm`, `2:00 pm`
 
 ## Methods

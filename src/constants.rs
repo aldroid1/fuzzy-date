@@ -95,6 +95,7 @@ pub(crate) const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[mon
 pub(crate) const PATTERN_DATE_WDAY_DAY_MONTH: &'static str = "[wday] [int] [month]";
 pub(crate) const PATTERN_DATE_WDAY_DAY_MONTH_YEAR: &'static str = "[wday] [int] [month] [year]";
 pub(crate) const PATTERN_DATE_WDAY_MONTH_DAY: &'static str = "[wday] [month] [int]";
+pub(crate) const PATTERN_DATE_WDAY_MONTH_DAY_HMS_YEAR: &'static str = "[wday] [month] [int] [int]:[int]:[int] [year]";
 pub(crate) const PATTERN_DATE_WDAY_MONTH_NTH: &'static str = "[wday] [month] [nth]";
 pub(crate) const PATTERN_DATE_WDAY_MONTH_NTH_YEAR: &'static str = "[wday] [month] [nth] [year]";
 pub(crate) const PATTERN_DATE_WDAY_MONTH_YEAR: &'static str = "[wday] [month] [int] [year]";
@@ -258,6 +259,7 @@ pub(crate) enum Pattern {
     DateWdayDayMonth,
     DateWdayDayMonthYear,
     DateWdayMontDay,
+    DateWdayMontDayHmsYear,
     DateWdayMontDayYear,
 
     TimeHms,
@@ -374,6 +376,7 @@ fn patterns() -> Vec<(Pattern, &'static str)> {
         (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_NTH_OF_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR),
         (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_DAY),
+        (Pattern::DateWdayMontDayHmsYear, PATTERN_DATE_WDAY_MONTH_DAY_HMS_YEAR),
         (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_NTH),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
