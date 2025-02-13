@@ -1,6 +1,6 @@
 // PATTERNS
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub(crate) const PATTERN_NOW: &'static str = "now";
 pub(crate) const PATTERN_TODAY: &'static str = "today";
@@ -281,12 +281,14 @@ impl Pattern {
     }
 
     /// Hashmap of string patterns mapped to constant values
-    pub(crate) fn value_patterns(only_patterns: Vec<&Pattern>) -> HashMap<String, Pattern> {
-        patterns()
+    pub(crate) fn value_patterns(only_patterns: HashSet<&Pattern>) -> HashMap<String, Pattern> {
+        let mut result = patterns()
             .iter()
-            .filter(|&v| only_patterns.contains(&&v.0))
             .map(|v| (v.1.to_string(), v.0.to_owned()))
-            .collect::<HashMap<String, Pattern>>()
+            .collect::<HashMap<String, Pattern>>();
+
+        result.retain(|_, v| only_patterns.contains(v));
+        result
     }
 
     pub(crate) fn year_month_dates() -> [Self; 5] {
@@ -308,8 +310,8 @@ impl Pattern {
     }
 }
 
-fn patterns() -> Vec<(Pattern, &'static str)> {
-    vec![
+fn patterns() -> [(Pattern, &'static str); 96] {
+    [
         (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Month, PATTERN_MONTH),
         (Pattern::MonthYear, PATTERN_MONTH_YEAR),
