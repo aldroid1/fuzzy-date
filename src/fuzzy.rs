@@ -761,7 +761,7 @@ fn find_pattern_calls(pattern: &str, custom: HashMap<String, String>) -> Vec<Cal
     let closure_map: HashMap<&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>> =
         HashMap::from(FUZZY_PATTERNS);
 
-    let pattern_keys = closure_map.keys().map(|v| v.to_owned()).collect::<Vec<&Pattern>>();
+    let pattern_keys = closure_map.keys().map(|v| v.to_owned()).collect::<HashSet<&Pattern>>();
     let mut pattern_map = Pattern::value_patterns(pattern_keys);
 
     for (custom_pattern, closure_pattern) in custom.iter() {
