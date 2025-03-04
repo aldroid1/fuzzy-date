@@ -117,7 +117,7 @@ pip install fuzzy-date
 - Weekdays `next Mon`, `next Monday`, `Monday`  
 - Months `next Jan`, `next January`, `January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
-- Ranges `first/last day of`, `first/last Monday of`
+- Ranges `first/last day of`, `first/last Monday of`, `first/last of month`
 
 ### Fixed
 
