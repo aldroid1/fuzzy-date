@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Duration, FixedOffset, NaiveDate, Timelike};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, Month, NaiveDate, Timelike};
 use std::cmp;
 
 #[derive(PartialEq)]
@@ -105,14 +105,14 @@ pub(crate) fn into_month_day(year: i32, month: u32, day: u32) -> u32 {
         return day;
     }
 
-    let next_month: u32 = if month.eq(&12) { 1 } else { month + 1 };
-    let next_year: i32 = if month.eq(&12) { year + 1 } else { year };
+    let Ok(target_month) = Month::try_from(month as u8) else {
+        return day;
+    };
 
-    let month_start = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
-    let month_end = NaiveDate::from_ymd_opt(next_year, next_month, 1).unwrap();
-    let max_days: u32 = month_end.signed_duration_since(month_start).num_days() as u32;
-
-    cmp::min(max_days, day)
+    match target_month.num_days(year) {
+        Some(v) => cmp::min(v as u32, day),
+        None => day,
+    }
 }
 
 /// Move datetime into previous or upcoming month
