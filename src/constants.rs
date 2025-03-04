@@ -55,6 +55,13 @@ pub(crate) const PATTERN_LAST_WDAY_OF_MONTH: &'static str = "last [wday] of [mon
 pub(crate) const PATTERN_LAST_WDAY_OF_MONTH_YEAR: &'static str = "last [wday] of [month] [year]";
 pub(crate) const PATTERN_LAST_WDAY_OF_YEAR: &'static str = "last [wday] of [year]";
 
+pub(crate) const PATTERN_FIRST_OF_LONG_UNIT: &'static str = "first of [long_unit]";
+pub(crate) const PATTERN_FIRST_OF_THE_LONG_UNIT: &'static str = "first of the [long_unit]";
+pub(crate) const PATTERN_FIRST_OF_THIS_LONG_UNIT: &'static str = "first of this [long_unit]";
+pub(crate) const PATTERN_LAST_OF_LONG_UNIT: &'static str = "last of [long_unit]";
+pub(crate) const PATTERN_LAST_OF_THE_LONG_UNIT: &'static str = "last of the [long_unit]";
+pub(crate) const PATTERN_LAST_OF_THIS_LONG_UNIT: &'static str = "last of this [long_unit]";
+
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "first [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "last [long_unit] of this [long_unit]";
 pub(crate) const PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = "first [long_unit] of prev [long_unit]";
@@ -230,6 +237,7 @@ pub(crate) enum Pattern {
     LongUnitInt,
     LongUnitIntYear,
 
+    FirstOfLongUnit,
     FirstLongUnitOfMonth,
     FirstLongUnitOfMonthYear,
     FirstLongUnitOfYear,
@@ -241,6 +249,7 @@ pub(crate) enum Pattern {
     FirstWdayOfMonthYear,
     FirstWdayOfYear,
 
+    LastOfLongUnit,
     LastLongUnitOfMonth,
     LastLongUnitOfMonthYear,
     LastLongUnitOfYear,
@@ -322,7 +331,7 @@ impl Pattern {
     }
 }
 
-fn patterns() -> [(Pattern, &'static str); 106] {
+fn patterns() -> [(Pattern, &'static str); 112] {
     [
         (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Month, PATTERN_MONTH),
@@ -359,6 +368,9 @@ fn patterns() -> [(Pattern, &'static str); 106] {
         (Pattern::LongUnitAgo, PATTERN_LONG_UNIT_AGO),
         (Pattern::LongUnitInt, PATTERN_LONG_UNIT_INT),
         (Pattern::LongUnitIntYear, PATTERN_LONG_UNIT_INT_YEAR),
+        (Pattern::FirstOfLongUnit, PATTERN_FIRST_OF_LONG_UNIT),
+        (Pattern::FirstOfLongUnit, PATTERN_FIRST_OF_THE_LONG_UNIT),
+        (Pattern::FirstOfLongUnit, PATTERN_FIRST_OF_THIS_LONG_UNIT),
         (Pattern::FirstLongUnitOfMonth, PATTERN_FIRST_LONG_UNIT_OF_MONTH),
         (Pattern::FirstLongUnitOfMonthYear, PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR),
         (Pattern::FirstLongUnitOfYear, PATTERN_FIRST_LONG_UNIT_OF_YEAR),
@@ -372,6 +384,9 @@ fn patterns() -> [(Pattern, &'static str); 106] {
         (Pattern::LastWdayOfMonth, PATTERN_LAST_WDAY_OF_MONTH),
         (Pattern::LastWdayOfMonthYear, PATTERN_LAST_WDAY_OF_MONTH_YEAR),
         (Pattern::LastWdayOfYear, PATTERN_LAST_WDAY_OF_YEAR),
+        (Pattern::LastOfLongUnit, PATTERN_LAST_OF_LONG_UNIT),
+        (Pattern::LastOfLongUnit, PATTERN_LAST_OF_THE_LONG_UNIT),
+        (Pattern::LastOfLongUnit, PATTERN_LAST_OF_THIS_LONG_UNIT),
         (Pattern::LastLongUnitOfMonth, PATTERN_LAST_LONG_UNIT_OF_MONTH),
         (Pattern::LastLongUnitOfYear, PATTERN_LAST_LONG_UNIT_OF_YEAR),
         (Pattern::LastLongUnitOfMonthYear, PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR),
