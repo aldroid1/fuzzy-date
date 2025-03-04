@@ -119,6 +119,18 @@ pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
 
+pub(crate) const PATTERN_TIME_AT_HMS: &'static str = "at [int]:[int]:[int]";
+pub(crate) const PATTERN_TIME_AT_HMS_MS: &'static str = "at [int]:[int]:[int].[int]";
+pub(crate) const PATTERN_TIME_AT_12H_H: &'static str = "at [int] [meridiem]";
+pub(crate) const PATTERN_TIME_AT_12H_HM: &'static str = "at [int]:[int] [meridiem]";
+pub(crate) const PATTERN_TIME_AT_12H_HOUR: &'static str = "at [int][meridiem]";
+
+pub(crate) const PATTERN_TIME_AT_SIGN_HMS: &'static str = "@ [int]:[int]:[int]";
+pub(crate) const PATTERN_TIME_AT_SIGN_HMS_MS: &'static str = "@ [int]:[int]:[int].[int]";
+pub(crate) const PATTERN_TIME_AT_SIGN_12H_H: &'static str = "@ [int] [meridiem]";
+pub(crate) const PATTERN_TIME_AT_SIGN_12H_HM: &'static str = "@ [int]:[int] [meridiem]";
+pub(crate) const PATTERN_TIME_AT_SIGN_12H_HOUR: &'static str = "@ [int][meridiem]";
+
 // TOKENS
 
 // Weekdays
@@ -310,7 +322,7 @@ impl Pattern {
     }
 }
 
-fn patterns() -> [(Pattern, &'static str); 96] {
+fn patterns() -> [(Pattern, &'static str); 106] {
     [
         (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Month, PATTERN_MONTH),
@@ -404,9 +416,19 @@ fn patterns() -> [(Pattern, &'static str); 96] {
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
+        (Pattern::TimeHms, PATTERN_TIME_AT_HMS),
+        (Pattern::TimeHms, PATTERN_TIME_AT_SIGN_HMS),
         (Pattern::TimeHmsMs, PATTERN_TIME_HMS_MS),
+        (Pattern::TimeHmsMs, PATTERN_TIME_AT_HMS_MS),
+        (Pattern::TimeHmsMs, PATTERN_TIME_AT_SIGN_HMS_MS),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_HOUR),
+        (Pattern::TimeMeridiemH, PATTERN_TIME_AT_12H_HOUR),
+        (Pattern::TimeMeridiemH, PATTERN_TIME_AT_SIGN_12H_HOUR),
         (Pattern::TimeMeridiemH, PATTERN_TIME_12H_H),
+        (Pattern::TimeMeridiemH, PATTERN_TIME_AT_12H_H),
+        (Pattern::TimeMeridiemH, PATTERN_TIME_AT_SIGN_12H_H),
         (Pattern::TimeMeridiemHm, PATTERN_TIME_12H_HM),
+        (Pattern::TimeMeridiemHm, PATTERN_TIME_AT_12H_HM),
+        (Pattern::TimeMeridiemHm, PATTERN_TIME_AT_SIGN_12H_HM),
     ]
 }

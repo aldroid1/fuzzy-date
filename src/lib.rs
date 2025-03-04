@@ -829,7 +829,16 @@ mod tests {
         ];
 
         for (from_string, expect_time) in expect {
-            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
+            let try_string = from_string;
+            let result_time = convert_str(try_string, &current_time, true, HashMap::new(), HashMap::new());
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+
+            let try_string = format!("at {}", from_string);
+            let result_time = convert_str(&try_string, &current_time, true, HashMap::new(), HashMap::new());
+            assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
+
+            let try_string = format!("@ {}", from_string);
+            let result_time = convert_str(&try_string, &current_time, true, HashMap::new(), HashMap::new());
             assert_eq!(result_time.unwrap().to_string(), expect_time.to_string());
         }
     }
@@ -1169,7 +1178,9 @@ mod tests {
             ("dec 12.3.2023", "2024-01-12T15:22:28+02:00", "2023-03-12 00:00:00 +02:00"),
             ("dec 2025 2pm", "2024-01-12T15:22:28+02:00", "2025-12-01 14:00:00 +02:00"),
             ("Nov-09-2006 2pm", "2024-01-12T15:22:28+02:00", "2006-11-09 14:00:00 +02:00"),
+            ("Nov-09-2006 at 2pm", "2024-01-12T15:22:28+02:00", "2006-11-09 14:00:00 +02:00"),
             ("Nov 2006 2pm", "2024-01-12T15:22:28+02:00", "2006-11-01 14:00:00 +02:00"),
+            ("Nov 2006 @ 2pm", "2024-01-12T15:22:28+02:00", "2006-11-01 14:00:00 +02:00"),
             ("20240210 2pm", "2024-01-12T15:22:28+02:00", "2024-02-10 14:00:00 +02:00"),
             ("yesterday 1pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
             ("yesterday 1:00 pm", "2024-01-12T15:22:28+02:00", "2024-01-11 13:00:00 +02:00"),
