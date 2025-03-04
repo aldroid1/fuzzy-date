@@ -906,12 +906,16 @@ mod tests {
         assert_convert_from_mon(vec![
             // First
             ("first day of January", "2024-05-12T15:22:28+02:00", "2024-01-01 00:00:00 +02:00"),
+            ("first of month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
+            ("first of the month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of this month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of prev month", "2024-03-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of last month", "2024-03-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
             ("first day of next month", "2024-02-12T15:22:28+02:00", "2024-03-01 00:00:00 +02:00"),
             // Last
             ("last day of February", "2024-05-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
+            ("last of month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
+            ("last of the month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
             ("last day of this month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
             ("last day of prev month", "2024-03-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
             ("last day of last month", "2024-03-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
@@ -1251,6 +1255,8 @@ mod tests {
             "2023-12-07t15:02:01",       // Lowercase T not supported
             "2023w01",                   // Lowercase W not supported
             "Feb 29th 2023",             // Day out of range
+            "first of year",             // Not supported
+            "first of the year",         // Not supported
             "first day of this week",    // Not supported
             "first minute of Jan",       // Not supported
             "7 of Jan",                  // Missing nth supported

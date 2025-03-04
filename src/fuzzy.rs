@@ -6,7 +6,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 72] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 74] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, _| c.time_reset()),
@@ -51,6 +51,11 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .time_reset()
     }),
     // FIRST/LAST RELATIVE OFFSETS
+    (&Pattern::FirstOfLongUnit, |c, v, _| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
+            .offset_range_month(TimeUnit::Days, c.month(), convert::Change::First)?
+            .time_reset()
+    }),
     (&Pattern::FirstLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
             .time_reset()
@@ -65,6 +70,11 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     (&Pattern::LastLongUnitOfMonth, |c, v, _| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::Last)?
+            .time_reset()
+    }),
+    (&Pattern::LastOfLongUnit, |c, v, _| {
+        c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
+            .offset_range_month(TimeUnit::Days, c.month(), convert::Change::Last)?
             .time_reset()
     }),
     (&Pattern::LastLongUnitOfMonthYear, |c, v, _| {
