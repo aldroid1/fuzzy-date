@@ -27,11 +27,13 @@ test_cases = [
     {'source': 'Wed, 23 July 2008', 'expect': '2008-07-23 00:00:00'},
     {'source': 'Wed, July 23 2008', 'expect': '2008-07-23 00:00:00'},
     {'source': '2023-12-07 3pm', 'expect': '2023-12-07 15:00:00'},
-    {'source': '2023-12-07 3:00 p.m.', 'expect': '2023-12-07 15:00:00'},
     {'source': '2023-12-07 15:02:01', 'expect': '2023-12-07 15:02:01'},
     {'source': '2023-12-07T15:02:01', 'expect': '2023-12-07 15:02:01'},
     {'source': '2023-12-07T15:02:01.04', 'expect': '2023-12-07 15:02:01.040000'},
     {'source': '2023-12-07 15:02:01.04', 'expect': '2023-12-07 15:02:01.040000'},
+    {'source': 'Week 16', 'expect': '2024-04-15 00:00:00'},
+    {'source': 'Week 16, 2024', 'expect': '2024-04-15 00:00:00'},
+    {'source': '2024-W16', 'expect': '2024-04-15 00:00:00'},
 
     # Relative
     {'source': 'now', 'expect': '2024-01-25 15:22:28'},
@@ -121,7 +123,22 @@ def discrepancy_table() -> polars.DataFrame:
             'fuzzydate': test['fuzzydate'],
         }
         for test in test_cases
-        if not test['is_match']
+        if not test['is_match'] and test['dateparser']
+    ]
+
+    result.sort(key=lambda i: i['test'])
+    return polars.DataFrame(result, orient='row')
+
+
+def unsupported_table() -> polars.DataFrame:
+    result = [
+        {
+            'test': test['source'],
+            'dateparser': '`None`',
+            'fuzzydate': test['fuzzydate'],
+        }
+        for test in test_cases
+        if not test['is_match'] and not test['dateparser']
     ]
 
     result.sort(key=lambda i: i['test'])
@@ -142,12 +159,16 @@ if __name__ == '__main__':
         iterations = 100
         p_table = performance_table(iterations)
         d_table = discrepancy_table()
+        u_table = unsupported_table()
 
         print('\n# Performance\n# {} tests, {} iterations\n'.format(
-            len(test_cases) - len(d_table),
+            len(test_cases) - len(d_table) - len(u_table),
             iterations,
         ))
         print(p_table)
+
+        print('\n# Not supported\n# {} tests\n'.format(len(u_table)))
+        print(u_table)
 
         print('\n# Discrepancies\n# {} tests\n'.format(len(d_table)))
         print(d_table)
