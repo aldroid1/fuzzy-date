@@ -1,0 +1,12 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+dateparser = "1.2.1"
+fuzzy-date = "0.5.4"
+polars = "1.24.0"
+
+[requires]
+python_version = "3.13"

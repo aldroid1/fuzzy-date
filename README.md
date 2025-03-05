@@ -114,7 +114,7 @@ pip install fuzzy-date
 
 - Adjustment `first`, `last`, `prev`, `past`, `this`, `next` or `+`, `-`
 - Units `next week`, `next month`, `next year`
-- Weekdays `next Mon`, `next Monday`, `Monday`  
+- Weekdays `next Mon`, `next Monday`, `Monday`
 - Months `next Jan`, `next January`, `January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
 - Ranges `first/last day of`, `first/last Monday of`, `first/last of month`
@@ -180,6 +180,73 @@ fuzzydate.config.add_patterns(
 fuzzydate.config.add_tokens(
     tokens: dict[str, int]) -> None
 ```
+
+## Benchmarks
+
+Benchmark is perhaps the wrong word here, as performance is (usually) less important than accuracy when it comes to
+parsing fuzzy date strings.
+
+To get a sense of the accuracy for `fuzzydate`, we compare it with the popular fuzzy date parsing library for Python,
+[dateparser](https://pypi.org/project/dateparser/). Although it has a slightly different premise to
+extract dates from HTML pages — which can be much more vague — one would likely still use it for the same use case.
+
+### Summary
+
+- Comparing `dateparser 1.2.1` and `fuzzy-date 0.5.4`
+- Testing **45** strings — 26 fixed, 19 relative
+- No timezones included, as `fuzzydate` does not support them
+- **8** tests get different results, **1** only works in `dateparser`, **11** only work in `fuzzydate`
+- For identical **26** tests, mean execution time is **189%** faster for `fuzzydate`
+
+See [benchmark.py](benchmark/benchmark.py) for implementation.
+
+### Differences (9)
+
+Current time is assumed to be `2024-01-25 15:22:28`
+
+| test           | dateparser          | fuzzydate           |
+|----------------|---------------------|---------------------|
+| +1 day 2 hours | 2024-01-24 13:22:28 | 2024-01-26 17:22:28 |
+| 1705072948     | 2024-01-12 17:22:28 |                     |
+| 2024-W16       | 2024-01-16 00:00:00 | 2024-04-15 00:00:00 |
+| 7.2.2023       | 2023-07-02 00:00:00 | 2023-02-07 00:00:00 |
+| last week      | 2024-01-18 15:22:28 | 2024-01-15 15:22:28 |
+| next week      | 2024-02-01 15:22:28 | 2024-01-29 15:22:28 |
+| today          | 2024-01-25 15:22:28 | 2024-01-25 00:00:00 |
+| tuesday        | 2024-01-23 00:00:00 | 2024-01-30 00:00:00 |
+| yesterday      | 2024-01-24 15:22:28 | 2024-01-24 00:00:00 |
+
+Note that using a specific language or adding more settings can change the results for `dateparser`.
+
+### Unsupported (11)
+
+| test                    | dateparser | fuzzydate           |
+|-------------------------|------------|---------------------|
+| 20230201                | `None`     | 2023-02-01 00:00:00 |
+| \@1705072948            | `None`     | 2024-01-12 15:22:28 |
+| Week 16                 | `None`     | 2024-04-15 00:00:00 |
+| Week 16, 2024           | `None`     | 2024-04-15 00:00:00 |
+| first Mon of Feb        | `None`     | 2024-02-05 00:00:00 |
+| first day of February   | `None`     | 2024-02-01 00:00:00 |
+| first day of this month | `None`     | 2024-01-01 00:00:00 |
+| last 2 weeks            | `None`     | 2024-01-08 15:22:28 |
+| last monday             | `None`     | 2024-01-22 00:00:00 |
+| past week               | `None`     | 2024-01-18 15:22:28 |
+| prev monday             | `None`     | 2024-01-22 00:00:00 |
+
+### Performance
+
+For **26** test cases that both libraries supported, measuring the fastest run of 100 executions.
+
+| statistic | dateparser | fuzzydate | diff % |
+|-----------|------------|-----------|--------|
+| mean      | 0.060186   | 0.001607  | 189.6  |
+| std       | 0.012205   | 0.000117  | 196.2  |
+| min       | 0.039103   | 0.001451  | 185.7  |
+| max       | 0.088111   | 0.002023  | 191.0  |
+
+It's perhaps noteworthy that native `datetime.fromisoformat()` was still **197%** faster than `fuzzydate`, if it could
+be used.
 
 ## Background
 
