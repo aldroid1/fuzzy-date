@@ -186,11 +186,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .ensure_wday(v.get_int(0))?
             .time_reset()
     }),
-    // 2023-12-07 15:02, 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
-    (&Pattern::DateTimeYmdHm, |c, v, _| {
-        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
-            .time_hms(v.get_int(3), v.get_int(4), 0, 0)
-    }),
+    // 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
     (&Pattern::DateTimeYmdHms, |c, v, _| {
         c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
             .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)
@@ -203,7 +199,8 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             v.get_ms(6),
         )
     }),
-    // 3:00:00, 3:00:00.456
+    // 3:00, 3:00:00, 3:00:00.456
+    (&Pattern::TimeHm, |c, v, _| c.time_hms(v.get_int(0), v.get_int(1), 0, 0)),
     (&Pattern::TimeHms, |c, v, _| c.time_hms(v.get_int(0), v.get_int(1), v.get_int(2), c.milli_fractions())),
     (&Pattern::TimeHmsMs, |c, v, _| c.time_hms(v.get_int(0), v.get_int(1), v.get_int(2), v.get_ms(3))),
     // 3pm, 3:00 pm
