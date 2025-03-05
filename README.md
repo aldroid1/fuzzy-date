@@ -186,14 +186,14 @@ fuzzydate.config.add_tokens(
 Benchmark is perhaps the wrong word here, as performance is (usually) less important than accuracy when it comes to
 parsing fuzzy date strings.
 
-To get a sense of the accuracy for `fuzzydate`, we compare it with the popular fuzzy date parsing library for Python,
-[dateparser](https://pypi.org/project/dateparser/). Although it has a slightly different premise to
-extract dates from HTML pages — which can be much more vague — one would likely still use it for the same use case.
+To get a sense of the accuracy for `fuzzydate`, we compare it with [dateparser](https://pypi.org/project/dateparser/),
+the popular date parsing library for Python. Although it has a slightly different premise of extracting dates from HTML
+pages — which can be much more vague — one would likely still use it for the same use cases.
 
 ### Summary
 
 - Comparing `dateparser 1.2.1` and `fuzzy-date 0.5.4`
-- Testing **45** strings — 26 fixed, 19 relative
+- Testing **45** strings (26 fixed, 19 relative)
 - No timezones included, as `fuzzydate` does not support them
 - **8** tests get different results, **1** only works in `dateparser`, **11** only work in `fuzzydate`
 - For identical **26** tests, mean execution time is **189%** faster for `fuzzydate`
@@ -245,7 +245,7 @@ For **26** test cases that both libraries supported, measuring the fastest run o
 | min       | 0.039103   | 0.001451  | 185.7  |
 | max       | 0.088111   | 0.002023  | 191.0  |
 
-It's perhaps noteworthy that native `datetime.fromisoformat()` was still **197%** faster than `fuzzydate`, if it could
+It's perhaps noteworthy that native `datetime.fromisoformat()` was still **197%** faster than `fuzzydate`, when it could
 be used.
 
 ## Background
