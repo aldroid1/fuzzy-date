@@ -116,22 +116,24 @@ pub(crate) const PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR: &'static str = "[wday] [nt
 pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
 pub(crate) const PATTERN_DATETIME_ISO_YMD_HMS_MS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int].[int]";
 
-pub(crate) const PATTERN_DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
 pub(crate) const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
+pub(crate) const PATTERN_TIME_HM: &'static str = "[int]:[int]";
 pub(crate) const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
 pub(crate) const PATTERN_TIME_HMS_MS: &'static str = "[int]:[int]:[int].[int]";
 pub(crate) const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
 
+pub(crate) const PATTERN_TIME_AT_HM: &'static str = "at [int]:[int]";
 pub(crate) const PATTERN_TIME_AT_HMS: &'static str = "at [int]:[int]:[int]";
 pub(crate) const PATTERN_TIME_AT_HMS_MS: &'static str = "at [int]:[int]:[int].[int]";
 pub(crate) const PATTERN_TIME_AT_12H_H: &'static str = "at [int] [meridiem]";
 pub(crate) const PATTERN_TIME_AT_12H_HM: &'static str = "at [int]:[int] [meridiem]";
 pub(crate) const PATTERN_TIME_AT_12H_HOUR: &'static str = "at [int][meridiem]";
 
+pub(crate) const PATTERN_TIME_AT_SIGN_HM: &'static str = "@ [int]:[int]";
 pub(crate) const PATTERN_TIME_AT_SIGN_HMS: &'static str = "@ [int]:[int]:[int]";
 pub(crate) const PATTERN_TIME_AT_SIGN_HMS_MS: &'static str = "@ [int]:[int]:[int].[int]";
 pub(crate) const PATTERN_TIME_AT_SIGN_12H_H: &'static str = "@ [int] [meridiem]";
@@ -276,7 +278,6 @@ pub(crate) enum Pattern {
     DateMonthNthYear,
     DateDayMonth,
     DateDayMonthYear,
-    DateTimeYmdHm,
     DateTimeYmdHms,
     DateTimeYmdHmsMs,
 
@@ -285,6 +286,7 @@ pub(crate) enum Pattern {
     DateWdayMontDay,
     DateWdayMontDayYear,
 
+    TimeHm,
     TimeHms,
     TimeHmsMs,
     TimeMeridiemH,
@@ -331,7 +333,7 @@ impl Pattern {
     }
 }
 
-fn patterns() -> [(Pattern, &'static str); 112] {
+fn patterns() -> [(Pattern, &'static str); 114] {
     [
         (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Month, PATTERN_MONTH),
@@ -415,7 +417,6 @@ fn patterns() -> [(Pattern, &'static str); 112] {
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_MONTH_YEAR),
         (Pattern::DateDayMonth, PATTERN_DATE_NTH_OF_MONTH),
         (Pattern::DateDayMonthYear, PATTERN_DATE_NTH_OF_MONTH_YEAR),
-        (Pattern::DateTimeYmdHm, PATTERN_DATETIME_YMD_HM),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_YMD_HMS),
         (Pattern::DateTimeYmdHms, PATTERN_DATETIME_ISO_YMD_HMS),
         (Pattern::DateTimeYmdHmsMs, PATTERN_DATETIME_YMD_HMS_MS),
@@ -430,6 +431,9 @@ fn patterns() -> [(Pattern, &'static str); 112] {
         (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_NTH),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
         (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
+        (Pattern::TimeHm, PATTERN_TIME_HM),
+        (Pattern::TimeHm, PATTERN_TIME_AT_HM),
+        (Pattern::TimeHm, PATTERN_TIME_AT_SIGN_HM),
         (Pattern::TimeHms, PATTERN_TIME_HMS),
         (Pattern::TimeHms, PATTERN_TIME_AT_HMS),
         (Pattern::TimeHms, PATTERN_TIME_AT_SIGN_HMS),

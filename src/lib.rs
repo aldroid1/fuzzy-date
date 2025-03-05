@@ -257,7 +257,8 @@ mod fuzzydate {
         const DATE_NTH_MONTH_YEAR: &'static str = constants::PATTERN_DATE_NTH_MONTH_YEAR;
 
         #[classattr]
-        const DATETIME_YMD_HM: &'static str = constants::PATTERN_DATETIME_YMD_HM;
+        #[deprecated]
+        const DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
         #[classattr]
         const DATETIME_YMD_HMS: &'static str = constants::PATTERN_DATETIME_YMD_HMS;
         #[classattr]
@@ -815,6 +816,7 @@ mod tests {
             ("12pm", "2024-01-12 12:00:00 +02:00"),
             ("12 pm", "2024-01-12 12:00:00 +02:00"),
             ("12:01 pm", "2024-01-12 12:01:00 +02:00"),
+            ("12:01 p.m.", "2024-01-12 12:01:00 +02:00"),
             ("1pm", "2024-01-12 13:00:00 +02:00"),
             ("1p.m.", "2024-01-12 13:00:00 +02:00"),
             ("1 pm", "2024-01-12 13:00:00 +02:00"),
@@ -1180,6 +1182,7 @@ mod tests {
     fn test_combinations() {
         assert_convert_from_mon(vec![
             ("@1705072948.544 2pm", "2024-01-12T15:22:28+02:00", "2024-01-12 14:00:00 +00:00"),
+            ("2023-12-07 3:00 p.m.", "2024-01-12T15:22:28+02:00", "2023-12-07 15:00:00 +02:00"),
             ("dec 2pm", "2024-01-12T15:22:28+02:00", "2024-12-12 14:00:00 +02:00"),
             ("dec 12.3.2023", "2024-01-12T15:22:28+02:00", "2023-03-12 00:00:00 +02:00"),
             ("dec 2025 2pm", "2024-01-12T15:22:28+02:00", "2025-12-01 14:00:00 +02:00"),
