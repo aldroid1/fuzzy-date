@@ -223,7 +223,7 @@ Note that using a specific language or adding more settings can change the resul
 | test                    | dateparser | fuzzydate           |
 |-------------------------|------------|---------------------|
 | 20230201                | `None`     | 2023-02-01 00:00:00 |
-| @1705072948             | `None`     | 2024-01-12 15:22:28 |
+| \@1705072948            | `None`     | 2024-01-12 15:22:28 |
 | Week 16                 | `None`     | 2024-04-15 00:00:00 |
 | Week 16, 2024           | `None`     | 2024-04-15 00:00:00 |
 | first Mon of Feb        | `None`     | 2024-02-05 00:00:00 |
