@@ -1225,6 +1225,8 @@ mod tests {
             // Time of day is processed after month and day
             ("2015 2pm Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 14:00:00 +02:00"),
             ("2015 12:00:00 Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 12:00:00 +02:00"),
+            // Plus/minus movement is processed after time of day
+            ("2pm +10 minutes", "2024-05-12T15:22:28+02:00", "2024-05-12 14:10:00 +02:00"),
         ]);
     }
 
