@@ -294,8 +294,9 @@ pub(crate) enum Pattern {
 }
 
 impl Pattern {
-    pub(crate) fn time_of_days() -> [Self; 4] {
+    pub(crate) fn time_of_days() -> [Self; 5] {
         [
+            Self::TimeHm,
             Self::TimeHms,
             Self::TimeHmsMs,
             Self::TimeMeridiemH,
