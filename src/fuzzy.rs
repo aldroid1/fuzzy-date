@@ -10,7 +10,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, r| c.rule_time_reset(r)),
-    (&Pattern::Midnight, |c, _, r| c.rule_time_reset(r)),
+    (&Pattern::Midnight, |c, _, _| c.time_hms(0, 0, 0, 0)),
     (&Pattern::Yesterday, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, -1, r)?.rule_time_reset(r)),
     (&Pattern::Tomorrow, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, 1, r)?.rule_time_reset(r)),
     // WEEKDAY OFFSETS
@@ -265,8 +265,8 @@ impl CallSequence {
 
     fn should_reset_time(&self) -> bool {
         // Whenever pattern for explicit time of day is given, we should
-        // not reset time of day at the end of date movement, e.g. `today`
-        // will reset time to midnight, while `2pm today` will not
+        // not reset time of day at the end of date movement, e.g. "today"
+        // will reset time to midnight, while "2pm today" will not.
         !self.has_pattern(Vec::from(Pattern::time_of_days()))
     }
 
@@ -275,7 +275,7 @@ impl CallSequence {
             return;
         }
 
-        let mut order = self.get_allowed();
+        let order = self.get_allowed();
 
         if order.is_empty() {
             return;
