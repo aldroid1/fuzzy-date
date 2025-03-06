@@ -294,8 +294,20 @@ pub(crate) enum Pattern {
 }
 
 impl Pattern {
-    pub(crate) fn time_of_days() -> [Self; 4] {
+    pub(crate) fn minus_plus_units() -> [Pattern; 6] {
         [
+            Self::MinusUnit,
+            Self::MinusShortUnit,
+            Self::MinusLongUnit,
+            Self::PlusUnit,
+            Self::PlusShortUnit,
+            Self::PlusLongUnit,
+        ]
+    }
+
+    pub(crate) fn time_of_days() -> [Self; 5] {
+        [
+            Self::TimeHm,
             Self::TimeHms,
             Self::TimeHmsMs,
             Self::TimeMeridiemH,

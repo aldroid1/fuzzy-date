@@ -246,37 +246,6 @@ impl CallSequence {
         Self { calls: calls, patterns: patterns }
     }
 
-    fn sort(&mut self) {
-        let order = self.get_allowed();
-
-        if order.is_empty() {
-            return;
-        }
-
-        let order = order
-            .iter()
-            .enumerate()
-            .map(|(i, v)| (v.to_owned(), i + 1))
-            .collect::<HashMap<Pattern, usize>>();
-
-        self.calls.sort_by(|a, b| {
-            let a_index = order.get(&a.pattern_type).unwrap();
-            let b_index = order.get(&b.pattern_type).unwrap();
-            a_index.cmp(b_index)
-        })
-    }
-
-    fn validate(&self) -> bool {
-        let allowed = self.get_allowed();
-
-        if allowed.is_empty() {
-            return true;
-        }
-
-        let allowed = HashSet::from_iter(allowed.iter().cloned());
-        self.patterns.difference(&allowed).count().eq(&0)
-    }
-
     fn get_allowed(&self) -> Vec<Pattern> {
         if self.patterns.contains(&Pattern::Wday) {
             return Self::allowed_wday();
@@ -287,6 +256,54 @@ impl CallSequence {
         }
 
         Vec::new()
+    }
+
+    fn has_pattern(&self, any_of: Vec<Pattern>) -> bool {
+        let allowed = HashSet::from_iter(any_of);
+        self.patterns.intersection(&allowed).count().gt(&0)
+    }
+
+    fn sort(&mut self) {
+        if self.calls.len().le(&1) {
+            return;
+        }
+
+        let mut order = self.get_allowed();
+
+        if order.is_empty() {
+            // By default, explicit time of day is processed last, unless
+            // there are +/- prefixed calls to alter the time of day
+            if !self.has_pattern(Vec::from(Pattern::minus_plus_units())) {
+                order = Vec::from(Pattern::time_of_days());
+            }
+        }
+
+        let order = order
+            .iter()
+            .enumerate()
+            .map(|(i, v)| (v.to_owned(), i + 1))
+            .collect::<HashMap<Pattern, usize>>();
+
+        self.calls.sort_by(|a, b| {
+            let a_index = order.get(&a.pattern_type).unwrap_or(&0);
+            let b_index = order.get(&b.pattern_type).unwrap_or(&0);
+            a_index.cmp(b_index)
+        })
+    }
+
+    fn validate(&self) -> bool {
+        if self.calls.len().le(&1) {
+            return true;
+        }
+
+        let allowed = self.get_allowed();
+
+        if allowed.is_empty() {
+            return true;
+        }
+
+        let allowed = HashSet::from_iter(allowed);
+        self.patterns.difference(&allowed).count().eq(&0)
     }
 
     fn allowed_wday() -> Vec<Pattern> {
