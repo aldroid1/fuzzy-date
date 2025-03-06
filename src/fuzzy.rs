@@ -247,10 +247,15 @@ impl CallSequence {
     }
 
     fn sort(&mut self) {
-        let order = self.get_allowed();
+        if self.calls.len().le(&1) {
+            return;
+        }
+
+        let mut order = self.get_allowed();
 
         if order.is_empty() {
-            return;
+            // By default, explicit time of day is processed last
+            order = Vec::from(Pattern::time_of_days());
         }
 
         let order = order
@@ -260,13 +265,17 @@ impl CallSequence {
             .collect::<HashMap<Pattern, usize>>();
 
         self.calls.sort_by(|a, b| {
-            let a_index = order.get(&a.pattern_type).unwrap();
-            let b_index = order.get(&b.pattern_type).unwrap();
+            let a_index = order.get(&a.pattern_type).unwrap_or(&0);
+            let b_index = order.get(&b.pattern_type).unwrap_or(&0);
             a_index.cmp(b_index)
         })
     }
 
     fn validate(&self) -> bool {
+        if self.calls.len().le(&1) {
+            return true;
+        }
+
         let allowed = self.get_allowed();
 
         if allowed.is_empty() {
