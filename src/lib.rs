@@ -1255,13 +1255,15 @@ mod tests {
         assert_convert_from_mon(vec![
             ("2015", "2024-02-12T15:22:28+02:00", "2015-02-12 15:22:28 +02:00"),
             ("2023", "2024-02-29T15:22:28+02:00", "2023-02-28 15:22:28 +02:00"),
-            // Year is kept
             ("2015, Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 00:00:00 +02:00"),
             ("2015 today", "2024-05-12T15:22:28+02:00", "2015-05-12 00:00:00 +02:00"),
+            ("2015 next year", "2024-05-12T15:22:28+02:00", "2016-05-12 15:22:28 +02:00"),
+            ("next year 2015", "2024-05-12T15:22:28+02:00", "2015-05-12 15:22:28 +02:00"),
         ]);
 
         assert_convert_failure(vec![
-            // Year appears twice
+            // Year can't be used together with patterns that
+            // have their own year defined
             "2015 @1705072948",
             "2015 @1705072948.544",
             "2015 00900101",
@@ -1306,8 +1308,8 @@ mod tests {
             "first day of this week",    // Not supported
             "first minute of Jan",       // Not supported
             "7 of Jan",                  // Missing nth supported
-            "Tue, 23 July 2008",         // Wrong weekday
-            "2008 Tue 23 July",          // Wrong weekday
+            "Tue, 23 July 2008",         // Wrong weekday with date pattern
+            "2008 Tue 23 July",          // Wrong weekday with year pattern
             "Tue, 7 Dec",                // Wrong weekday
             "Fri Dec 07 02:00:00 2023",  // Wrong weekday
             "23:61:00",                  // Invalid time of day

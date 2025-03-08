@@ -139,38 +139,38 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     // 20230130
-    (&Pattern::Integer, |c, v, r| c.rule_allow_years(r)?.date_iso8601(v.get_string(0))?.rule_time_reset(r)),
+    (&Pattern::Integer, |c, v, r| c.rule_allow_year(r)?.date_iso8601(v.get_string(0))?.rule_time_reset(r)),
     // 2023
     (&Pattern::Year, |c, v, _| c.date_ym(v.get_int(0), c.month())),
     // 2023-W13
     (&Pattern::YearWeek, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_yw(v.get_int(0), v.get_int(1), r)?
             .rule_time_reset(r)
     }),
     // April, April 2023
     (&Pattern::Month, |c, v, r| c.date_ym(c.rule_year(r), v.get_int(0))?.rule_time_reset(r)),
     (&Pattern::MonthYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(1), v.get_int(0), 1)?
             .rule_time_reset(r)
     }),
     // @1705072948, @1705072948.452
-    (&Pattern::Timestamp, |c, v, r| c.rule_allow_years(r)?.date_stamp(v.get_int(0), 0)),
-    (&Pattern::TimestampFloat, |c, v, r| c.rule_allow_years(r)?.date_stamp(v.get_int(0), v.get_ms(1))),
+    (&Pattern::Timestamp, |c, v, r| c.rule_allow_year(r)?.date_stamp(v.get_int(0), 0)),
+    (&Pattern::TimestampFloat, |c, v, r| c.rule_allow_year(r)?.date_stamp(v.get_int(0), v.get_ms(1))),
     // 2023-01-30, 30.1.2023, 1/30/2023
     (&Pattern::DateYmd, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
             .rule_time_reset(r)
     }),
     (&Pattern::DateDmy, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?
             .rule_time_reset(r)
     }),
     (&Pattern::DateMdy, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
             .rule_time_reset(r)
     }),
@@ -180,17 +180,17 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::DateDayMonth, |c, v, r| c.date_ymd(c.rule_year(r), v.get_int(1), v.get_int(0))?.rule_time_reset(r)),
     // Dec 7 2023, Dec 7th 2023, 7 Dec 2023
     (&Pattern::DateMonthDayYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
             .rule_time_reset(r)
     }),
     (&Pattern::DateMonthNthYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
             .rule_time_reset(r)
     }),
     (&Pattern::DateDayMonthYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?
             .rule_time_reset(r)
     }),
@@ -202,7 +202,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // Thu, 7 Dec 2023
     (&Pattern::DateWdayDayMonthYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(3), v.get_int(2), v.get_int(1))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
@@ -215,19 +215,19 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     }),
     // Thu, Dec 7th 2023
     (&Pattern::DateWdayMontDayYear, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(3), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
     (&Pattern::DateTimeYmdHms, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
             .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)
     }),
     (&Pattern::DateTimeYmdHmsMs, |c, v, r| {
-        c.rule_allow_years(r)?
+        c.rule_allow_year(r)?
             .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
             .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), v.get_ms(6))
     }),
@@ -295,9 +295,9 @@ impl CallSequence {
     }
 
     fn get_default_year(&self, values: &CallValues) -> Option<i64> {
-        // Whenever pattern for explicit and separate year, we should
-        // not allow the use of other patterns that contain a year, thus
-        // preventing e.g. "2025 Feb 20th 2026" to be successfully used.
+        // Whenever pattern for explicit and separate year is used, we
+        // should not allow using patterns that contain another year, e.g.
+        // preventing strings like "2025 Feb 20th 2026" from being used.
         let Some(index) = self.mapping.get(&Pattern::Year) else {
             return None;
         };
@@ -611,8 +611,8 @@ impl FuzzyDate {
         Ok(Self { time: new_time })
     }
 
-    /// Ensure that that rules allow changing years
-    fn rule_allow_years(&self, rules: &Rules) -> Result<Self, ()> {
+    /// Ensure that rules allow changing the year
+    fn rule_allow_year(&self, rules: &Rules) -> Result<Self, ()> {
         match rules.default_year.is_none() {
             true => Ok(Self { time: self.time }),
             false => Err(()),
