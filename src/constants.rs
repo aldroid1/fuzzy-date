@@ -315,16 +315,6 @@ impl Pattern {
         result
     }
 
-    pub(crate) fn year_month_dates() -> [Self; 5] {
-        [
-            Self::DateMonthDay,
-            Self::DateMonthNth,
-            Self::DateDayMonth,
-            Self::DateWdayDayMonth,
-            Self::DateWdayMontDay,
-        ]
-    }
-
     pub(crate) fn values(key: &Pattern) -> Vec<&'static str> {
         patterns().iter().filter(|&v| v.0.eq(&key)).map(|v| v.1).collect()
     }

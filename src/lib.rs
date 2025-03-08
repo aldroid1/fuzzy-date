@@ -1255,14 +1255,35 @@ mod tests {
         assert_convert_from_mon(vec![
             ("2015", "2024-02-12T15:22:28+02:00", "2015-02-12 15:22:28 +02:00"),
             ("2023", "2024-02-29T15:22:28+02:00", "2023-02-28 15:22:28 +02:00"),
-            // Month and day is is processed after year
+            // Year is kept
             ("2015, Feb 1", "2024-05-12T15:22:28+02:00", "2015-02-01 00:00:00 +02:00"),
+            ("2015 today", "2024-05-12T15:22:28+02:00", "2015-05-12 00:00:00 +02:00"),
+        ]);
+
+        assert_convert_failure(vec![
+            // Year appears twice
+            "2015 @1705072948",
+            "2015 @1705072948.544",
+            "2015 00900101",
+            "20230101 2015",
+            "2015 2023-01-01",
+            "2015 7.2.2023",
+            "2015 2/7/2023",
+            "2015 2023-12-07 15:02",
+            "2015 2023-12-07 15:02:01",
+            "2015 2023-12-07 15:02:01.000",
+            "2015 2023-12-07T15:02:01",
+            "2015 2023-12-07T15:02:01.04",
+            "2015 Wed, July 23 2008",
+            "2015 Wed, 23 July 2008",
+            "2015 Thu Dec 07 02:00:00 2023",
+            "2015 2015",
         ]);
     }
 
     #[test]
     fn test_unsupported() {
-        let expect: Vec<&str> = vec![
+        assert_convert_failure(vec![
             "",                          // Not parsed
             " ",                         // Nothing to parse
             "2024-12-01 7",              // Unknown part
@@ -1286,21 +1307,13 @@ mod tests {
             "first minute of Jan",       // Not supported
             "7 of Jan",                  // Missing nth supported
             "Tue, 23 July 2008",         // Wrong weekday
+            "2008 Tue 23 July",          // Wrong weekday
             "Tue, 7 Dec",                // Wrong weekday
             "Fri Dec 07 02:00:00 2023",  // Wrong weekday
             "23:61:00",                  // Invalid time of day
             "tuesday 2023-05-01",        // Invalid use of weekday
-            "next month 2015",           // Invalid use of year
             "month 7, 2023",             // Invalid unit for syntax
-        ];
-
-        let current_time = "2024-01-12T15:22:28+02:00";
-        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
-
-        for from_string in expect {
-            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
-            assert!(result_time.is_none());
-        }
+        ])
     }
 
     #[test]
@@ -1465,6 +1478,16 @@ mod tests {
         }
         assert!(gid_into_token(600).is_none());
         assert!(gid_into_token(603).is_none());
+    }
+
+    fn assert_convert_failure(expect: Vec<&str>) {
+        let current_time = "2024-01-12T15:22:28+02:00";
+        let current_time = DateTime::parse_from_rfc3339(current_time).unwrap();
+
+        for from_string in expect {
+            let result_time = convert_str(from_string, &current_time, true, HashMap::new(), HashMap::new());
+            assert!(result_time.is_none());
+        }
     }
 
     fn assert_convert_from_mon(expect: Vec<(&str, &str, &str)>) {

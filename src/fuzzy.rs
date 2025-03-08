@@ -42,7 +42,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // EXACT UNIT
     (&Pattern::LongUnitInt, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
-            .date_yw(c.year(), v.get_int(1), r)?
+            .date_yw(c.rule_year(r), v.get_int(1), r)?
             .rule_time_reset(r)
     }),
     (&Pattern::LongUnitIntYear, |c, v, r| {
@@ -119,7 +119,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     (&Pattern::FirstWdayOfMonth, |c, v, r| {
-        c.offset_range_year_month_wday(c.year(), v.get_int(1), v.get_int(0), convert::Change::First)?
+        c.offset_range_year_month_wday(c.rule_year(r), v.get_int(1), v.get_int(0), convert::Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstWdayOfYear, |c, v, r| {
@@ -131,7 +131,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     (&Pattern::LastWdayOfMonth, |c, v, r| {
-        c.offset_range_year_month_wday(c.year(), v.get_int(1), v.get_int(0), convert::Change::Last)?
+        c.offset_range_year_month_wday(c.rule_year(r), v.get_int(1), v.get_int(0), convert::Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastWdayOfYear, |c, v, r| {
@@ -139,65 +139,97 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     // 20230130
-    (&Pattern::Integer, |c, v, r| c.date_iso8601(v.get_string(0))?.rule_time_reset(r)),
+    (&Pattern::Integer, |c, v, r| c.rule_allow_years(r)?.date_iso8601(v.get_string(0))?.rule_time_reset(r)),
     // 2023
     (&Pattern::Year, |c, v, _| c.date_ym(v.get_int(0), c.month())),
     // 2023-W13
-    (&Pattern::YearWeek, |c, v, r| c.date_yw(v.get_int(0), v.get_int(1), r)?.rule_time_reset(r)),
+    (&Pattern::YearWeek, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_yw(v.get_int(0), v.get_int(1), r)?
+            .rule_time_reset(r)
+    }),
     // April, April 2023
-    (&Pattern::Month, |c, v, r| c.date_ym(c.year(), v.get_int(0))?.rule_time_reset(r)),
-    (&Pattern::MonthYear, |c, v, r| c.date_ymd(v.get_int(1), v.get_int(0), 1)?.rule_time_reset(r)),
+    (&Pattern::Month, |c, v, r| c.date_ym(c.rule_year(r), v.get_int(0))?.rule_time_reset(r)),
+    (&Pattern::MonthYear, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(1), v.get_int(0), 1)?
+            .rule_time_reset(r)
+    }),
     // @1705072948, @1705072948.452
-    (&Pattern::Timestamp, |c, v, _| c.date_stamp(v.get_int(0), 0)),
-    (&Pattern::TimestampFloat, |c, v, _| c.date_stamp(v.get_int(0), v.get_ms(1))),
+    (&Pattern::Timestamp, |c, v, r| c.rule_allow_years(r)?.date_stamp(v.get_int(0), 0)),
+    (&Pattern::TimestampFloat, |c, v, r| c.rule_allow_years(r)?.date_stamp(v.get_int(0), v.get_ms(1))),
     // 2023-01-30, 30.1.2023, 1/30/2023
-    (&Pattern::DateYmd, |c, v, r| c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.rule_time_reset(r)),
-    (&Pattern::DateDmy, |c, v, r| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.rule_time_reset(r)),
-    (&Pattern::DateMdy, |c, v, r| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
+    (&Pattern::DateYmd, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
+            .rule_time_reset(r)
+    }),
+    (&Pattern::DateDmy, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?
+            .rule_time_reset(r)
+    }),
+    (&Pattern::DateMdy, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
+            .rule_time_reset(r)
+    }),
     // Dec 7, Dec 7th, 7 Dec
-    (&Pattern::DateMonthDay, |c, v, r| c.date_ymd(c.year(), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
-    (&Pattern::DateMonthNth, |c, v, r| c.date_ymd(c.year(), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
-    (&Pattern::DateDayMonth, |c, v, r| c.date_ymd(c.year(), v.get_int(1), v.get_int(0))?.rule_time_reset(r)),
+    (&Pattern::DateMonthDay, |c, v, r| c.date_ymd(c.rule_year(r), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
+    (&Pattern::DateMonthNth, |c, v, r| c.date_ymd(c.rule_year(r), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
+    (&Pattern::DateDayMonth, |c, v, r| c.date_ymd(c.rule_year(r), v.get_int(1), v.get_int(0))?.rule_time_reset(r)),
     // Dec 7 2023, Dec 7th 2023, 7 Dec 2023
-    (&Pattern::DateMonthDayYear, |c, v, r| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
-    (&Pattern::DateMonthNthYear, |c, v, r| c.date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?.rule_time_reset(r)),
-    (&Pattern::DateDayMonthYear, |c, v, r| c.date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?.rule_time_reset(r)),
+    (&Pattern::DateMonthDayYear, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
+            .rule_time_reset(r)
+    }),
+    (&Pattern::DateMonthNthYear, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(2), v.get_int(0), v.get_int(1))?
+            .rule_time_reset(r)
+    }),
+    (&Pattern::DateDayMonthYear, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(2), v.get_int(1), v.get_int(0))?
+            .rule_time_reset(r)
+    }),
     // Thu, 7 Dec
     (&Pattern::DateWdayDayMonth, |c, v, r| {
-        c.date_ymd(c.year(), v.get_int(2), v.get_int(1))?
+        c.date_ymd(c.rule_year(r), v.get_int(2), v.get_int(1))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // Thu, 7 Dec 2023
     (&Pattern::DateWdayDayMonthYear, |c, v, r| {
-        c.date_ymd(v.get_int(3), v.get_int(2), v.get_int(1))?
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(3), v.get_int(2), v.get_int(1))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // Thu, Dec 7th
     (&Pattern::DateWdayMontDay, |c, v, r| {
-        c.date_ymd(c.year(), v.get_int(1), v.get_int(2))?
+        c.date_ymd(c.rule_year(r), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // Thu, Dec 7th 2023
     (&Pattern::DateWdayMontDayYear, |c, v, r| {
-        c.date_ymd(v.get_int(3), v.get_int(1), v.get_int(2))?
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(3), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // 2023-12-07 15:02:01, 2023-12-07 15:02:01.456
-    (&Pattern::DateTimeYmdHms, |c, v, _| {
-        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
+    (&Pattern::DateTimeYmdHms, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
             .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), 0)
     }),
-    (&Pattern::DateTimeYmdHmsMs, |c, v, _| {
-        c.date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?.time_hms(
-            v.get_int(3),
-            v.get_int(4),
-            v.get_int(5),
-            v.get_ms(6),
-        )
+    (&Pattern::DateTimeYmdHmsMs, |c, v, r| {
+        c.rule_allow_years(r)?
+            .date_ymd(v.get_int(0), v.get_int(1), v.get_int(2))?
+            .time_hms(v.get_int(3), v.get_int(4), v.get_int(5), v.get_ms(6))
     }),
     // 3:00, 3:00:00, 3:00:00.456
     (&Pattern::TimeHm, |c, v, _| c.time_hms(v.get_int(0), v.get_int(1), 0, 0)),
@@ -237,13 +269,21 @@ impl TimeUnit {
 
 struct CallSequence {
     calls: Vec<CallPattern>,
+    mapping: HashMap<Pattern, Vec<usize>>,
     patterns: HashSet<Pattern>,
 }
 
 impl CallSequence {
     fn new(calls: Vec<CallPattern>) -> Self {
-        let patterns = calls.iter().map(|v| v.pattern_type.to_owned()).collect();
-        Self { calls: calls, patterns: patterns }
+        let mut mapping: HashMap<Pattern, Vec<usize>> = HashMap::new();
+
+        calls
+            .iter()
+            .enumerate()
+            .for_each(|(i, v)| mapping.entry(v.pattern_type.to_owned()).or_insert(Vec::new()).push(i));
+
+        let patterns = mapping.keys().cloned().collect();
+        Self { calls: calls, mapping: mapping, patterns: patterns }
     }
 
     fn get_allowed(&self) -> Vec<Pattern> {
@@ -251,11 +291,22 @@ impl CallSequence {
             return Self::allowed_wday();
         }
 
-        if self.patterns.contains(&Pattern::Year) {
-            return Self::allowed_year();
-        }
-
         Vec::new()
+    }
+
+    fn get_default_year(&self, values: &CallValues) -> Option<i64> {
+        // Whenever pattern for explicit and separate year, we should
+        // not allow the use of other patterns that contain a year, thus
+        // preventing e.g. "2025 Feb 20th 2026" to be successfully used.
+        let Some(index) = self.mapping.get(&Pattern::Year) else {
+            return None;
+        };
+
+        let Some(call) = self.calls.get(*index.first().unwrap()) else {
+            return None;
+        };
+
+        Some(values.get_int(call.value_offset))
     }
 
     fn has_pattern(&self, any_of: Vec<Pattern>) -> bool {
@@ -299,6 +350,13 @@ impl CallSequence {
             return true;
         }
 
+        // We can't have more than one separate year defined
+        if let Some(indexes) = self.mapping.get(&Pattern::Year) {
+            if indexes.len().gt(&1) {
+                return false;
+            }
+        }
+
         let allowed = self.get_allowed();
 
         if allowed.is_empty() {
@@ -317,13 +375,6 @@ impl CallSequence {
             Pattern::NextLongUnit,
             Pattern::Wday,
         ]);
-        result.extend(Pattern::time_of_days());
-        result
-    }
-
-    fn allowed_year() -> Vec<Pattern> {
-        let mut result = Vec::from([Pattern::Year]);
-        result.extend(Pattern::year_month_dates());
         result.extend(Pattern::time_of_days());
         result
     }
@@ -560,9 +611,17 @@ impl FuzzyDate {
         Ok(Self { time: new_time })
     }
 
-    /// Set time to specific hour, minute and second using 12-hour clock
-    fn time_12h(&self, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<Self, ()> {
-        Ok(Self { time: convert::time_12h(self.time, hour, min, sec, meridiem)? })
+    /// Ensure that that rules allow changing years
+    fn rule_allow_years(&self, rules: &Rules) -> Result<Self, ()> {
+        match rules.default_year.is_none() {
+            true => Ok(Self { time: self.time }),
+            false => Err(()),
+        }
+    }
+
+    /// Get either rule-enforced year or current year
+    fn rule_year(&self, rules: &Rules) -> i64 {
+        rules.default_year.unwrap_or(self.time.year() as i64)
     }
 
     /// Reset time to midnight, if rules allow it
@@ -571,6 +630,11 @@ impl FuzzyDate {
             true => self.time_hms(0, 0, 0, 0),
             false => Ok(Self { time: self.time }),
         }
+    }
+
+    /// Set time to specific hour, minute and second using 12-hour clock
+    fn time_12h(&self, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<Self, ()> {
+        Ok(Self { time: convert::time_12h(self.time, hour, min, sec, meridiem)? })
     }
 
     /// Set time to specific hour, minute and second
@@ -582,14 +646,10 @@ impl FuzzyDate {
     fn weekday(&self) -> i64 {
         self.time.weekday().num_days_from_monday() as i64 + 1
     }
-
-    /// Current year
-    fn year(&self) -> i64 {
-        self.time.year() as i64
-    }
 }
 
 struct Rules {
+    default_year: Option<i64>,
     reset_time: bool,
     week_start_mon: bool,
 }
@@ -697,10 +757,14 @@ pub(crate) fn convert(
 
     call_sequence.sort();
 
-    let rules = Rules { reset_time: call_sequence.should_reset_time(), week_start_mon: week_start_mon };
-
     let mut ctx_time = FuzzyDate::new(current_time.to_owned());
     let mut ctx_vals = CallValues::from_tokens(tokens);
+
+    let rules = Rules {
+        default_year: call_sequence.get_default_year(&ctx_vals),
+        reset_time: call_sequence.should_reset_time(),
+        week_start_mon: week_start_mon,
+    };
 
     for item in call_sequence.calls {
         ctx_vals.position = item.value_offset;
