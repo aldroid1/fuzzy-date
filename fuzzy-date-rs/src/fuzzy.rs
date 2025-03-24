@@ -1,6 +1,7 @@
-use crate::constants::Pattern;
-use crate::convert;
+use crate::pattern::Pattern;
 use crate::token::Token;
+use crate::UnitNames;
+use crate::convert;
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
 use std::cmp::{Ordering, PartialEq};
@@ -670,78 +671,6 @@ impl Rules {
     }
 }
 
-pub(crate) struct UnitLocale {
-    day: String,
-    days: String,
-    hour: String,
-    hours: String,
-    minute: String,
-    minutes: String,
-    second: String,
-    seconds: String,
-    week: String,
-    weeks: String,
-    separator: String,
-}
-
-impl UnitLocale {
-    pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
-        let mut mapping: HashMap<String, String> = HashMap::from([
-            (String::from("second"), String::new()),
-            (String::from("seconds"), String::new()),
-            (String::from("minute"), String::new()),
-            (String::from("minutes"), String::new()),
-            (String::from("hour"), String::new()),
-            (String::from("hours"), String::new()),
-            (String::from("day"), String::new()),
-            (String::from("days"), String::new()),
-            (String::from("week"), String::new()),
-            (String::from("weeks"), String::new()),
-        ]);
-
-        mapping.extend(names);
-
-        Self {
-            day: mapping.get("day").unwrap().to_owned(),
-            days: mapping.get("days").unwrap().to_owned(),
-            hour: mapping.get("hour").unwrap().to_owned(),
-            hours: mapping.get("hours").unwrap().to_owned(),
-            minute: mapping.get("minute").unwrap().to_owned(),
-            minutes: mapping.get("minutes").unwrap().to_owned(),
-            second: mapping.get("second").unwrap().to_owned(),
-            seconds: mapping.get("seconds").unwrap().to_owned(),
-            week: mapping.get("week").unwrap().to_owned(),
-            weeks: mapping.get("weeks").unwrap().to_owned(),
-            separator: if mapping.get("day").unwrap().len() > 1 { " " } else { "" }.to_owned(),
-        }
-    }
-
-    fn format_days(&self, amount: i32) -> String {
-        let unit = if amount.eq(&1) { &self.day } else { &self.days };
-        format!(" {}{}{}", amount, self.separator, unit)
-    }
-
-    fn format_hours(&self, amount: i32) -> String {
-        let unit = if amount.eq(&1) { &self.hour } else { &self.hours };
-        format!(" {}{}{}", amount, self.separator, unit)
-    }
-
-    fn format_minutes(&self, amount: i32) -> String {
-        let unit = if amount.eq(&1) { &self.minute } else { &self.minutes };
-        format!(" {}{}{}", amount, self.separator, unit)
-    }
-
-    fn format_seconds(&self, amount: i32) -> String {
-        let unit = if amount.eq(&1) { &self.second } else { &self.seconds };
-        format!(" {}{}{}", amount, self.separator, unit)
-    }
-
-    fn format_weeks(&self, amount: i32) -> String {
-        let unit = if amount.eq(&1) { &self.week } else { &self.weeks };
-        format!(" {}{}{}", amount, self.separator, unit)
-    }
-}
-
 /// Perform conversion against pattern and corresponding token values,
 /// relative to given datetime
 pub(crate) fn convert(
@@ -786,7 +715,7 @@ pub(crate) fn convert(
 }
 
 /// Turn seconds into a duration string
-pub(crate) fn to_duration(seconds: f64, units: &UnitLocale, max_unit: &str, min_unit: &str) -> String {
+pub(crate) fn to_duration(seconds: f64, units: &UnitNames, max_unit: &str, min_unit: &str) -> String {
     let mut seconds = seconds;
     let mut result: String = String::new();
 

@@ -208,7 +208,7 @@ impl ParsedNumberValue {
 }
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
-pub(crate) enum TokenType {
+pub enum TokenType {
     Integer,
     LongUnit,
     Meridiem,
@@ -247,19 +247,207 @@ impl TokenType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Token {
+pub struct Token {
     pub(crate) token: TokenType,
     pub(crate) value: i64,
     pub(crate) zeros: u8,
 }
 
 impl Token {
-    pub(crate) fn new(token: TokenType, value: i64) -> Self {
+    pub fn new(token: TokenType, value: i64) -> Self {
         Self { token: token, value: value, zeros: 0 }
     }
 
     pub(crate) fn new_integer(value: i64, zeros: u8) -> Self {
         Self { token: TokenType::Integer, value: value, zeros: zeros }
+    }
+
+    /// Create token from global identifier
+    pub fn from_gid(gid: u32) -> Option<Self> {
+        let gid = gid as i64;
+
+        if gid.ge(&101) && gid.le(&107) {
+            return Some(Self::new(TokenType::Weekday, gid - 100));
+        }
+
+        if gid.ge(&201) && gid.le(&212) {
+            return Some(Self::new(TokenType::Month, gid - 200));
+        }
+
+        if gid.ge(&301) && gid.le(&303) {
+            return Some(Self::new(TokenType::Unit, gid - 300));
+        }
+
+        if gid.ge(&401) && gid.le(&407) && !gid.eq(&402) {
+            return Some(Self::new(TokenType::ShortUnit, gid - 400));
+        }
+
+        if gid.ge(&501) && gid.le(&507) {
+            return Some(Self::new(TokenType::LongUnit, gid - 500));
+        }
+
+        if gid.ge(&601) && gid.le(&602) {
+            return Some(Self::new(TokenType::Meridiem, gid - 600));
+        }
+
+        None
+    }
+}
+
+#[derive(Eq, PartialEq)]
+pub enum WeekStartDay {
+    Monday,
+    Sunday,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum UnitSet {
+    Long,
+    Short,
+    Default,
+}
+
+impl UnitSet {
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "long" => Self::Long,
+            "short" => Self::Short,
+            _ => Self::Default,
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct UnitNames {
+    day: String,
+    days: String,
+    hour: String,
+    hours: String,
+    minute: String,
+    minutes: String,
+    second: String,
+    seconds: String,
+    week: String,
+    weeks: String,
+    separator: String,
+}
+
+impl UnitNames {
+    pub const UNITS_DEFAULT: [(&'static str, &'static str); 10] = [
+        (crate::pattern::UNIT_SECOND, "sec"),
+        (crate::pattern::UNIT_SECONDS, "sec"),
+        (crate::pattern::UNIT_MINUTE, "min"),
+        (crate::pattern::UNIT_MINUTES, "min"),
+        (crate::pattern::UNIT_HOUR, "hr"),
+        (crate::pattern::UNIT_HOURS, "hrs"),
+        (crate::pattern::UNIT_DAY, "d"),
+        (crate::pattern::UNIT_DAYS, "d"),
+        (crate::pattern::UNIT_WEEK, "w"),
+        (crate::pattern::UNIT_WEEKS, "w"),
+    ];
+
+    pub const UNITS_LONG: [(&'static str, &'static str); 10] = [
+        (crate::pattern::UNIT_SECOND, "second"),
+        (crate::pattern::UNIT_SECONDS, "seconds"),
+        (crate::pattern::UNIT_MINUTE, "minute"),
+        (crate::pattern::UNIT_MINUTES, "minutes"),
+        (crate::pattern::UNIT_HOUR, "hour"),
+        (crate::pattern::UNIT_HOURS, "hours"),
+        (crate::pattern::UNIT_DAY, "day"),
+        (crate::pattern::UNIT_DAYS, "days"),
+        (crate::pattern::UNIT_WEEK, "week"),
+        (crate::pattern::UNIT_WEEKS, "weeks"),
+    ];
+
+    pub const UNITS_SHORT: [(&'static str, &'static str); 10] = [
+        (crate::pattern::UNIT_SECOND, "s"),
+        (crate::pattern::UNIT_SECONDS, "s"),
+        (crate::pattern::UNIT_MINUTE, "min"),
+        (crate::pattern::UNIT_MINUTES, "min"),
+        (crate::pattern::UNIT_HOUR, "h"),
+        (crate::pattern::UNIT_HOURS, "h"),
+        (crate::pattern::UNIT_DAY, "d"),
+        (crate::pattern::UNIT_DAYS, "d"),
+        (crate::pattern::UNIT_WEEK, "w"),
+        (crate::pattern::UNIT_WEEKS, "w"),
+    ];
+
+    pub fn get_defaults(name: &UnitSet) -> HashMap<String, String> {
+        let mapping = match name {
+            UnitSet::Long => Self::UNITS_LONG,
+            UnitSet::Short => Self::UNITS_SHORT,
+            UnitSet::Default => Self::UNITS_DEFAULT,
+        };
+        mapping.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    }
+
+    pub(crate) fn from_map(names: HashMap<String, String>) -> Self {
+        let separator = match names.get("day").unwrap_or(&String::new()).len() > 1 {
+            true => String::from(" "),
+            false => String::new(),
+        };
+
+        Self {
+            day: names.get("day").unwrap_or(&String::new()).to_owned(),
+            days: names.get("days").unwrap_or(&String::new()).to_owned(),
+            hour: names.get("hour").unwrap_or(&String::new()).to_owned(),
+            hours: names.get("hours").unwrap_or(&String::new()).to_owned(),
+            minute: names.get("minute").unwrap_or(&String::new()).to_owned(),
+            minutes: names.get("minutes").unwrap_or(&String::new()).to_owned(),
+            second: names.get("second").unwrap_or(&String::new()).to_owned(),
+            seconds: names.get("seconds").unwrap_or(&String::new()).to_owned(),
+            week: names.get("week").unwrap_or(&String::new()).to_owned(),
+            weeks: names.get("weeks").unwrap_or(&String::new()).to_owned(),
+            separator: separator,
+        }
+    }
+
+    pub(crate) fn from_name(name: &UnitSet) -> Self {
+        Self::from_map(Self::get_defaults(name))
+    }
+
+    pub(crate) fn add_names(&mut self, custom: HashMap<String, String>) {
+        for (name, value) in custom {
+            match name.as_str() {
+                crate::pattern::UNIT_SECOND => self.seconds = value,
+                crate::pattern::UNIT_MINUTE => self.minute = value,
+                crate::pattern::UNIT_MINUTES => self.minutes = value,
+                crate::pattern::UNIT_HOUR => self.hour = value,
+                crate::pattern::UNIT_HOURS => self.hours = value,
+                crate::pattern::UNIT_DAY => self.day = value,
+                crate::pattern::UNIT_DAYS => self.days = value,
+                crate::pattern::UNIT_WEEK => self.week = value,
+                crate::pattern::UNIT_WEEKS => self.weeks = value,
+                _ => {}
+            }
+        }
+
+        self.separator = if self.day.len() > 1 { " " } else { "" }.to_owned();
+    }
+
+    pub(crate) fn format_days(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.day } else { &self.days };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    pub(crate) fn format_hours(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.hour } else { &self.hours };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    pub(crate) fn format_minutes(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.minute } else { &self.minutes };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    pub(crate) fn format_seconds(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.second } else { &self.seconds };
+        format!(" {}{}{}", amount, self.separator, unit)
+    }
+
+    pub(crate) fn format_weeks(&self, amount: i32) -> String {
+        let unit = if amount.eq(&1) { &self.week } else { &self.weeks };
+        format!(" {}{}{}", amount, self.separator, unit)
     }
 }
 
@@ -1068,6 +1256,47 @@ mod tests {
         for from_string in expect {
             assert_eq!(tokenize_str(from_string), (from_string.to_string(), vec![]));
         }
+    }
+
+    #[test]
+    fn test_gid_into_token() {
+        for value in 101..=107 {
+            assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::Weekday, value as i64 - 100));
+        }
+        assert!(Token::from_gid(100).is_none());
+        assert!(Token::from_gid(108).is_none());
+
+        for value in 201..=212 {
+            assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::Month, value as i64 - 200));
+        }
+        assert!(Token::from_gid(200).is_none());
+        assert!(Token::from_gid(213).is_none());
+
+        for value in 301..=303 {
+            assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::Unit, value as i64 - 300));
+        }
+        assert!(Token::from_gid(300).is_none());
+        assert!(Token::from_gid(304).is_none());
+
+        for value in 401..=407 {
+            if !value.eq(&402) {
+                assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::ShortUnit, value as i64 - 400));
+            }
+        }
+        assert!(Token::from_gid(400).is_none());
+        assert!(Token::from_gid(408).is_none());
+
+        for value in 501..=507 {
+            assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::LongUnit, value as i64 - 500));
+        }
+        assert!(Token::from_gid(500).is_none());
+        assert!(Token::from_gid(508).is_none());
+
+        for value in 601..=602 {
+            assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::Meridiem, value as i64 - 600));
+        }
+        assert!(Token::from_gid(600).is_none());
+        assert!(Token::from_gid(603).is_none());
     }
 
     fn tokenize_str(source: &str) -> (String, Vec<Token>) {
