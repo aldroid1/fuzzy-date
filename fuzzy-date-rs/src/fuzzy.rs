@@ -1,7 +1,7 @@
-use crate::pattern::Pattern;
-use crate::token::Token;
-use crate::UnitNames;
 use crate::convert;
+use crate::convert::Change;
+use crate::pattern::Pattern;
+use crate::token::{Token, UnitNames};
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::cmp;
 use std::cmp::{Ordering, PartialEq};
@@ -16,13 +16,13 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::Tomorrow, |c, _, r| c.offset_unit_keyword(TimeUnit::Days, 1, r)?.rule_time_reset(r)),
     // WEEKDAY OFFSETS
     (&Pattern::Wday, |c, v, r| c.offset_current_weekday(v.get_int(0))?.rule_time_reset(r)),
-    (&Pattern::ThisWday, |c, v, r| c.offset_weekday(v.get_int(0), convert::Change::None)?.rule_time_reset(r)),
-    (&Pattern::PrevWday, |c, v, r| c.offset_weekday(v.get_int(0), convert::Change::Prev)?.rule_time_reset(r)),
-    (&Pattern::NextWday, |c, v, r| c.offset_weekday(v.get_int(0), convert::Change::Next)?.rule_time_reset(r)),
+    (&Pattern::ThisWday, |c, v, r| c.offset_weekday(v.get_int(0), Change::None)?.rule_time_reset(r)),
+    (&Pattern::PrevWday, |c, v, r| c.offset_weekday(v.get_int(0), Change::Prev)?.rule_time_reset(r)),
+    (&Pattern::NextWday, |c, v, r| c.offset_weekday(v.get_int(0), Change::Next)?.rule_time_reset(r)),
     // MONTH OFFSETS
-    (&Pattern::ThisMonth, |c, v, r| c.offset_month(v.get_int(0), convert::Change::None)?.rule_time_reset(r)),
-    (&Pattern::PrevMonth, |c, v, r| c.offset_month(v.get_int(0), convert::Change::Prev)?.rule_time_reset(r)),
-    (&Pattern::NextMonth, |c, v, r| c.offset_month(v.get_int(0), convert::Change::Next)?.rule_time_reset(r)),
+    (&Pattern::ThisMonth, |c, v, r| c.offset_month(v.get_int(0), Change::None)?.rule_time_reset(r)),
+    (&Pattern::PrevMonth, |c, v, r| c.offset_month(v.get_int(0), Change::Prev)?.rule_time_reset(r)),
+    (&Pattern::NextMonth, |c, v, r| c.offset_month(v.get_int(0), Change::Next)?.rule_time_reset(r)),
     // KEYWORD OFFSETS
     (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
     (&Pattern::PastLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(0), -1, r)),
@@ -54,89 +54,89 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     // FIRST/LAST RELATIVE OFFSETS
     (&Pattern::FirstOfLongUnit, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
-            .offset_range_month(TimeUnit::Days, c.month(), convert::Change::First)?
+            .offset_range_month(TimeUnit::Days, c.month(), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfMonth, |c, v, r| {
-        c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::First)?
+        c.offset_range_month(v.get_unit(0), v.get_int(1), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfMonthYear, |c, v, r| {
-        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::First)?
+        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfYear, |c, v, r| {
-        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 1, convert::Change::First)?
+        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 1, Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfMonth, |c, v, r| {
-        c.offset_range_month(v.get_unit(0), v.get_int(1), convert::Change::Last)?
+        c.offset_range_month(v.get_unit(0), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastOfLongUnit, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
-            .offset_range_month(TimeUnit::Days, c.month(), convert::Change::Last)?
+            .offset_range_month(TimeUnit::Days, c.month(), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfMonthYear, |c, v, r| {
-        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), convert::Change::Last)?
+        c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfYear, |c, v, r| {
-        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 12, convert::Change::Last)?
+        c.offset_range_year_month(v.get_unit(0), v.get_int(1), 12, Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, r| {
-        c.offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
+        c.offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfThisLongUnit, |c, v, r| {
-        c.offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
+        c.offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfPrevLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), -1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), -1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstLongUnitOfNextLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), 1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::First)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), 1, r)?
-            .offset_range_unit(v.get_unit(0), v.get_unit(1), convert::Change::Last)?
+            .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
     }),
     // FIRST/LAST WEEKDAY OFFSETS
     (&Pattern::FirstWdayOfMonthYear, |c, v, r| {
-        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), convert::Change::First)?
+        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstWdayOfMonth, |c, v, r| {
-        c.offset_range_year_month_wday(c.rule_year(), v.get_int(1), v.get_int(0), convert::Change::First)?
+        c.offset_range_year_month_wday(c.rule_year(), v.get_int(1), v.get_int(0), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::FirstWdayOfYear, |c, v, r| {
-        c.offset_range_year_month_wday(v.get_int(1), 1, v.get_int(0), convert::Change::First)?
+        c.offset_range_year_month_wday(v.get_int(1), 1, v.get_int(0), Change::First)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastWdayOfMonthYear, |c, v, r| {
-        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), convert::Change::Last)?
+        c.offset_range_year_month_wday(v.get_int(2), v.get_int(1), v.get_int(0), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastWdayOfMonth, |c, v, r| {
-        c.offset_range_year_month_wday(c.rule_year(), v.get_int(1), v.get_int(0), convert::Change::Last)?
+        c.offset_range_year_month_wday(c.rule_year(), v.get_int(1), v.get_int(0), Change::Last)?
             .rule_time_reset(r)
     }),
     (&Pattern::LastWdayOfYear, |c, v, r| {
-        c.offset_range_year_month_wday(v.get_int(1), 12, v.get_int(0), convert::Change::Last)?
+        c.offset_range_year_month_wday(v.get_int(1), 12, v.get_int(0), Change::Last)?
             .rule_time_reset(r)
     }),
     // 20230130
@@ -517,22 +517,22 @@ impl FuzzyDate {
     fn offset_current_weekday(&self, new_weekday: i64) -> Result<Self, ()> {
         match self.weekday().eq(&new_weekday) {
             true => Ok(self.with_defaults(self.time)),
-            false => self.offset_weekday(new_weekday, convert::Change::Next),
+            false => self.offset_weekday(new_weekday, Change::Next),
         }
     }
 
     /// Move time into previous or upcoming month
-    fn offset_month(&self, new_month: i64, change: convert::Change) -> Result<Self, ()> {
+    fn offset_month(&self, new_month: i64, change: Change) -> Result<Self, ()> {
         Ok(self.with_defaults(convert::offset_month(self.time, new_month, change)))
     }
 
     /// Move time into previous or upcoming weekday
-    fn offset_weekday(&self, new_weekday: i64, change: convert::Change) -> Result<Self, ()> {
+    fn offset_weekday(&self, new_weekday: i64, change: Change) -> Result<Self, ()> {
         Ok(self.with_defaults(convert::offset_weekday(self.time, new_weekday, change)))
     }
 
     /// Move time within month range
-    fn offset_range_month(&self, target: TimeUnit, month: i64, change: convert::Change) -> Result<Self, ()> {
+    fn offset_range_month(&self, target: TimeUnit, month: i64, change: Change) -> Result<Self, ()> {
         if target.eq(&TimeUnit::Days) {
             let new_time = convert::offset_range_year_month(self.time, self.time.year() as i64, month, change)?;
             return Ok(self.with_defaults(new_time));
@@ -542,9 +542,9 @@ impl FuzzyDate {
     }
 
     /// Move time within unit range
-    fn offset_range_unit(&self, target: TimeUnit, unit: TimeUnit, change: convert::Change) -> Result<Self, ()> {
+    fn offset_range_unit(&self, target: TimeUnit, unit: TimeUnit, change: Change) -> Result<Self, ()> {
         if target.eq(&TimeUnit::Days) && unit.eq(&TimeUnit::Years) {
-            if change.eq(&convert::Change::Last) {
+            if change.eq(&Change::Last) {
                 let last_day = convert::into_month_day(self.time.year(), 12, 31);
                 return self.date_ymd(self.time.year() as i64, 12, last_day as i64);
             }
@@ -553,7 +553,7 @@ impl FuzzyDate {
         }
 
         if target.eq(&TimeUnit::Days) && unit.eq(&TimeUnit::Months) {
-            if change.eq(&convert::Change::Last) {
+            if change.eq(&Change::Last) {
                 let last_day = convert::into_month_day(self.time.year(), self.time.month(), 31);
                 return Ok(self.with_defaults(self.time.with_day(last_day).unwrap()));
             }
@@ -592,13 +592,7 @@ impl FuzzyDate {
     }
 
     /// Move time within year and month range
-    fn offset_range_year_month(
-        &self,
-        target: TimeUnit,
-        year: i64,
-        month: i64,
-        change: convert::Change,
-    ) -> Result<Self, ()> {
+    fn offset_range_year_month(&self, target: TimeUnit, year: i64, month: i64, change: Change) -> Result<Self, ()> {
         if target.eq(&TimeUnit::Days) {
             let new_time = convert::offset_range_year_month(self.time, year, month, change)?;
             return Ok(self.with_defaults(new_time));
@@ -613,7 +607,7 @@ impl FuzzyDate {
         year: i64,
         month: i64,
         wday: i64,
-        change: convert::Change,
+        change: Change,
     ) -> Result<Self, ()> {
         let new_time = convert::offset_range_year_month_wday(self.time, year, month, wday, change)?;
         Ok(self.without_defaults(new_time))

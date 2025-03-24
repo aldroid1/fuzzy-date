@@ -1,5 +1,5 @@
-use fuzzy_date_rs::{FuzzyDuration, FuzzySeconds};
 use fuzzy_date_rs::token::UnitSet;
+use fuzzy_date_rs::{FuzzyDuration, FuzzySeconds};
 
 #[test]
 fn test_to_duration_all() {
