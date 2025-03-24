@@ -3,7 +3,7 @@ mod fuzzy;
 pub mod pattern;
 pub mod token;
 
-use crate::token::{Token, UnitNames, UnitSet, WeekStartDay};
+use crate::token::{Token, UnitNames, UnitGroup, WeekStartDay};
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use std::collections::HashMap;
 
@@ -65,7 +65,7 @@ pub struct FuzzyDuration {
     custom_units: HashMap<String, String>,
     max_unit: String,
     min_unit: String,
-    unit_set: UnitSet,
+    unit_group: UnitGroup,
 }
 
 impl FuzzyDuration {
@@ -74,7 +74,7 @@ impl FuzzyDuration {
             custom_units: HashMap::new(),
             min_unit: String::new(),
             max_unit: String::new(),
-            unit_set: UnitSet::Default,
+            unit_group: UnitGroup::Default,
         }
     }
 
@@ -83,8 +83,8 @@ impl FuzzyDuration {
         self
     }
 
-    pub fn set_default_units(mut self, name: UnitSet) -> Self {
-        self.unit_set = name;
+    pub fn set_default_units(mut self, group: UnitGroup) -> Self {
+        self.unit_group = group;
         self
     }
 
@@ -100,10 +100,10 @@ impl FuzzyDuration {
 
     /// Convert number of seconds into a time duration string
     pub fn to_duration(&self, seconds: f64) -> String {
-        let mut units = UnitNames::from_name(&self.unit_set);
-        units.add_names(self.custom_units.to_owned());
+        let mut unit_names = UnitNames::from_name(&self.unit_group);
+        unit_names.add_names(self.custom_units.to_owned());
 
-        fuzzy::to_duration(seconds, &units, &self.max_unit, &self.min_unit)
+        fuzzy::to_duration(seconds, &unit_names, &self.max_unit, &self.min_unit)
     }
 }
 

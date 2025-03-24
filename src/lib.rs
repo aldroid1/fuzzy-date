@@ -11,7 +11,7 @@ use std::collections::HashMap;
 mod fuzzydate {
     use super::*;
     use crate::fuzzydate::__core__::Config;
-    use fuzzy_date_rs::token::{Token, UnitNames, UnitSet, WeekStartDay};
+    use fuzzy_date_rs::token::{Token, UnitNames, UnitGroup, WeekStartDay};
     use fuzzy_date_rs::{FuzzyDate, FuzzySeconds};
 
     const ATTR_CONFIG: &'static str = "config";
@@ -535,9 +535,9 @@ mod fuzzydate {
         max: &str,
         min: &str,
     ) -> PyResult<String> {
-        let units_name = units.unwrap_or("");
+        let unit_group = units.unwrap_or("");
 
-        let custom_units = match units_name {
+        let custom_units = match unit_group {
             "short" => read_config(module)?.units_short,
             "long" => read_config(module)?.units_long,
             _ => read_config(module)?.units,
@@ -545,7 +545,7 @@ mod fuzzydate {
 
         py.allow_threads(move || {
             let result = FuzzyDuration::new()
-                .set_default_units(UnitSet::from_str(units_name))
+                .set_default_units(UnitGroup::from_str(unit_group))
                 .set_custom_units(custom_units)
                 .set_min_unit(min)
                 .set_max_unit(max)
@@ -596,9 +596,9 @@ mod fuzzydate {
             Config {
                 patterns: HashMap::new(),
                 tokens: HashMap::new(),
-                units: UnitNames::get_defaults(&UnitSet::Default),
-                units_long: UnitNames::get_defaults(&UnitSet::Long),
-                units_short: UnitNames::get_defaults(&UnitSet::Short),
+                units: UnitNames::get_defaults(&UnitGroup::Default),
+                units_long: UnitNames::get_defaults(&UnitGroup::Long),
+                units_short: UnitNames::get_defaults(&UnitGroup::Short),
             },
         )?;
 

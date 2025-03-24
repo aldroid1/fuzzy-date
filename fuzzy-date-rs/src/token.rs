@@ -301,13 +301,13 @@ pub enum WeekStartDay {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum UnitSet {
+pub enum UnitGroup {
     Long,
     Short,
     Default,
 }
 
-impl UnitSet {
+impl UnitGroup {
     pub fn from_str(value: &str) -> Self {
         match value {
             "long" => Self::Long,
@@ -372,11 +372,11 @@ impl UnitNames {
         (crate::pattern::UNIT_WEEKS, "w"),
     ];
 
-    pub fn get_defaults(name: &UnitSet) -> HashMap<String, String> {
+    pub fn get_defaults(name: &UnitGroup) -> HashMap<String, String> {
         let mapping = match name {
-            UnitSet::Long => Self::UNITS_LONG,
-            UnitSet::Short => Self::UNITS_SHORT,
-            UnitSet::Default => Self::UNITS_DEFAULT,
+            UnitGroup::Long => Self::UNITS_LONG,
+            UnitGroup::Short => Self::UNITS_SHORT,
+            UnitGroup::Default => Self::UNITS_DEFAULT,
         };
         mapping.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
     }
@@ -402,25 +402,23 @@ impl UnitNames {
         }
     }
 
-    pub(crate) fn from_name(name: &UnitSet) -> Self {
+    pub(crate) fn from_name(name: &UnitGroup) -> Self {
         Self::from_map(Self::get_defaults(name))
     }
 
     pub(crate) fn add_names(&mut self, custom: HashMap<String, String>) {
-        for (name, value) in custom {
-            match name.as_str() {
-                crate::pattern::UNIT_SECOND => self.seconds = value,
-                crate::pattern::UNIT_MINUTE => self.minute = value,
-                crate::pattern::UNIT_MINUTES => self.minutes = value,
-                crate::pattern::UNIT_HOUR => self.hour = value,
-                crate::pattern::UNIT_HOURS => self.hours = value,
-                crate::pattern::UNIT_DAY => self.day = value,
-                crate::pattern::UNIT_DAYS => self.days = value,
-                crate::pattern::UNIT_WEEK => self.week = value,
-                crate::pattern::UNIT_WEEKS => self.weeks = value,
-                _ => {}
-            }
-        }
+        custom.iter().for_each(|(name, value)| match name.as_str() {
+            crate::pattern::UNIT_SECOND => self.seconds = value.to_owned(),
+            crate::pattern::UNIT_MINUTE => self.minute = value.to_owned(),
+            crate::pattern::UNIT_MINUTES => self.minutes = value.to_owned(),
+            crate::pattern::UNIT_HOUR => self.hour = value.to_owned(),
+            crate::pattern::UNIT_HOURS => self.hours = value.to_owned(),
+            crate::pattern::UNIT_DAY => self.day = value.to_owned(),
+            crate::pattern::UNIT_DAYS => self.days = value.to_owned(),
+            crate::pattern::UNIT_WEEK => self.week = value.to_owned(),
+            crate::pattern::UNIT_WEEKS => self.weeks = value.to_owned(),
+            _ => {}
+        });
 
         self.separator = if self.day.len() > 1 { " " } else { "" }.to_owned();
     }

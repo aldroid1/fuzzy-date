@@ -1,4 +1,4 @@
-use fuzzy_date_rs::token::UnitSet;
+use fuzzy_date_rs::token::UnitGroup;
 use fuzzy_date_rs::{FuzzyDuration, FuzzySeconds};
 
 #[test]
@@ -125,9 +125,9 @@ fn test_to_seconds_none() {
 }
 
 fn assert_to_duration(max: &str, min: &str, expect: Vec<(f64, &str, &str)>) {
-    for (from_seconds, unit_types, expect_str) in expect {
+    for (from_seconds, unit_group, expect_str) in expect {
         let into_duration = FuzzyDuration::new()
-            .set_default_units(UnitSet::from_str(unit_types))
+            .set_default_units(UnitGroup::from_str(unit_group))
             .set_min_unit(min)
             .set_max_unit(max)
             .to_duration(from_seconds);
