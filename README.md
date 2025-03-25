@@ -14,16 +14,17 @@ Python module to convert various time strings into datetime objects, written in 
 ```python
 import fuzzydate as fd
 
-for date_str in [
+date_formats = [
     '2023-04-01', '20230401', '04/01/2023', '01.04.2023',
-    '1st of April, 2023', '1 April 2023', 'Sat April 1 2023']:
+    '1st of April, 2023', '1 April 2023', 'Sat April 1 2023']
+
+for date_str in date_formats:
     assert str(fd.to_date(date_str)) == '2023-04-01'
 
 # Anything invalid raises a ValueError
 
-fd.to_date('Sun 1st of April 2023')
-# ValueError: Unable to convert "Sun 1st of April 2023" into datetime
-# Weekday for the date is Saturday
+fd.to_date('Sun April 1 2023')
+# ValueError: Unable to convert "Sun April 1 2023" into datetime
 ```
 
 ### Relative time
