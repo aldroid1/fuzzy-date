@@ -9,17 +9,18 @@ Python module to convert various time strings into datetime objects, written in 
 
 ## Date conversion
 
-### Exact dates
+### Dates
 
 ```python
 import fuzzydate as fd
 
-date_formats = [
-    '2023-04-01', '20230401', '04/01/2023', '01.04.2023',
-    '1st of April, 2023', '1 April 2023', 'Sat April 1 2023']
-
-for date_str in date_formats:
-    assert str(fd.to_date(date_str)) == '2023-04-01'
+fd.to_date('2023-04-01')          # 2023-04-01
+fd.to_date('20230401')            # 2023-04-01
+fd.to_date('04/01/2023')          # 2023-04-01
+fd.to_date('01.04.2023')          # 2023-04-01
+fd.to_date('1st of April, 2023')  # 2023-04-01
+fd.to_date('1 April 2023')        # 2023-04-01
+fd.to_date('Sat April 1 2023')    # 2023-04-01
 
 # Anything invalid raises a ValueError
 
@@ -34,17 +35,17 @@ import fuzzydate as fd
 
 # If current time is April 1st 2023 12PM UTC...
 
-fd.to_datetime('1 hour ago')             # 2023-04-01 11:00:00+00:00
-fd.to_datetime('last week')              # 2023-03-20 12:00:00+00:00
-fd.to_datetime('past 2 weeks')           # 2023-03-18 12:00:00+00:00
-fd.to_datetime('-1 week')                # 2023-03-25 12:00:00+00:00
-fd.to_datetime('tuesday next week')      # 2023-04-04 00:00:00+00:00
-fd.to_datetime('last week midnight')     # 2023-03-20 00:00:00+00:00
-fd.to_datetime('-1d 2h 5min 10s')        # 2023-03-31 09:54:50+00:00
-fd.to_datetime('tomorrow')               # 2023-04-02 00:00:00+00:00
-fd.to_datetime('prev Monday')            # 2023-03-27 00:00:00+00:00
-fd.to_datetime('prev June')              # 2022-06-01 00:00:00+00:00
-fd.to_datetime('last day of this month') # 2023-04-30 00:00:00+00:00
+fd.to_datetime('1 hour ago')         # 2023-04-01 11:00:00+00:00
+fd.to_datetime('last week')          # 2023-03-20 12:00:00+00:00
+fd.to_datetime('past 2 weeks')       # 2023-03-18 12:00:00+00:00
+fd.to_datetime('-1 week')            # 2023-03-25 12:00:00+00:00
+fd.to_datetime('tuesday next week')  # 2023-04-04 00:00:00+00:00
+fd.to_datetime('last week midnight') # 2023-03-20 00:00:00+00:00
+fd.to_datetime('-1d 2h 5min 10s')    # 2023-03-31 09:54:50+00:00
+fd.to_datetime('tomorrow')           # 2023-04-02 00:00:00+00:00
+fd.to_datetime('prev Monday')        # 2023-03-27 00:00:00+00:00
+fd.to_datetime('prev June')          # 2022-06-01 00:00:00+00:00
+fd.to_datetime('last of the month')  # 2023-04-30 00:00:00+00:00
 
 # Anything invalid raises a ValueError
 
