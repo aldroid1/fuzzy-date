@@ -7,7 +7,7 @@ use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
 
-const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 74] = [
+const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<FuzzyDate, ()>); 69] = [
     // KEYWORDS
     (&Pattern::Now, |c, _, _| Ok(c)),
     (&Pattern::Today, |c, _, r| c.rule_time_reset(r)),
@@ -24,92 +24,85 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
     (&Pattern::PrevMonth, |c, v, r| c.offset_month(v.get_int(0), Change::Prev)?.rule_time_reset(r)),
     (&Pattern::NextMonth, |c, v, r| c.offset_month(v.get_int(0), Change::Next)?.rule_time_reset(r)),
     // KEYWORD OFFSETS
-    (&Pattern::ThisLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
-    (&Pattern::PastLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(0), -1, r)),
-    (&Pattern::PrevLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
-    (&Pattern::PrevNLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(1), 0 - v.get_int(0), r)),
-    (&Pattern::NextLongUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
-    // NUMERIC OFFSET, MINUS
+    (&Pattern::ThisUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 0, r)),
+    (&Pattern::PastUnit, |c, v, r| c.offset_unit_exact(v.get_unit(0), -1, r)),
+    (&Pattern::PrevUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), -1, r)),
+    (&Pattern::PrevNUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(1), 0 - v.get_int(0), r)),
+    (&Pattern::NextUnit, |c, v, r| c.offset_unit_keyword(v.get_unit(0), 1, r)),
+    // NUMERIC OFFSETS
     (&Pattern::MinusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
-    (&Pattern::MinusShortUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
-    (&Pattern::MinusLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
-    // NUMERIC OFFSET, PLUS
     (&Pattern::PlusUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
-    (&Pattern::PlusShortUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
-    (&Pattern::PlusLongUnit, |c, v, r| c.offset_unit_exact(v.get_unit(1), v.get_int(0), r)),
-    // NUMERIC OFFSET, PLUS
     (&Pattern::UnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
-    (&Pattern::LongUnitAgo, |c, v, r| c.offset_unit_exact(v.get_unit(1), 0 - v.get_int(0), r)),
     // EXACT UNIT
-    (&Pattern::LongUnitInt, |c, v, r| {
+    (&Pattern::UnitInt, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
             .date_yw(c.rule_year(), v.get_int(1), r)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LongUnitIntYear, |c, v, r| {
+    (&Pattern::UnitIntYear, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Weeks)?
             .date_yw(v.get_int(2), v.get_int(1), r)?
             .rule_time_reset(r)
     }),
     // FIRST/LAST RELATIVE OFFSETS
-    (&Pattern::FirstOfLongUnit, |c, v, r| {
+    (&Pattern::FirstOfUnit, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
             .offset_range_month(TimeUnit::Days, c.month(), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfMonth, |c, v, r| {
+    (&Pattern::FirstUnitOfMonth, |c, v, r| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfMonthYear, |c, v, r| {
+    (&Pattern::FirstUnitOfMonthYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfYear, |c, v, r| {
+    (&Pattern::FirstUnitOfYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(1), 1, Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfMonth, |c, v, r| {
+    (&Pattern::LastUnitOfMonth, |c, v, r| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastOfLongUnit, |c, v, r| {
+    (&Pattern::LastOfUnit, |c, v, r| {
         c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
             .offset_range_month(TimeUnit::Days, c.month(), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfMonthYear, |c, v, r| {
+    (&Pattern::LastUnitOfMonthYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfYear, |c, v, r| {
+    (&Pattern::LastUnitOfYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(1), 12, Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfThisLongUnit, |c, v, r| {
+    (&Pattern::FirstUnitOfThisUnit, |c, v, r| {
         c.offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfThisLongUnit, |c, v, r| {
+    (&Pattern::LastUnitOfThisUnit, |c, v, r| {
         c.offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfPrevLongUnit, |c, v, r| {
+    (&Pattern::FirstUnitOfPrevUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), -1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfPrevLongUnit, |c, v, r| {
+    (&Pattern::LastUnitOfPrevUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), -1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::FirstLongUnitOfNextLongUnit, |c, v, r| {
+    (&Pattern::FirstUnitOfNextUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), 1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::First)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastLongUnitOfNextLongUnit, |c, v, r| {
+    (&Pattern::LastUnitOfNextUnit, |c, v, r| {
         c.offset_unit_keyword(v.get_unit(1), 1, r)?
             .offset_range_unit(v.get_unit(0), v.get_unit(1), Change::Last)?
             .rule_time_reset(r)
@@ -370,10 +363,10 @@ impl CallSequence {
 
     fn allowed_wday() -> Vec<Pattern> {
         let mut result = Vec::from([
-            Pattern::ThisLongUnit,
-            Pattern::PastLongUnit,
-            Pattern::PrevLongUnit,
-            Pattern::NextLongUnit,
+            Pattern::ThisUnit,
+            Pattern::PastUnit,
+            Pattern::PrevUnit,
+            Pattern::NextUnit,
             Pattern::Wday,
         ]);
         result.extend(Pattern::time_of_days());
@@ -860,7 +853,7 @@ fn find_pattern_prefix(pattern: &str, custom: HashMap<String, String>) -> &'stat
 
     // Check whether the pattern ending matches with an "ago" pattern in a
     // from both internal and custom patterns, to prefer using minus patterns
-    for pattern_type in vec![Pattern::LongUnitAgo, Pattern::UnitAgo] {
+    for pattern_type in vec![Pattern::UnitAgo] {
         for pattern_value in Pattern::values(&pattern_type) {
             if pattern.ends_with(pattern_value) {
                 return "-";
@@ -914,7 +907,7 @@ mod tests {
             ("edellinen [wday]", &Pattern::PrevWday),
             ("ensi [wday]", &Pattern::NextWday),
             ("seuraava [wday]", &Pattern::NextWday),
-            ("[int] [long_unit] sitten", &Pattern::LongUnitAgo),
+            ("[int] [long_unit] sitten", &Pattern::UnitAgo),
         ];
 
         let result_value = convert_custom("viime [wday]", vec![1], "2024-01-19T15:22:28+02:00", &custom_finnish);
