@@ -132,18 +132,12 @@ mod fuzzydate {
         #[classattr]
         const PREV_WDAY: &'static str = fuzzy_date_rs::pattern::PATTERN_PREV_WDAY;
         #[classattr]
-        #[deprecated]
-        const LAST_WDAY: &'static str = fuzzy_date_rs::pattern::PATTERN_LAST_WDAY;
-        #[classattr]
         const NEXT_WDAY: &'static str = fuzzy_date_rs::pattern::PATTERN_NEXT_WDAY;
 
         #[classattr]
         const THIS_MONTH: &'static str = fuzzy_date_rs::pattern::PATTERN_THIS_MONTH;
         #[classattr]
         const PREV_MONTH: &'static str = fuzzy_date_rs::pattern::PATTERN_PREV_MONTH;
-        #[classattr]
-        #[deprecated]
-        const LAST_MONTH: &'static str = fuzzy_date_rs::pattern::PATTERN_LAST_MONTH;
         #[classattr]
         const NEXT_MONTH: &'static str = fuzzy_date_rs::pattern::PATTERN_NEXT_MONTH;
 
@@ -153,9 +147,6 @@ mod fuzzydate {
         const PAST_LONG_UNIT: &'static str = fuzzy_date_rs::pattern::PATTERN_PAST_LONG_UNIT;
         #[classattr]
         const PREV_LONG_UNIT: &'static str = fuzzy_date_rs::pattern::PATTERN_PREV_LONG_UNIT;
-        #[classattr]
-        #[deprecated]
-        const LAST_LONG_UNIT: &'static str = fuzzy_date_rs::pattern::PATTERN_LAST_LONG_UNIT;
         #[classattr]
         const NEXT_LONG_UNIT: &'static str = fuzzy_date_rs::pattern::PATTERN_NEXT_LONG_UNIT;
 
@@ -207,14 +198,6 @@ mod fuzzydate {
         const LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str =
             fuzzy_date_rs::pattern::PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT;
         #[classattr]
-        #[deprecated]
-        const FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str =
-            fuzzy_date_rs::pattern::PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT;
-        #[classattr]
-        #[deprecated]
-        const LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str =
-            fuzzy_date_rs::pattern::PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT;
-        #[classattr]
         const FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str =
             fuzzy_date_rs::pattern::PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT;
         #[classattr]
@@ -263,9 +246,6 @@ mod fuzzydate {
         #[classattr]
         const DATE_NTH_MONTH_YEAR: &'static str = fuzzy_date_rs::pattern::PATTERN_DATE_NTH_MONTH_YEAR;
 
-        #[classattr]
-        #[deprecated]
-        const DATETIME_YMD_HM: &'static str = "[year]-[int]-[int] [int]:[int]";
         #[classattr]
         const DATETIME_YMD_HMS: &'static str = fuzzy_date_rs::pattern::PATTERN_DATETIME_YMD_HMS;
         #[classattr]
