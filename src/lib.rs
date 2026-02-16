@@ -424,7 +424,7 @@ mod fuzzydate {
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
-        py.allow_threads(move || {
+        py.detach(move || {
             let week_start_day = match weekday_start_mon {
                 true => WeekStartDay::Monday,
                 false => WeekStartDay::Sunday,
@@ -476,7 +476,7 @@ mod fuzzydate {
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
-        py.allow_threads(move || {
+        py.detach(move || {
             let week_start_day = match weekday_start_mon {
                 true => WeekStartDay::Monday,
                 false => WeekStartDay::Sunday,
@@ -543,7 +543,7 @@ mod fuzzydate {
             _ => read_config(module)?.units,
         };
 
-        py.allow_threads(move || {
+        py.detach(move || {
             let result = FuzzyDuration::new()
                 .set_default_units(UnitGroup::from_str(unit_group))
                 .set_custom_units(custom_units)
@@ -576,7 +576,7 @@ mod fuzzydate {
         let config_patterns = read_config(module)?.patterns;
         let config_tokens = read_tokens(module)?;
 
-        py.allow_threads(move || {
+        py.detach(move || {
             let result = FuzzySeconds::new()
                 .set_custom_patterns(config_patterns)
                 .set_custom_tokens(config_tokens)
@@ -607,7 +607,7 @@ mod fuzzydate {
 
     /// Read config registered to Python module
     fn read_config(module: &Bound<'_, PyModule>) -> Result<Config, PyErr> {
-        let config = &module.as_borrowed().getattr(ATTR_CONFIG)?.downcast_into::<Config>()?.borrow();
+        let config = &module.as_borrowed().getattr(ATTR_CONFIG)?.cast::<Config>()?.borrow();
 
         Ok(Config {
             patterns: config.patterns.clone(),
