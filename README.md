@@ -116,7 +116,7 @@ assert fd.to_duration(86400.0) == '1 dag'
 
 ## Requirements
 
-- Python >= 3.9
+- Python >= 3.11
 
 ## Installation
 
