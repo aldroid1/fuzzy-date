@@ -13,7 +13,7 @@ name = "fuzzydate"
 crate-type = ["cdylib"]
 
 [workspace.dependencies]
-chrono = "0.4.41"
+chrono = "0.4.43"
 
 [dependencies]
 chrono = { workspace = true }
