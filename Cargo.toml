@@ -13,9 +13,9 @@ name = "fuzzydate"
 crate-type = ["cdylib"]
 
 [workspace.dependencies]
-chrono = "0.4.41"
+chrono = "0.4.43"
 
 [dependencies]
 chrono = { workspace = true }
 fuzzy-date-rs = { path = "fuzzy-date-rs" }
-pyo3 = { version = "0.24.2", features = ["chrono"] }
+pyo3 = { version = "0.28.1 ", features = ["chrono"] }
