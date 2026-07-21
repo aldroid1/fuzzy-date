@@ -23,9 +23,9 @@ classifiers = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/aldroid1/fuzzy-date"
+Repository = "https://github.com/aldroid1/fuzzy-date"
+Changelog = "https://github.com/aldroid1/fuzzy-date/releases"
 Issues = "https://github.com/aldroid1/fuzzy-date/issues"
-Repository = "https://github.com/aldroid1/fuzzy-date.git"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
