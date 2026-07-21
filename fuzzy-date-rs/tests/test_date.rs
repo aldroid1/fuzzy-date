@@ -1,5 +1,5 @@
-use fuzzy_date_rs::token::WeekStartDay;
 use fuzzy_date_rs::FuzzyDate;
+use fuzzy_date_rs::token::WeekStartDay;
 
 #[test]
 fn test_fixed_dates() {
@@ -177,6 +177,12 @@ fn test_month_year() {
 #[test]
 fn test_month_ranges() {
     assert_convert_from_mon(vec![
+        // Start
+        ("start of month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
+        ("start of the month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),
+        // End
+        ("end of month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
+        ("end of the month", "2024-02-12T15:22:28+02:00", "2024-02-29 00:00:00 +02:00"),
         // First
         ("first day of January", "2024-05-12T15:22:28+02:00", "2024-01-01 00:00:00 +02:00"),
         ("first of month", "2024-02-12T15:22:28+02:00", "2024-02-01 00:00:00 +02:00"),

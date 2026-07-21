@@ -71,6 +71,11 @@ pub const PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "last [long_u
 pub const PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "first [long_unit] of next [long_unit]";
 pub const PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "last [long_unit] of next [long_unit]";
 
+pub const PATTERN_START_OF_LONG_UNIT: &'static str = "start of [long_unit]";
+pub const PATTERN_START_OF_THE_LONG_UNIT: &'static str = "start of the [long_unit]";
+pub const PATTERN_END_OF_LONG_UNIT: &'static str = "end of [long_unit]";
+pub const PATTERN_END_OF_THE_LONG_UNIT: &'static str = "end of the [long_unit]";
+
 pub const PATTERN_INTEGER: &'static str = "[int]";
 pub const PATTERN_MONTH: &'static str = "[month]";
 pub const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
@@ -317,7 +322,7 @@ impl Pattern {
     }
 }
 
-fn patterns() -> [(Pattern, &'static str); 114] {
+fn patterns() -> [(Pattern, &'static str); 118] {
     [
         (Pattern::Integer, PATTERN_INTEGER),
         (Pattern::Month, PATTERN_MONTH),
@@ -357,6 +362,8 @@ fn patterns() -> [(Pattern, &'static str); 114] {
         (Pattern::FirstOfUnit, PATTERN_FIRST_OF_LONG_UNIT),
         (Pattern::FirstOfUnit, PATTERN_FIRST_OF_THE_LONG_UNIT),
         (Pattern::FirstOfUnit, PATTERN_FIRST_OF_THIS_LONG_UNIT),
+        (Pattern::FirstOfUnit, PATTERN_START_OF_LONG_UNIT),
+        (Pattern::FirstOfUnit, PATTERN_START_OF_THE_LONG_UNIT),
         (Pattern::FirstUnitOfMonth, PATTERN_FIRST_LONG_UNIT_OF_MONTH),
         (Pattern::FirstUnitOfMonthYear, PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR),
         (Pattern::FirstUnitOfYear, PATTERN_FIRST_LONG_UNIT_OF_YEAR),
@@ -373,6 +380,8 @@ fn patterns() -> [(Pattern, &'static str); 114] {
         (Pattern::LastOfUnit, PATTERN_LAST_OF_LONG_UNIT),
         (Pattern::LastOfUnit, PATTERN_LAST_OF_THE_LONG_UNIT),
         (Pattern::LastOfUnit, PATTERN_LAST_OF_THIS_LONG_UNIT),
+        (Pattern::LastOfUnit, PATTERN_END_OF_LONG_UNIT),
+        (Pattern::LastOfUnit, PATTERN_END_OF_THE_LONG_UNIT),
         (Pattern::LastUnitOfMonth, PATTERN_LAST_LONG_UNIT_OF_MONTH),
         (Pattern::LastUnitOfYear, PATTERN_LAST_LONG_UNIT_OF_YEAR),
         (Pattern::LastUnitOfMonthYear, PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR),
