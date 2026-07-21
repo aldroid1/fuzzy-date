@@ -147,6 +147,9 @@ pub const PATTERN_TIME_AT_SIGN_12H_HOUR: &'static str = "@ [int][meridiem]";
 
 // TOKENS
 
+// Ignore
+pub const TOKEN_IGNORE: i16 = 0;
+
 // Weekdays
 pub const TOKEN_WDAY_MON: i16 = 101;
 pub const TOKEN_WDAY_TUE: i16 = 102;
