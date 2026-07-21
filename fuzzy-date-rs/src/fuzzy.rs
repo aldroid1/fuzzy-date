@@ -45,11 +45,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     // FIRST/LAST RELATIVE OFFSETS
-    (&Pattern::FirstOfUnit, |c, v, r| {
-        c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
-            .offset_range_month(TimeUnit::Days, c.month(), Change::First)?
-            .rule_time_reset(r)
-    }),
+    (&Pattern::FirstOfUnit, |c, v, r| c.offset_range_boundary(v.get_unit(0), Change::First, r)?.rule_time_reset(r)),
     (&Pattern::FirstUnitOfMonth, |c, v, r| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::First)?
             .rule_time_reset(r)
@@ -66,11 +62,7 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastOfUnit, |c, v, r| {
-        c.ensure_unit(v.get_unit(0), TimeUnit::Months)?
-            .offset_range_month(TimeUnit::Days, c.month(), Change::Last)?
-            .rule_time_reset(r)
-    }),
+    (&Pattern::LastOfUnit, |c, v, r| c.offset_range_boundary(v.get_unit(0), Change::Last, r)?.rule_time_reset(r)),
     (&Pattern::LastUnitOfMonthYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
@@ -528,6 +520,26 @@ impl FuzzyDate {
     fn offset_range_month(&self, target: TimeUnit, month: i64, change: Change) -> Result<Self, ()> {
         if target.eq(&TimeUnit::Days) {
             let new_time = convert::offset_range_year_month(self.time, self.time.year() as i64, month, change)?;
+            return Ok(self.with_defaults(new_time));
+        }
+
+        Err(())
+    }
+
+    /// Move time to end/start of range
+    fn offset_range_boundary(&self, target: TimeUnit, change: Change, rules: &Rules) -> Result<Self, ()> {
+        if target.eq(&TimeUnit::Weeks) {
+            let first_day = convert::offset_weekday(self.time, rules.week_start_day() as i64, Change::None);
+            let new_time = match change {
+                Change::First => first_day,
+                Change::Last => first_day + Duration::days(6),
+                _ => return Err(()),
+            };
+            return Ok(self.with_defaults(new_time));
+        }
+
+        if target.eq(&TimeUnit::Months) {
+            let new_time = convert::offset_range_year_month(self.time, self.time.year() as i64, self.month(), change)?;
             return Ok(self.with_defaults(new_time));
         }
 
