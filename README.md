@@ -133,12 +133,12 @@ pip install fuzzy-date
 
 ### Relative
 
-- Adjustment `first`, `last`, `prev`, `past`, `this`, `next` or `+`, `-`
+- Adjustment `first`, `last`, `start`, `end`, `prev`, `past`, `this`, `next` or `+`, `-`
 - Units `next week`, `next month`, `next year`
 - Weekdays `next Mon`, `next Monday`, `Monday`
 - Months `next Jan`, `next January`, `January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
-- Ranges `first/last day of`, `first/last Monday of`, `first/last of month`
+- Ranges `first/last day of`, `first/last Monday of`, `start/end of month`
 
 ### Fixed
 
