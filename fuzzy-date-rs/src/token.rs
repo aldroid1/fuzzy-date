@@ -553,7 +553,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         if part_chars.eq("") {
-            if out_values.is_empty() || !&part_letter.eq(" ") {
+            if part_letter.ne(" ") {
                 out_pattern.push_str(&part_letter);
             }
 
@@ -953,6 +953,8 @@ mod tests {
             ("First of THE month", "First of [long_unit]"),
             ("Their month", "Their [long_unit]"),
             ("The 2nd of Jan", "[nth] of [month]"),
+            ("End of the week", "End of [long_unit]"),
+            ("End of the  week", "End of [long_unit]"),
         ];
 
         for (from_string, expect_pattern) in expect {
