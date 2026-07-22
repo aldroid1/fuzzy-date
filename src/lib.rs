@@ -11,7 +11,7 @@ use std::collections::HashMap;
 mod fuzzydate {
     use super::*;
     use crate::fuzzydate::__core__::Config;
-    use fuzzy_date_rs::token::{Token, UnitNames, UnitGroup, WeekStartDay};
+    use fuzzy_date_rs::token::{Token, UnitGroup, UnitNames, WeekStartDay};
     use fuzzy_date_rs::{FuzzyDate, FuzzySeconds};
 
     const ATTR_CONFIG: &'static str = "config";
@@ -262,6 +262,10 @@ mod fuzzydate {
 
     #[pymethods]
     impl Tokens {
+        // Ignore
+        #[classattr]
+        const IGNORE: i16 = fuzzy_date_rs::pattern::TOKEN_IGNORE;
+
         // Weekdays
         #[classattr]
         const WDAY_MON: i16 = fuzzy_date_rs::pattern::TOKEN_WDAY_MON;
