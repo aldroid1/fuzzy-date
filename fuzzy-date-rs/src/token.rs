@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 
 // Boundary characters that always trigger treating
 // parsing collected characters into token(s)
@@ -15,7 +16,9 @@ const IGNORED_CHARS: [&'static str; 1] = [","];
 // be treated as a timestamp
 const PREFIX_CHARS_TIMESTAMP: [&'static str; 1] = ["@"];
 
-const STANDARD_TOKENS: [(&'static str, Token); 141] = [
+const STANDARD_TOKENS: [(&'static str, Token); 142] = [
+    // Ignore
+    ("the", Token { token: TokenType::Ignore, value: 0, zeros: 0 }),
     // Months, abbreviated
     ("jan", Token { token: TokenType::Month, value: 1, zeros: 0 }),
     ("jan.", Token { token: TokenType::Month, value: 1, zeros: 0 }),
@@ -209,6 +212,7 @@ impl ParsedNumberValue {
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum TokenType {
+    Ignore,
     Integer,
     LongUnit,
     Meridiem,
@@ -221,24 +225,27 @@ pub enum TokenType {
     Year,
 }
 
-impl TokenType {
-    fn as_name(&self) -> &'static str {
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TokenType::Integer => "int",
-            TokenType::LongUnit => "long_unit",
-            TokenType::Meridiem => "meridiem",
-            TokenType::Month => "month",
-            TokenType::ShortUnit => "short_unit",
-            TokenType::Nth => "nth",
-            TokenType::Timestamp => "timestamp",
-            TokenType::Unit => "unit",
-            TokenType::Weekday => "wday",
-            TokenType::Year => "year",
+            Self::Ignore => f.write_str("ignore"),
+            Self::Integer => f.write_str("int"),
+            Self::LongUnit => f.write_str("long_unit"),
+            Self::Meridiem => f.write_str("meridiem"),
+            Self::Month => f.write_str("month"),
+            Self::ShortUnit => f.write_str("short_unit"),
+            Self::Nth => f.write_str("nth"),
+            Self::Timestamp => f.write_str("timestamp"),
+            Self::Unit => f.write_str("unit"),
+            Self::Weekday => f.write_str("wday"),
+            Self::Year => f.write_str("year"),
         }
     }
+}
 
+impl TokenType {
     fn as_pattern(&self) -> String {
-        format!("[{}]", self.as_name())
+        format!("[{}]", self.to_string())
     }
 
     pub(crate) fn is_unit(&self) -> bool {
@@ -265,6 +272,10 @@ impl Token {
     /// Create token from global identifier
     pub fn from_gid(gid: u32) -> Option<Self> {
         let gid = gid as i64;
+
+        if gid.eq(&0) {
+            return Some(Self::new(TokenType::Ignore, 0));
+        }
 
         if gid.ge(&101) && gid.le(&107) {
             return Some(Self::new(TokenType::Weekday, gid - 100));
@@ -542,7 +553,7 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         if part_chars.eq("") {
-            if out_values.is_empty() || !&part_letter.eq(" ") {
+            if part_letter.ne(" ") {
                 out_pattern.push_str(&part_letter);
             }
 
@@ -550,9 +561,12 @@ pub(crate) fn tokenize(source: &str, custom: HashMap<String, Token>) -> (String,
         }
 
         if let Some(string_value) = token_list.find_token(&part_chars) {
-            out_values.push(string_value.clone());
-            out_pattern.push_str(&string_value.token.as_pattern());
-            out_pattern.push_str(&part_letter);
+            if string_value.token.ne(&TokenType::Ignore) {
+                out_values.push(string_value.clone());
+                out_pattern.push_str(&string_value.token.as_pattern());
+                out_pattern.push_str(&part_letter);
+            }
+
             continue;
         }
 
@@ -934,6 +948,21 @@ mod tests {
     }
 
     #[test]
+    fn test_specific_words_ignored() {
+        let expect: Vec<(&str, &str)> = vec![
+            ("First of THE month", "First of [long_unit]"),
+            ("Their month", "Their [long_unit]"),
+            ("The 2nd of Jan", "[nth] of [month]"),
+            ("End of the week", "End of [long_unit]"),
+            ("End of the  week", "End of [long_unit]"),
+        ];
+
+        for (from_string, expect_pattern) in expect {
+            assert_eq!(tokenize_str(from_string).0, expect_pattern);
+        }
+    }
+
+    #[test]
     fn test_unit_prefixes() {
         assert_eq!(
             tokenize_str("+1y 5m 2w 5d"),
@@ -1258,6 +1287,8 @@ mod tests {
 
     #[test]
     fn test_gid_into_token() {
+        assert_eq!(Token::from_gid(0).unwrap(), Token::new(TokenType::Ignore, 0));
+
         for value in 101..=107 {
             assert_eq!(Token::from_gid(value).unwrap(), Token::new(TokenType::Weekday, value as i64 - 100));
         }

@@ -45,7 +45,9 @@ fd.to_datetime('-1d 2h 5min 10s')    # 2023-03-31 09:54:50+00:00
 fd.to_datetime('tomorrow')           # 2023-04-02 00:00:00+00:00
 fd.to_datetime('prev Monday')        # 2023-03-27 00:00:00+00:00
 fd.to_datetime('prev June')          # 2022-06-01 00:00:00+00:00
+fd.to_datetime('start of month')     # 2023-04-01 00:00:00+00:00
 fd.to_datetime('last of the month')  # 2023-04-30 00:00:00+00:00
+fd.to_datetime('end of year')        # 2023-12-31 00:00:00+00:00
 
 # Anything invalid raises a ValueError
 
@@ -133,12 +135,12 @@ pip install fuzzy-date
 
 ### Relative
 
-- Adjustment `first`, `last`, `prev`, `past`, `this`, `next` or `+`, `-`
+- Adjustment `first`, `last`, `start`, `end`, `prev`, `past`, `this`, `next` or `+`, `-`
 - Units `next week`, `next month`, `next year`
 - Weekdays `next Mon`, `next Monday`, `Monday`
 - Months `next Jan`, `next January`, `January`
 - Numeric `(s)ec`, `min`, `(h)r`, `(d)ay`, `(w)eek`, `(m)onth`, `(y)ear`
-- Ranges `first/last day of`, `first/last Monday of`, `first/last of month`
+- Ranges `first/last day of`, `first/last Monday of`, `start/end of month`, `start/end of week`
 
 ### Fixed
 

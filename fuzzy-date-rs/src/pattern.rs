@@ -56,10 +56,8 @@ pub const PATTERN_LAST_WDAY_OF_MONTH_YEAR: &'static str = "last [wday] of [month
 pub const PATTERN_LAST_WDAY_OF_YEAR: &'static str = "last [wday] of [year]";
 
 pub const PATTERN_FIRST_OF_LONG_UNIT: &'static str = "first of [long_unit]";
-pub const PATTERN_FIRST_OF_THE_LONG_UNIT: &'static str = "first of the [long_unit]";
 pub const PATTERN_FIRST_OF_THIS_LONG_UNIT: &'static str = "first of this [long_unit]";
 pub const PATTERN_LAST_OF_LONG_UNIT: &'static str = "last of [long_unit]";
-pub const PATTERN_LAST_OF_THE_LONG_UNIT: &'static str = "last of the [long_unit]";
 pub const PATTERN_LAST_OF_THIS_LONG_UNIT: &'static str = "last of this [long_unit]";
 
 pub const PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "first [long_unit] of this [long_unit]";
@@ -70,6 +68,9 @@ pub const PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "first [long
 pub const PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "last [long_unit] of last [long_unit]";
 pub const PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "first [long_unit] of next [long_unit]";
 pub const PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "last [long_unit] of next [long_unit]";
+
+pub const PATTERN_START_OF_LONG_UNIT: &'static str = "start of [long_unit]";
+pub const PATTERN_END_OF_LONG_UNIT: &'static str = "end of [long_unit]";
 
 pub const PATTERN_INTEGER: &'static str = "[int]";
 pub const PATTERN_MONTH: &'static str = "[month]";
@@ -141,6 +142,9 @@ pub const PATTERN_TIME_AT_SIGN_12H_HM: &'static str = "@ [int]:[int] [meridiem]"
 pub const PATTERN_TIME_AT_SIGN_12H_HOUR: &'static str = "@ [int][meridiem]";
 
 // TOKENS
+
+// Ignore
+pub const TOKEN_IGNORE: i16 = 0;
 
 // Weekdays
 pub const TOKEN_WDAY_MON: i16 = 101;
@@ -355,8 +359,8 @@ fn patterns() -> [(Pattern, &'static str); 114] {
         (Pattern::UnitInt, PATTERN_LONG_UNIT_INT),
         (Pattern::UnitIntYear, PATTERN_LONG_UNIT_INT_YEAR),
         (Pattern::FirstOfUnit, PATTERN_FIRST_OF_LONG_UNIT),
-        (Pattern::FirstOfUnit, PATTERN_FIRST_OF_THE_LONG_UNIT),
         (Pattern::FirstOfUnit, PATTERN_FIRST_OF_THIS_LONG_UNIT),
+        (Pattern::FirstOfUnit, PATTERN_START_OF_LONG_UNIT),
         (Pattern::FirstUnitOfMonth, PATTERN_FIRST_LONG_UNIT_OF_MONTH),
         (Pattern::FirstUnitOfMonthYear, PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR),
         (Pattern::FirstUnitOfYear, PATTERN_FIRST_LONG_UNIT_OF_YEAR),
@@ -371,8 +375,8 @@ fn patterns() -> [(Pattern, &'static str); 114] {
         (Pattern::LastWdayOfMonthYear, PATTERN_LAST_WDAY_OF_MONTH_YEAR),
         (Pattern::LastWdayOfYear, PATTERN_LAST_WDAY_OF_YEAR),
         (Pattern::LastOfUnit, PATTERN_LAST_OF_LONG_UNIT),
-        (Pattern::LastOfUnit, PATTERN_LAST_OF_THE_LONG_UNIT),
         (Pattern::LastOfUnit, PATTERN_LAST_OF_THIS_LONG_UNIT),
+        (Pattern::LastOfUnit, PATTERN_END_OF_LONG_UNIT),
         (Pattern::LastUnitOfMonth, PATTERN_LAST_LONG_UNIT_OF_MONTH),
         (Pattern::LastUnitOfYear, PATTERN_LAST_LONG_UNIT_OF_YEAR),
         (Pattern::LastUnitOfMonthYear, PATTERN_LAST_LONG_UNIT_OF_MONTH_YEAR),

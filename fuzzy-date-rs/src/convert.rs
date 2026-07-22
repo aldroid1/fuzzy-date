@@ -226,9 +226,9 @@ pub(crate) fn offset_weekday(
     new_weekday: i64,
     change: Change,
 ) -> DateTime<FixedOffset> {
-    let curr_weekday: i64 = from_time.weekday().num_days_from_monday() as i64 + 1;
+    let curr_weekday = from_time.weekday().num_days_from_monday() as i64 + 1;
 
-    let mut offset_weeks: i64 = 0;
+    let mut offset_weeks = 0;
 
     if change.eq(&Change::Prev) && curr_weekday.le(&new_weekday) {
         offset_weeks = -1;
