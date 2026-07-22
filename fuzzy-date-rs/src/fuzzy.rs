@@ -2,7 +2,7 @@ use crate::convert;
 use crate::convert::Change;
 use crate::pattern::Pattern;
 use crate::token::{Token, UnitNames};
-use chrono::{DateTime, Datelike, Duration, FixedOffset};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, Timelike};
 use std::cmp;
 use std::cmp::{Ordering, PartialEq};
 use std::collections::{HashMap, HashSet};
@@ -45,7 +45,10 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     // FIRST/LAST RELATIVE OFFSETS
-    (&Pattern::FirstOfUnit, |c, v, r| c.offset_range_boundary(v.get_unit(0), Change::First, r)?.rule_time_reset(r)),
+    (&Pattern::FirstOfUnit, |c, v, r| {
+        let r = r.to_owned().apply_unit_inclusive(v.get_unit(0));
+        c.offset_range_boundary(v.get_unit(0), Change::First, &r)?.rule_time_reset(&r)
+    }),
     (&Pattern::FirstUnitOfMonth, |c, v, r| {
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::First)?
             .rule_time_reset(r)
@@ -62,7 +65,10 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
         c.offset_range_month(v.get_unit(0), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
     }),
-    (&Pattern::LastOfUnit, |c, v, r| c.offset_range_boundary(v.get_unit(0), Change::Last, r)?.rule_time_reset(r)),
+    (&Pattern::LastOfUnit, |c, v, r| {
+        let r = r.to_owned().apply_unit_inclusive(v.get_unit(0));
+        c.offset_range_boundary(v.get_unit(0), Change::Last, &r)?.rule_time_reset(&r)
+    }),
     (&Pattern::LastUnitOfMonthYear, |c, v, r| {
         c.offset_range_year_month(v.get_unit(0), v.get_int(2), v.get_int(1), Change::Last)?
             .rule_time_reset(r)
@@ -528,22 +534,55 @@ impl FuzzyDate {
 
     /// Move time to end/start of range
     fn offset_range_boundary(&self, target: TimeUnit, change: Change, rules: &Rules) -> Result<Self, ()> {
-        if target.eq(&TimeUnit::Weeks) {
-            let first_day = convert::offset_weekday(self.time, rules.week_start_day() as i64, Change::None);
-            let new_time = match change {
-                Change::First => first_day,
-                Change::Last => first_day + Duration::days(6),
-                _ => return Err(()),
-            };
-            return Ok(self.with_defaults(new_time));
-        }
+        match target {
+            TimeUnit::Hours => match change {
+                Change::First => self.time_hms(self.time.hour() as i64, 0, 0, 0),
+                Change::Last => self.time_hms(self.time.hour() as i64, 59, 59, 999),
+                _ => Err(()),
+            },
+            TimeUnit::Days => match change {
+                Change::First => self.time_hms(0, 0, 0, 0),
+                Change::Last => self.time_hms(23, 59, 59, 999),
+                _ => Err(()),
+            },
+            TimeUnit::Weeks => {
+                let week_start = rules.week_start_day() as i64;
 
-        if target.eq(&TimeUnit::Months) {
-            let new_time = convert::offset_range_year_month(self.time, self.time.year() as i64, self.month(), change)?;
-            return Ok(self.with_defaults(new_time));
-        }
+                let week_first = match self.weekday().eq(&week_start) {
+                    true => self.time,
+                    false => {
+                        let week_change = match rules.week_start_mon {
+                            true => Change::None,
+                            false => Change::Prev,
+                        };
+                        convert::offset_weekday(self.time, week_start, week_change)
+                    }
+                };
 
-        Err(())
+                let new_time = match change {
+                    Change::First => week_first,
+                    Change::Last => week_first + Duration::days(6),
+                    _ => return Err(()),
+                };
+
+                Ok(self.with_defaults(new_time))
+            }
+            TimeUnit::Months => {
+                let new_time =
+                    convert::offset_range_year_month(self.time, self.time.year() as i64, self.month(), change)?;
+                Ok(self.with_defaults(new_time))
+            }
+            TimeUnit::Years => {
+                let new_time = match change {
+                    Change::First => convert::date_ymd(self.time, self.time.year() as i64, 1, 1)?,
+                    Change::Last => convert::into_last_of_month(self.time, self.time.year() as i64, 12)?,
+                    _ => return Err(()),
+                };
+
+                Ok(self.with_defaults(new_time))
+            }
+            _ => Err(()),
+        }
     }
 
     /// Move time within unit range
@@ -655,6 +694,7 @@ impl FuzzyDate {
     }
 }
 
+#[derive(Clone)]
 struct Rules {
     date_years: bool,
     reset_time: bool,
@@ -662,6 +702,21 @@ struct Rules {
 }
 
 impl Rules {
+    fn apply_unit_inclusive(mut self, unit: TimeUnit) -> Self {
+        // Whenever time unit sets the time of day (inclusive), ensure
+        // that we do not reset the time of day at the end of movement.
+        // E.g. "end of day" would not reset time while "end of week"
+        // would.
+        self.reset_time = match unit {
+            TimeUnit::Seconds => false,
+            TimeUnit::Minutes => false,
+            TimeUnit::Hours => false,
+            TimeUnit::Days => false,
+            _ => self.reset_time,
+        };
+        self
+    }
+
     fn week_start_day(&self) -> i8 {
         match self.week_start_mon {
             true => 1,
@@ -694,7 +749,7 @@ pub(crate) fn convert(
 
     let mut ctx_vals = CallValues::from_tokens(tokens);
     let mut ctx_time =
-        FuzzyDate { time: current_time.to_owned(), default_year: call_sequence.get_default_year(&ctx_vals) };
+        FuzzyDate { default_year: call_sequence.get_default_year(&ctx_vals), time: current_time.to_owned() };
 
     let rules = Rules {
         date_years: ctx_time.default_year.is_none(),
