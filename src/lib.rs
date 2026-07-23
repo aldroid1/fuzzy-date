@@ -19,9 +19,6 @@ mod fuzzydate {
         first_weekday: WeekStartDay,
 
         #[pyo3(get)]
-        pub(crate) first_weekday_monday: bool,
-
-        #[pyo3(get)]
         pub(crate) patterns: HashMap<String, String>,
 
         #[pyo3(get)]
@@ -43,7 +40,6 @@ mod fuzzydate {
         pub fn new() -> Self {
             Self {
                 first_weekday: WeekStartDay::Monday,
-                first_weekday_monday: true,
                 patterns: HashMap::new(),
                 tokens: HashMap::new(),
                 units: UnitNames::get_defaults(&UnitGroup::Default),
@@ -120,19 +116,16 @@ mod fuzzydate {
             Ok(slf)
         }
 
-        /// Set first weekday to either Monday or Sunday
+        /// Change first weekday from Monday to Sunday
         ///
-        /// Defaults to Monday.
-        ///
-        /// :param use_monday: True for Monday, False for Sunday
-        /// :type use_monday: bool
+        /// :param use_sunday: True for Sunday, False for Monday
+        /// :type use_sunday: bool
         /// :rtype Self
         ///
-        pub fn set_first_weekday_monday(mut slf: PyRefMut<Self>, use_monday: bool) -> PyRefMut<Self> {
-            slf.first_weekday_monday = use_monday;
-            slf.first_weekday = match use_monday {
-                true => WeekStartDay::Monday,
-                false => WeekStartDay::Sunday,
+        pub fn set_first_weekday_sunday(mut slf: PyRefMut<Self>, use_sunday: bool) -> PyRefMut<Self> {
+            slf.first_weekday = match use_sunday {
+                true => WeekStartDay::Sunday,
+                false => WeekStartDay::Monday,
             };
             slf
         }
@@ -575,7 +568,7 @@ mod fuzzydate {
     ) -> PyResult<NaiveDate> {
         let fd = Py::new(py, FuzzyDate::new())?;
         let fd_ref = fd.borrow_mut(py);
-        FuzzyDate::set_first_weekday_monday(fd_ref, weekday_start_mon).to_date(source, today)
+        FuzzyDate::set_first_weekday_sunday(fd_ref, !weekday_start_mon).to_date(source, today)
     }
 
     /// Turn time string into datetime.datetime object
@@ -605,7 +598,7 @@ mod fuzzydate {
     ) -> PyResult<DateTime<FixedOffset>> {
         let fd = Py::new(py, FuzzyDate::new())?;
         let fd_ref = fd.borrow_mut(py);
-        FuzzyDate::set_first_weekday_monday(fd_ref, weekday_start_mon).to_datetime(source, now)
+        FuzzyDate::set_first_weekday_sunday(fd_ref, !weekday_start_mon).to_datetime(source, now)
     }
 
     /// Convert number of seconds into a time duration string

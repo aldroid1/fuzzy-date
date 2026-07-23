@@ -210,8 +210,8 @@ d.add_patterns(
 d.add_tokens(
     tokens: dict[str, int]) -> Self
     
-d.set_first_weekday_monday(
-    use_monday: bool) -> Self
+d.set_first_weekday_sunday(
+    use_sunday: bool) -> Self
     
 d.to_date(
     source: str,
