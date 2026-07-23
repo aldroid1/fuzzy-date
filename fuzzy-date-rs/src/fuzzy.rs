@@ -200,13 +200,13 @@ const FUZZY_PATTERNS: [(&Pattern, fn(FuzzyDate, &CallValues, &Rules) -> Result<F
             .rule_time_reset(r)
     }),
     // Thu, Dec 7th
-    (&Pattern::DateWdayMontDay, |c, v, r| {
+    (&Pattern::DateWdayMonthDay, |c, v, r| {
         c.date_ymd(c.rule_year(), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
             .rule_time_reset(r)
     }),
     // Thu, Dec 7th 2023
-    (&Pattern::DateWdayMontDayYear, |c, v, r| {
+    (&Pattern::DateWdayMonthDayYear, |c, v, r| {
         c.rule_allow_year_dates(r)?
             .date_ymd(v.get_int(3), v.get_int(1), v.get_int(2))?
             .ensure_wday(v.get_int(0))?
