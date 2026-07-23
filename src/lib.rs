@@ -63,7 +63,10 @@ mod fuzzydate {
         /// :raises ValueError
         /// :rtype Self
         ///
-        #[pyo3(text_signature = "(patterns: dict[str, Pattern]) -> None")]
+        #[pyo3(
+            signature=(patterns,),
+            text_signature = "(patterns: dict[str, Pattern])")
+        ]
         pub fn add_patterns(mut slf: PyRefMut<Self>, patterns: HashMap<String, String>) -> PyResult<PyRefMut<Self>> {
             for (pattern, value) in patterns {
                 if !fuzzy_date_rs::pattern::Pattern::is_valid(&value) {
@@ -102,7 +105,10 @@ mod fuzzydate {
         /// :raises ValueError
         /// :rtype Self
         ///
-        #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
+        #[pyo3(
+            signature=(tokens,),
+            text_signature = "(tokens: dict[str, int])")
+        ]
         pub fn add_tokens(mut slf: PyRefMut<Self>, tokens: HashMap<String, u32>) -> PyResult<PyRefMut<Self>> {
             for (keyword, gid) in tokens {
                 if Token::from_gid(gid).is_some() {
@@ -145,7 +151,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (source, today=None),
-            text_signature = "(source: str, today: datetime.date = None) -> datetime.date"
+            text_signature = "(source: str, today: datetime.date = None)"
         )]
         pub fn to_date(&self, source: &str, today: Option<Bound<PyDate>>) -> PyResult<NaiveDate> {
             let timestamp = python::into_date(today)?;
@@ -178,7 +184,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (source, now=None),
-            text_signature = "(source: str, now: datetime.datetime = None) -> datetime.datetime"
+            text_signature = "(source: str, now: datetime.datetime = None)"
         )]
         pub fn to_datetime(&self, source: &str, now: Option<Bound<PyDateTime>>) -> PyResult<DateTime<FixedOffset>> {
             let timestamp = python::into_datetime(now)?;
@@ -223,7 +229,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (seconds, units=None, max="w", min="s"),
-            text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
+            text_signature = "(seconds: float, units: Literal['long', 'short'] | None = None, max: Literal['s','sec','min','mins','h','hr','hrs','d','day','days','w','week','weeks'] = 'w', min: Literal['s','sec','min','mins','h','hr','hrs','d','day','days','w','week','weeks'] = 's')"
         )]
         fn to_duration(&self, seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
             let unit_group = units.unwrap_or("");
@@ -257,7 +263,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (source,),
-            text_signature = "(source: str) -> float"
+            text_signature = "(source: str)"
         )]
         fn to_seconds(&self, source: &str) -> PyResult<f64> {
             let config_patterns = self.patterns.to_owned();
@@ -558,7 +564,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         signature = (source, today=None, weekday_start_mon=true),
-        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True) -> datetime.date"
+        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
     )]
     fn to_date(
         py: Python<'_>,
@@ -588,7 +594,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         signature = (source, now=None, weekday_start_mon=true),
-        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True) -> datetime.date"
+        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
     )]
     pub fn to_datetime(
         py: Python<'_>,
@@ -629,7 +635,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
             signature = (seconds, units=None, max="w", min="s"),
-            text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
+            text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's')"
     )]
     pub fn to_duration(seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
         FuzzyDate::new().to_duration(seconds, units, max, min)
@@ -649,7 +655,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
             signature = (source,),
-            text_signature = "(source: str) -> float"
+            text_signature = "(source: str)"
     )]
     pub fn to_seconds(source: &str) -> PyResult<f64> {
         FuzzyDate::new().to_seconds(source)
