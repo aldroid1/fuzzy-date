@@ -95,25 +95,27 @@ fd.to_duration(3840.0, max='min', min='min') # 64min
 ```python
 import fuzzydate as fd
 
-fd.config.add_tokens({
+d = fd.FuzzyDate()
+
+d.add_tokens({
     'måndag': fd.token.WDAY_MON,
     'dagar': fd.token.LONG_UNIT_DAY,
 })
 
-fd.config.add_patterns({
+d.add_patterns({
     'nästa [wday]': fd.pattern.NEXT_WDAY,
 })
 
-assert fd.to_date('next Monday') == fd.to_date('nästa Måndag')
-assert fd.to_date('+5 days') == fd.to_date('+5 dagar')
-assert fd.to_seconds('+5 days') == fd.to_seconds('+5 dagar')
+assert fd.to_date('next Monday') == d.to_date('nästa Måndag')
+assert fd.to_date('+5 days') == d.to_date('+5 dagar')
+assert fd.to_seconds('+5 days') == d.to_seconds('+5 dagar')
 
-fd.config.units = {
+d.units = {
     fd.unit.DAY: 'dag',
     fd.unit.DAYS: 'dagar',
 }
 
-assert fd.to_duration(86400.0) == '1 dag'
+assert d.to_duration(86400.0) == '1 dag'
 ```
 
 ## Requirements
@@ -160,7 +162,7 @@ pip install fuzzy-date
 - Datetime `Sat Apr 01 12:00:00 2023`, `2023-04-01T12:00:00`, `2023-04-01T12:00.410`
 - Time of day w/wo `at`, `@`, `14:00`, `14:00:00`, `14:00:00.410`, `2pm`, `2:00 pm`
 
-## Methods
+## Interface
 
 ### Conversion
 
@@ -185,23 +187,48 @@ fuzzydate.to_seconds(
     source: str) -> float
 ```
 
-### Configuration
+### Constants
 
 ```python
-# Read-only
-fuzzydate.config.patterns: dict[str, str]
-fuzzydate.config.tokens: dict[str, int]
+fuzzydate.patterns: dict[str, str]
+fuzzydate.tokens: dict[str, int]
+```
+
+### Custom configuration
+
+```python
+d = fd.FuzzyDate()
 
 # Read-write
-fuzzydate.config.units: dict[str, str]
-fuzzydate.config.units_long: dict[str, str]
-fuzzydate.config.units_short: dict[str, str]
+d.units: dict[str, str]
+d.units_long: dict[str, str]
+d.units_short: dict[str, str]
 
-fuzzydate.config.add_patterns(
-    tokens: dict[str, str]) -> None
+d.add_patterns(
+    tokens: dict[str, str]) -> Self
+    
+d.add_tokens(
+    tokens: dict[str, int]) -> Self
+    
+d.set_first_weekday_sunday(
+    use_sunday: bool) -> Self
+    
+d.to_date(
+    source: str,
+    today: datetime.date = None) -> datetime.date
 
-fuzzydate.config.add_tokens(
-    tokens: dict[str, int]) -> None
+d.to_datetime(
+    source: str,
+    now: datetime.datetime = None) -> datetime.datetime
+    
+d.to_duration(
+    seconds: float, 
+    units: str = None, 
+    max: str = 'w', 
+    min: str = 's') -> str
+    
+d.to_seconds(
+    source: str) -> float
 ```
 
 ## Benchmarks
