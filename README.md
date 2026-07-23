@@ -7,9 +7,9 @@
 
 Python module to convert various time strings into datetime objects, written in Rust.
 
-## Date conversion
+## Conversion
 
-### Dates
+### Date
 
 ```python
 import fuzzydate as fd
@@ -25,7 +25,24 @@ fd.to_date('Sat April 1 2023')    # 2023-04-01
 # Anything invalid raises a ValueError
 
 fd.to_date('Sun April 1 2023')
-# ValueError: Unable to convert "Sun April 1 2023" into datetime
+# ValueError: Unable to convert "Sun April 1 2023" into date
+```
+
+### Datetime
+
+```python
+import fuzzydate as fd
+
+fd.to_date('@1680307200')              # 2023-04-01 00:00:00+00:00
+fd.to_date('2023-04-01 midnight')      # 2023-04-01 00:00:00+00:00
+fd.to_date('2023-04-01 2pm')           # 2023-04-01 14:00:00+00:00
+fd.to_date('2023-04-01 14:00')         # 2023-04-01 14:00:00+00:00
+fd.to_date('2023-04-01 14:00:00.410')  # 2023-04-01 14:00:00.410000+00:00
+
+# Anything invalid raises a ValueError
+
+fd.to_date('2023-04-01 25:00')
+# ValueError: Unable to convert "2023-04-01 25:00" into datetime
 ```
 
 ### Relative time
@@ -53,6 +70,36 @@ fd.to_datetime('end of year')        # 2023-12-31 00:00:00+00:00
 
 fd.to_datetime('next Summer')
 # ValueError: Unable to convert "next Summer" into datetime
+```
+
+### Relative range
+
+Ending datetime is always exclusive.
+
+```python
+import fuzzydate as fd
+
+# If current time is April 1st 2023 12PM UTC...
+
+fd.to_range('today')
+# 2023-04-01 00:00:00+00:00, 2023-04-02 00:00:00+00:00
+
+fd.to_range('last hour')
+# 2023-04-01 11:00:00+00:00, 2023-04-01 12:00:00+00:00
+
+fd.to_range('last 7 days')
+# 2023-03-25 00:00:00+00:00, 2023-04-01 00:00:00+00:00
+
+fd.to_range('prev 2 weeks')
+# 2023-03-13 00:00:00+00:00, 2023-03-27 00:00:00+00:00
+
+fd.to_range('last month')
+# 2023-03-01 00:00:00+00:00, 2023-04-01 00:00:00+00:00
+
+# Anything invalid raises a ValueError
+
+fd.to_range('last month midnight')
+# ValueError: Unable to convert "last month midnight" into datetime range
 ```
 
 ## Time duration
@@ -170,21 +217,31 @@ pip install fuzzy-date
 fuzzydate.to_date(
     source: str,
     today: datetime.date = None,
-    weekday_start_mon: bool = True) -> datetime.date
+    weekday_start_mon: bool = True,
+) -> datetime.date
 
 fuzzydate.to_datetime(
     source: str,
     now: datetime.datetime = None,
-    weekday_start_mon: bool = True) -> datetime.datetime
+    weekday_start_mon: bool = True,
+) -> datetime.datetime
     
 fuzzydate.to_duration(
     seconds: float, 
     units: str = None, 
     max: str = 'w', 
-    min: str = 's') -> str
+    min: str = 's',
+) -> str
+    
+fuzzydate.to_range(
+    source: str,
+    now: datetime.datetime = None,
+    weekday_start_mon: bool = True,
+) -> tuple[datetime.datetime, datetime.datetime]
     
 fuzzydate.to_seconds(
-    source: str) -> float
+    source: str,
+) -> float
 ```
 
 ### Constants
@@ -205,30 +262,42 @@ d.units_long: dict[str, str]
 d.units_short: dict[str, str]
 
 d.add_patterns(
-    tokens: dict[str, str]) -> Self
+    tokens: dict[str, str],
+) -> Self
     
 d.add_tokens(
-    tokens: dict[str, int]) -> Self
+    tokens: dict[str, int],
+) -> Self
     
 d.set_first_weekday_sunday(
-    use_sunday: bool) -> Self
+    use_sunday: bool,
+) -> Self
     
 d.to_date(
     source: str,
-    today: datetime.date = None) -> datetime.date
+    today: datetime.date = None,
+) -> datetime.date
 
 d.to_datetime(
     source: str,
-    now: datetime.datetime = None) -> datetime.datetime
+    now: datetime.datetime = None,
+) -> datetime.datetime
     
 d.to_duration(
     seconds: float, 
     units: str = None, 
     max: str = 'w', 
-    min: str = 's') -> str
-    
+    min: str = 's',
+) -> str
+  
+d.to_range(
+    source: str,
+    now: datetime.datetime = None,
+) -> tuple[datetime.datetime, datetime.datetime]
+      
 d.to_seconds(
-    source: str) -> float
+    source: str,
+) -> float
 ```
 
 ## Benchmarks

@@ -1,3 +1,5 @@
+pub(crate) mod range;
+
 use crate::convert;
 use crate::convert::Change;
 use crate::pattern::Pattern;
@@ -447,6 +449,11 @@ struct FuzzyDate {
 }
 
 impl FuzzyDate {
+    /// Get a new instance from Chrono datetime
+    fn from_time(time: DateTime<FixedOffset>) -> Self {
+        Self { default_year: None, time: time }
+    }
+
     /// Get a new instance of self with defaults
     fn with_defaults(&self, new_time: DateTime<FixedOffset>) -> Self {
         Self { default_year: self.default_year, time: new_time }
@@ -499,6 +506,16 @@ impl FuzzyDate {
         }
     }
 
+    /// Current hour
+    fn hour(&self) -> i64 {
+        self.time.hour() as i64
+    }
+
+    /// Current minute
+    fn minute(&self) -> i64 {
+        self.time.minute() as i64
+    }
+
     /// Current month
     fn month(&self) -> i64 {
         self.time.month() as i64
@@ -536,8 +553,8 @@ impl FuzzyDate {
     fn offset_range_boundary(&self, target: TimeUnit, change: Change, rules: &Rules) -> Result<Self, ()> {
         match target {
             TimeUnit::Hours => match change {
-                Change::First => self.time_hms(self.time.hour() as i64, 0, 0, 0),
-                Change::Last => self.time_hms(self.time.hour() as i64, 59, 59, 999),
+                Change::First => self.time_hms(self.hour(), 0, 0, 0),
+                Change::Last => self.time_hms(self.hour(), 59, 59, 999),
                 _ => Err(()),
             },
             TimeUnit::Days => match change {
@@ -678,6 +695,11 @@ impl FuzzyDate {
         }
     }
 
+    /// Current second
+    fn seconds(&self) -> i64 {
+        self.time.second() as i64
+    }
+
     /// Set time to specific hour, minute and second using 12-hour clock
     fn time_12h(&self, hour: i64, min: i64, sec: i64, meridiem: i64) -> Result<Self, ()> {
         Ok(self.with_defaults(convert::time_12h(self.time, hour, min, sec, meridiem)?))
@@ -734,6 +756,18 @@ pub(crate) fn convert(
     week_start_mon: bool,
     custom_patterns: HashMap<String, String>,
 ) -> Option<DateTime<FixedOffset>> {
+    let Some(call_sequence) = create_call_sequence(pattern, custom_patterns) else {
+        return None;
+    };
+
+    match parse_pattern(&call_sequence, tokens, current_time, week_start_mon) {
+        Some(v) => Some(v.time),
+        None => None,
+    }
+}
+
+/// Create call sequence from pattern
+fn create_call_sequence(pattern: &str, custom_patterns: HashMap<String, String>) -> Option<CallSequence> {
     let call_list = find_pattern_calls(&pattern, custom_patterns);
     let mut call_sequence = CallSequence::new(call_list);
 
@@ -747,25 +781,7 @@ pub(crate) fn convert(
 
     call_sequence.sort();
 
-    let mut ctx_vals = CallValues::from_tokens(tokens);
-    let mut ctx_time =
-        FuzzyDate { default_year: call_sequence.get_default_year(&ctx_vals), time: current_time.to_owned() };
-
-    let rules = Rules {
-        date_years: ctx_time.default_year.is_none(),
-        reset_time: call_sequence.should_reset_time(),
-        week_start_mon: week_start_mon,
-    };
-
-    for item in call_sequence.calls {
-        ctx_vals.position = item.value_offset;
-        ctx_time = match (item.callback)(ctx_time, &ctx_vals, &rules) {
-            Ok(value) => value,
-            Err(_) => return None,
-        };
-    }
-
-    Some(ctx_time.time)
+    Some(call_sequence)
 }
 
 /// Turn seconds into a duration string
@@ -961,6 +977,35 @@ fn is_pattern_match(searches: &Vec<String>, pattern: &String) -> bool {
     }
 
     false
+}
+
+/// Perform conversion against pattern and corresponding token values,
+/// relative to given datetime
+fn parse_pattern(
+    call_sequence: &CallSequence,
+    tokens: Vec<Token>,
+    current_time: &DateTime<FixedOffset>,
+    week_start_mon: bool,
+) -> Option<FuzzyDate> {
+    let mut ctx_vals = CallValues::from_tokens(tokens);
+    let mut ctx_time =
+        FuzzyDate { default_year: call_sequence.get_default_year(&ctx_vals), time: current_time.to_owned() };
+
+    let rules = Rules {
+        date_years: ctx_time.default_year.is_none(),
+        reset_time: call_sequence.should_reset_time(),
+        week_start_mon: week_start_mon,
+    };
+
+    for item in call_sequence.calls.iter() {
+        ctx_vals.position = item.value_offset;
+        ctx_time = match (item.callback)(ctx_time, &ctx_vals, &rules) {
+            Ok(value) => value,
+            Err(_) => return None,
+        };
+    }
+
+    Some(ctx_time)
 }
 
 #[cfg(test)]

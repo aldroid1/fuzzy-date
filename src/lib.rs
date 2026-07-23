@@ -12,7 +12,7 @@ use std::collections::HashMap;
 mod fuzzydate {
     use super::*;
     use fuzzy_date_rs::token::{Token, UnitGroup, UnitNames, WeekStartDay};
-    use fuzzy_date_rs::{FuzzyDate as FuzzyDateRs, FuzzySeconds};
+    use fuzzy_date_rs::{FuzzyDate as FuzzyDateRs, FuzzyRange, FuzzySeconds};
 
     #[pyclass]
     pub struct FuzzyDate {
@@ -151,7 +151,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (source, today=None),
-            text_signature = "(source: str, today: datetime.date = None)"
+            text_signature = "(source: str, today: datetime.date | None = None)"
         )]
         pub fn to_date(&self, source: &str, today: Option<Bound<PyDate>>) -> PyResult<NaiveDate> {
             let timestamp = python::into_date(today)?;
@@ -184,7 +184,7 @@ mod fuzzydate {
         ///
         #[pyo3(
             signature = (source, now=None),
-            text_signature = "(source: str, now: datetime.datetime = None)"
+            text_signature = "(source: str, now: datetime.datetime | None = None)"
         )]
         pub fn to_datetime(&self, source: &str, now: Option<Bound<PyDateTime>>) -> PyResult<DateTime<FixedOffset>> {
             let timestamp = python::into_datetime(now)?;
@@ -248,6 +248,43 @@ mod fuzzydate {
                 .to_duration(seconds);
 
             Ok(result)
+        }
+
+        /// Turn time string into range of datetime.datetime objects
+        ///
+        /// Current time (`now`) defaults to system time in UTC. If custom `now`
+        /// does not contain a timezone, UTC timezone will be used. Raises a
+        /// ValueError if the conversion fails.
+        ///
+        /// :param source: Source string
+        /// :type source: str
+        /// :param now: Current time. Defaults to system time in UTC.
+        /// :type now: datetime.datetime, optional
+        /// :raises ValueError
+        /// :rtype datetime.datetime
+        ///
+        #[pyo3(
+            signature = (source, now=None),
+            text_signature = "(source: str, now: datetime.datetime | None = None)"
+        )]
+        pub fn to_range(
+            &self,
+            source: &str,
+            now: Option<Bound<PyDateTime>>,
+        ) -> PyResult<(DateTime<FixedOffset>, DateTime<FixedOffset>)> {
+            let timestamp = python::into_datetime(now)?;
+
+            let result = FuzzyRange::from_time(timestamp)
+                .set_first_weekday(self.first_weekday.to_owned())
+                .set_custom_patterns(self.patterns.to_owned())
+                .set_custom_tokens(tokens_from_gids(&self.tokens))
+                .to_range(source);
+
+            if let Some(v) = result {
+                return Ok(v);
+            }
+
+            Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime range", source)))
         }
 
         /// Turn time duration string into seconds
@@ -564,7 +601,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         signature = (source, today=None, weekday_start_mon=true),
-        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
+        text_signature = "(source: str, today: datetime.date | None = None, weekday_start_mon: bool = True)"
     )]
     fn to_date(
         py: Python<'_>,
@@ -594,7 +631,7 @@ mod fuzzydate {
     #[pyfunction]
     #[pyo3(
         signature = (source, now=None, weekday_start_mon=true),
-        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True)"
+        text_signature = "(source: str, now: datetime.datetime | None = None, weekday_start_mon: bool = True)"
     )]
     pub fn to_datetime(
         py: Python<'_>,
@@ -639,6 +676,37 @@ mod fuzzydate {
     )]
     pub fn to_duration(seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
         FuzzyDate::new().to_duration(seconds, units, max, min)
+    }
+
+    /// Turn time string into range of datetime.datetime objects
+    ///
+    /// Current time (`now`) defaults to system time in UTC. If custom `now`
+    /// does not contain a timezone, UTC timezone will be used. Raises a
+    /// ValueError if the conversion fails.
+    ///
+    /// :param source: Source string
+    /// :type source: str
+    /// :param now: Current time. Defaults to system time in UTC.
+    /// :type now: datetime.datetime, optional
+    /// :param weekday_start_mon: Whether weeks begin on Monday instead of Sunday. Defaults to True.
+    /// :type weekday_start_mon: bool, optional, default True
+    /// :raises ValueError
+    /// :rtype tuplex[datetime.datetime, datetime.datetime]
+    ///
+    #[pyfunction]
+    #[pyo3(
+        signature = (source, now=None, weekday_start_mon=true),
+        text_signature = "(source: str, now: datetime.datetime | None = None, weekday_start_mon: bool = True)"
+    )]
+    pub fn to_range(
+        py: Python<'_>,
+        source: &str,
+        now: Option<Bound<PyDateTime>>,
+        weekday_start_mon: bool,
+    ) -> PyResult<(DateTime<FixedOffset>, DateTime<FixedOffset>)> {
+        let fd = Py::new(py, FuzzyDate::new())?;
+        let fd_ref = fd.borrow_mut(py);
+        FuzzyDate::set_first_weekday_sunday(fd_ref, !weekday_start_mon).to_range(source, now)
     }
 
     /// Turn time duration string into seconds
