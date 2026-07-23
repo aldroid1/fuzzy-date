@@ -8,38 +8,38 @@ pub const PATTERN_MIDNIGHT: &'static str = "midnight";
 pub const PATTERN_YESTERDAY: &'static str = "yesterday";
 pub const PATTERN_TOMORROW: &'static str = "tomorrow";
 
-pub const PATTERN_WDAY: &'static str = "[wday]";
+const PATTERN_WDAY: &'static str = "[wday]";
 pub const PATTERN_THIS_WDAY: &'static str = "this [wday]";
 pub const PATTERN_PREV_WDAY: &'static str = "prev [wday]";
-pub const PATTERN_LAST_WDAY: &'static str = "last [wday]";
+const PATTERN_LAST_WDAY: &'static str = "last [wday]";
 pub const PATTERN_NEXT_WDAY: &'static str = "next [wday]";
 
 pub const PATTERN_THIS_MONTH: &'static str = "this [month]";
 pub const PATTERN_PREV_MONTH: &'static str = "prev [month]";
-pub const PATTERN_LAST_MONTH: &'static str = "last [month]";
+const PATTERN_LAST_MONTH: &'static str = "last [month]";
 pub const PATTERN_NEXT_MONTH: &'static str = "next [month]";
 
 pub const PATTERN_THIS_LONG_UNIT: &'static str = "this [long_unit]";
 pub const PATTERN_PAST_LONG_UNIT: &'static str = "past [long_unit]";
 pub const PATTERN_PREV_LONG_UNIT: &'static str = "prev [long_unit]";
-pub const PATTERN_LAST_LONG_UNIT: &'static str = "last [long_unit]";
+const PATTERN_LAST_LONG_UNIT: &'static str = "last [long_unit]";
 pub const PATTERN_NEXT_LONG_UNIT: &'static str = "next [long_unit]";
 
 pub const PATTERN_MINUS_UNIT: &'static str = "-[int][unit]";
 pub const PATTERN_MINUS_SHORT_UNIT: &'static str = "-[int][short_unit]";
 pub const PATTERN_MINUS_LONG_UNIT: &'static str = "-[int] [long_unit]";
 
-pub const PATTERN_PAST_N_LONG_UNIT: &'static str = "past [int] [long_unit]";
+const PATTERN_PAST_N_LONG_UNIT: &'static str = "past [int] [long_unit]";
 pub const PATTERN_PREV_N_LONG_UNIT: &'static str = "prev [int] [long_unit]";
-pub const PATTERN_LAST_N_LONG_UNIT: &'static str = "last [int] [long_unit]";
+const PATTERN_LAST_N_LONG_UNIT: &'static str = "last [int] [long_unit]";
 
 pub const PATTERN_PLUS_UNIT: &'static str = "+[int][unit]";
 pub const PATTERN_PLUS_SHORT_UNIT: &'static str = "+[int][short_unit]";
 pub const PATTERN_PLUS_LONG_UNIT: &'static str = "+[int] [long_unit]";
 pub const PATTERN_UNIT_AGO: &'static str = "[int] [unit] ago";
 pub const PATTERN_LONG_UNIT_AGO: &'static str = "[int] [long_unit] ago";
-pub const PATTERN_LONG_UNIT_INT: &'static str = "[long_unit] [int]";
-pub const PATTERN_LONG_UNIT_INT_YEAR: &'static str = "[long_unit] [int] [year]";
+const PATTERN_LONG_UNIT_INT: &'static str = "[long_unit] [int]";
+const PATTERN_LONG_UNIT_INT_YEAR: &'static str = "[long_unit] [int] [year]";
 
 pub const PATTERN_FIRST_LONG_UNIT_OF_MONTH: &'static str = "first [long_unit] of [month]";
 pub const PATTERN_FIRST_LONG_UNIT_OF_MONTH_YEAR: &'static str = "first [long_unit] of [month] [year]";
@@ -55,34 +55,34 @@ pub const PATTERN_LAST_WDAY_OF_MONTH: &'static str = "last [wday] of [month]";
 pub const PATTERN_LAST_WDAY_OF_MONTH_YEAR: &'static str = "last [wday] of [month] [year]";
 pub const PATTERN_LAST_WDAY_OF_YEAR: &'static str = "last [wday] of [year]";
 
-pub const PATTERN_FIRST_OF_LONG_UNIT: &'static str = "first of [long_unit]";
-pub const PATTERN_FIRST_OF_THIS_LONG_UNIT: &'static str = "first of this [long_unit]";
-pub const PATTERN_LAST_OF_LONG_UNIT: &'static str = "last of [long_unit]";
-pub const PATTERN_LAST_OF_THIS_LONG_UNIT: &'static str = "last of this [long_unit]";
+const PATTERN_FIRST_OF_LONG_UNIT: &'static str = "first of [long_unit]";
+const PATTERN_FIRST_OF_THIS_LONG_UNIT: &'static str = "first of this [long_unit]";
+const PATTERN_LAST_OF_LONG_UNIT: &'static str = "last of [long_unit]";
+const PATTERN_LAST_OF_THIS_LONG_UNIT: &'static str = "last of this [long_unit]";
 
 pub const PATTERN_FIRST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "first [long_unit] of this [long_unit]";
 pub const PATTERN_LAST_LONG_UNIT_OF_THIS_LONG_UNIT: &'static str = "last [long_unit] of this [long_unit]";
 pub const PATTERN_FIRST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = "first [long_unit] of prev [long_unit]";
 pub const PATTERN_LAST_LONG_UNIT_OF_PREV_LONG_UNIT: &'static str = "last [long_unit] of prev [long_unit]";
-pub const PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "first [long_unit] of last [long_unit]";
-pub const PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "last [long_unit] of last [long_unit]";
+const PATTERN_FIRST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "first [long_unit] of last [long_unit]";
+const PATTERN_LAST_LONG_UNIT_OF_LAST_LONG_UNIT: &'static str = "last [long_unit] of last [long_unit]";
 pub const PATTERN_FIRST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "first [long_unit] of next [long_unit]";
 pub const PATTERN_LAST_LONG_UNIT_OF_NEXT_LONG_UNIT: &'static str = "last [long_unit] of next [long_unit]";
 
-pub const PATTERN_START_OF_LONG_UNIT: &'static str = "start of [long_unit]";
-pub const PATTERN_END_OF_LONG_UNIT: &'static str = "end of [long_unit]";
+const PATTERN_START_OF_LONG_UNIT: &'static str = "start of [long_unit]";
+const PATTERN_END_OF_LONG_UNIT: &'static str = "end of [long_unit]";
 
-pub const PATTERN_INTEGER: &'static str = "[int]";
-pub const PATTERN_MONTH: &'static str = "[month]";
-pub const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
+const PATTERN_INTEGER: &'static str = "[int]";
+const PATTERN_MONTH: &'static str = "[month]";
+const PATTERN_MONTH_YEAR: &'static str = "[month] [year]";
 
 pub const PATTERN_TIMESTAMP: &'static str = "[timestamp]";
 pub const PATTERN_TIMESTAMP_FLOAT: &'static str = "[timestamp].[int]";
 
-pub const PATTERN_YEAR: &'static str = "[year]";
+const PATTERN_YEAR: &'static str = "[year]";
 
-pub const PATTERN_YEAR_WEEK: &'static str = "[year]-W[int]";
-pub const PATTERN_YW: &'static str = "[year]W[int]";
+const PATTERN_YEAR_WEEK: &'static str = "[year]-W[int]";
+const PATTERN_YW: &'static str = "[year]W[int]";
 
 pub const PATTERN_DATE_YMD: &'static str = "[year]-[int]-[int]";
 pub const PATTERN_DATE_DMY: &'static str = "[int].[int].[year]";
@@ -90,56 +90,55 @@ pub const PATTERN_DATE_MDY: &'static str = "[int]/[int]/[year]";
 
 pub const PATTERN_DATE_MONTH_DAY: &'static str = "[month] [int]";
 pub const PATTERN_DATE_MONTH_DAY_YEAR: &'static str = "[month] [int] [year]";
-pub const PATTERN_DATE_MONTH_DAY_YEAR_DASHED: &'static str = "[month]-[int]-[year]";
+const PATTERN_DATE_MONTH_DAY_YEAR_DASHED: &'static str = "[month]-[int]-[year]";
 pub const PATTERN_DATE_MONTH_NTH: &'static str = "[month] [nth]";
 pub const PATTERN_DATE_MONTH_NTH_YEAR: &'static str = "[month] [nth] [year]";
 pub const PATTERN_DATE_DAY_MONTH: &'static str = "[int] [month]";
 pub const PATTERN_DATE_DAY_MONTH_YEAR: &'static str = "[int] [month] [year]";
-pub const PATTERN_DATE_DAY_MONTH_YEAR_DASHED: &'static str = "[int]-[month]-[year]";
+const PATTERN_DATE_DAY_MONTH_YEAR_DASHED: &'static str = "[int]-[month]-[year]";
 pub const PATTERN_DATE_NTH_MONTH: &'static str = "[nth] [month]";
 pub const PATTERN_DATE_NTH_MONTH_YEAR: &'static str = "[nth] [month] [year]";
-pub const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
-pub const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
-pub const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
+const PATTERN_DATE_NTH_OF_MONTH: &'static str = "[nth] of [month]";
+const PATTERN_DATE_NTH_OF_MONTH_YEAR: &'static str = "[nth] of [month] [year]";
+const PATTERN_DATE_YEAR_MONTH_DAY_DASHED: &'static str = "[year]-[month]-[int]";
 
-pub const PATTERN_DATE_WDAY_DAY_MONTH: &'static str = "[wday] [int] [month]";
-pub const PATTERN_DATE_WDAY_DAY_MONTH_YEAR: &'static str = "[wday] [int] [month] [year]";
-pub const PATTERN_DATE_WDAY_MONTH_DAY: &'static str = "[wday] [month] [int]";
-pub const PATTERN_DATE_WDAY_MONTH_DAY_HMS_YEAR: &'static str = "[wday] [month] [int] [int]:[int]:[int] [year]";
-pub const PATTERN_DATE_WDAY_MONTH_NTH: &'static str = "[wday] [month] [nth]";
-pub const PATTERN_DATE_WDAY_MONTH_NTH_YEAR: &'static str = "[wday] [month] [nth] [year]";
-pub const PATTERN_DATE_WDAY_MONTH_YEAR: &'static str = "[wday] [month] [int] [year]";
-pub const PATTERN_DATE_WDAY_NTH_MONTH: &'static str = "[wday] [nth] [month]";
-pub const PATTERN_DATE_WDAY_NTH_MONTH_YEAR: &'static str = "[wday] [nth] [month] [year]";
-pub const PATTERN_DATE_WDAY_NTH_OF_MONTH: &'static str = "[wday] [nth] of [month]";
-pub const PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR: &'static str = "[wday] [nth] of [month] [year]";
+const PATTERN_DATE_WDAY_DAY_MONTH: &'static str = "[wday] [int] [month]";
+const PATTERN_DATE_WDAY_DAY_MONTH_YEAR: &'static str = "[wday] [int] [month] [year]";
+const PATTERN_DATE_WDAY_MONTH_DAY: &'static str = "[wday] [month] [int]";
+const PATTERN_DATE_WDAY_MONTH_NTH: &'static str = "[wday] [month] [nth]";
+const PATTERN_DATE_WDAY_MONTH_NTH_YEAR: &'static str = "[wday] [month] [nth] [year]";
+const PATTERN_DATE_WDAY_MONTH_YEAR: &'static str = "[wday] [month] [int] [year]";
+const PATTERN_DATE_WDAY_NTH_MONTH: &'static str = "[wday] [nth] [month]";
+const PATTERN_DATE_WDAY_NTH_MONTH_YEAR: &'static str = "[wday] [nth] [month] [year]";
+const PATTERN_DATE_WDAY_NTH_OF_MONTH: &'static str = "[wday] [nth] of [month]";
+const PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR: &'static str = "[wday] [nth] of [month] [year]";
 
-pub const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
-pub const PATTERN_DATETIME_ISO_YMD_HMS_MS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int].[int]";
+const PATTERN_DATETIME_ISO_YMD_HMS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int]";
+const PATTERN_DATETIME_ISO_YMD_HMS_MS: &'static str = "[year]-[int]-[int]T[int]:[int]:[int].[int]";
 
 pub const PATTERN_DATETIME_YMD_HMS: &'static str = "[year]-[int]-[int] [int]:[int]:[int]";
 pub const PATTERN_DATETIME_YMD_HMS_MS: &'static str = "[year]-[int]-[int] [int]:[int]:[int].[int]";
 
-pub const PATTERN_TIME_HM: &'static str = "[int]:[int]";
-pub const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
-pub const PATTERN_TIME_HMS_MS: &'static str = "[int]:[int]:[int].[int]";
+const PATTERN_TIME_HM: &'static str = "[int]:[int]";
+const PATTERN_TIME_HMS: &'static str = "[int]:[int]:[int]";
+const PATTERN_TIME_HMS_MS: &'static str = "[int]:[int]:[int].[int]";
 pub const PATTERN_TIME_12H_H: &'static str = "[int] [meridiem]";
 pub const PATTERN_TIME_12H_HM: &'static str = "[int]:[int] [meridiem]";
-pub const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
+const PATTERN_TIME_12H_HOUR: &'static str = "[int][meridiem]";
 
-pub const PATTERN_TIME_AT_HM: &'static str = "at [int]:[int]";
-pub const PATTERN_TIME_AT_HMS: &'static str = "at [int]:[int]:[int]";
-pub const PATTERN_TIME_AT_HMS_MS: &'static str = "at [int]:[int]:[int].[int]";
-pub const PATTERN_TIME_AT_12H_H: &'static str = "at [int] [meridiem]";
-pub const PATTERN_TIME_AT_12H_HM: &'static str = "at [int]:[int] [meridiem]";
-pub const PATTERN_TIME_AT_12H_HOUR: &'static str = "at [int][meridiem]";
+const PATTERN_TIME_AT_HM: &'static str = "at [int]:[int]";
+const PATTERN_TIME_AT_HMS: &'static str = "at [int]:[int]:[int]";
+const PATTERN_TIME_AT_HMS_MS: &'static str = "at [int]:[int]:[int].[int]";
+const PATTERN_TIME_AT_12H_H: &'static str = "at [int] [meridiem]";
+const PATTERN_TIME_AT_12H_HM: &'static str = "at [int]:[int] [meridiem]";
+const PATTERN_TIME_AT_12H_HOUR: &'static str = "at [int][meridiem]";
 
-pub const PATTERN_TIME_AT_SIGN_HM: &'static str = "@ [int]:[int]";
-pub const PATTERN_TIME_AT_SIGN_HMS: &'static str = "@ [int]:[int]:[int]";
-pub const PATTERN_TIME_AT_SIGN_HMS_MS: &'static str = "@ [int]:[int]:[int].[int]";
-pub const PATTERN_TIME_AT_SIGN_12H_H: &'static str = "@ [int] [meridiem]";
-pub const PATTERN_TIME_AT_SIGN_12H_HM: &'static str = "@ [int]:[int] [meridiem]";
-pub const PATTERN_TIME_AT_SIGN_12H_HOUR: &'static str = "@ [int][meridiem]";
+const PATTERN_TIME_AT_SIGN_HM: &'static str = "@ [int]:[int]";
+const PATTERN_TIME_AT_SIGN_HMS: &'static str = "@ [int]:[int]:[int]";
+const PATTERN_TIME_AT_SIGN_HMS_MS: &'static str = "@ [int]:[int]:[int].[int]";
+const PATTERN_TIME_AT_SIGN_12H_H: &'static str = "@ [int] [meridiem]";
+const PATTERN_TIME_AT_SIGN_12H_HM: &'static str = "@ [int]:[int] [meridiem]";
+const PATTERN_TIME_AT_SIGN_12H_HOUR: &'static str = "@ [int][meridiem]";
 
 // TOKENS
 
@@ -280,8 +279,8 @@ pub enum Pattern {
 
     DateWdayDayMonth,
     DateWdayDayMonthYear,
-    DateWdayMontDay,
-    DateWdayMontDayYear,
+    DateWdayMonthDay,
+    DateWdayMonthDayYear,
 
     TimeHm,
     TimeHms,
@@ -415,10 +414,10 @@ fn patterns() -> [(Pattern, &'static str); 114] {
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_MONTH_YEAR),
         (Pattern::DateWdayDayMonth, PATTERN_DATE_WDAY_NTH_OF_MONTH),
         (Pattern::DateWdayDayMonthYear, PATTERN_DATE_WDAY_NTH_OF_MONTH_YEAR),
-        (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_DAY),
-        (Pattern::DateWdayMontDay, PATTERN_DATE_WDAY_MONTH_NTH),
-        (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
-        (Pattern::DateWdayMontDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
+        (Pattern::DateWdayMonthDay, PATTERN_DATE_WDAY_MONTH_DAY),
+        (Pattern::DateWdayMonthDay, PATTERN_DATE_WDAY_MONTH_NTH),
+        (Pattern::DateWdayMonthDayYear, PATTERN_DATE_WDAY_MONTH_NTH_YEAR),
+        (Pattern::DateWdayMonthDayYear, PATTERN_DATE_WDAY_MONTH_YEAR),
         (Pattern::TimeHm, PATTERN_TIME_HM),
         (Pattern::TimeHm, PATTERN_TIME_AT_HM),
         (Pattern::TimeHm, PATTERN_TIME_AT_SIGN_HM),
