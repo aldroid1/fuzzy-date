@@ -3,7 +3,7 @@ mod fuzzy;
 pub mod pattern;
 pub mod token;
 
-use crate::token::{Token, UnitNames, UnitGroup, WeekStartDay};
+use crate::token::{Token, UnitGroup, UnitNames, WeekStartDay};
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use std::collections::HashMap;
 
@@ -104,6 +104,60 @@ impl FuzzyDuration {
         unit_names.add_names(self.custom_units.to_owned());
 
         fuzzy::to_duration(seconds, &unit_names, &self.max_unit, &self.min_unit)
+    }
+}
+
+pub struct FuzzyRange {
+    current_time: DateTime<FixedOffset>,
+    custom_patterns: HashMap<String, String>,
+    custom_tokens: HashMap<String, Token>,
+    first_weekday: WeekStartDay,
+}
+
+impl FuzzyRange {
+    pub fn from_now() -> Self {
+        Self::from_time(Utc::now().fixed_offset())
+    }
+
+    pub fn from_rfc3339(time: &str) -> Self {
+        let time = DateTime::parse_from_rfc3339(time).expect("Invalid RFC 3339 time");
+        Self::from_time(time)
+    }
+
+    pub fn from_time(current_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            current_time: current_time,
+            custom_patterns: HashMap::new(),
+            custom_tokens: HashMap::new(),
+            first_weekday: WeekStartDay::Monday,
+        }
+    }
+
+    pub fn set_custom_patterns(mut self, custom: HashMap<String, String>) -> Self {
+        self.custom_patterns = custom;
+        self
+    }
+
+    pub fn set_custom_tokens(mut self, custom: HashMap<String, Token>) -> Self {
+        self.custom_tokens = custom;
+        self
+    }
+
+    pub fn set_first_weekday(mut self, weekday: WeekStartDay) -> Self {
+        self.first_weekday = weekday;
+        self
+    }
+
+    /// Tokenize source string and then convert it into a range with start and end date
+    pub fn to_range(&self, source: &str) -> Option<(DateTime<FixedOffset>, DateTime<FixedOffset>)> {
+        let (pattern, tokens) = token::tokenize(&source, self.custom_tokens.to_owned());
+        fuzzy::range::convert_to_range(
+            &pattern,
+            tokens,
+            &self.current_time,
+            self.first_weekday.eq(&WeekStartDay::Monday),
+            self.custom_patterns.to_owned(),
+        )
     }
 }
 
