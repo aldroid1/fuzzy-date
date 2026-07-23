@@ -7,7 +7,7 @@
 
 Python module to convert various time strings into datetime objects, written in Rust.
 
-## Date conversion
+## Conversion
 
 ### Date
 
@@ -26,6 +26,23 @@ fd.to_date('Sat April 1 2023')    # 2023-04-01
 
 fd.to_date('Sun April 1 2023')
 # ValueError: Unable to convert "Sun April 1 2023" into date
+```
+
+### Datetime
+
+```python
+import fuzzydate as fd
+
+fd.to_date('@1680307200')              # 2023-04-01 00:00:00+00:00
+fd.to_date('2023-04-01 midnight')      # 2023-04-01 00:00:00+00:00
+fd.to_date('2023-04-01 2pm')           # 2023-04-01 14:00:00+00:00
+fd.to_date('2023-04-01 14:00')         # 2023-04-01 14:00:00+00:00
+fd.to_date('2023-04-01 14:00:00.410')  # 2023-04-01 14:00:00.410000+00:00
+
+# Anything invalid raises a ValueError
+
+fd.to_date('2023-04-01 25:00')
+# ValueError: Unable to convert "2023-04-01 25:00" into datetime
 ```
 
 ### Relative time
@@ -57,7 +74,7 @@ fd.to_datetime('next Summer')
 
 ### Relative range
 
-Ending datetimes are exclusive.
+Ending time is always exclusive.
 
 ```python
 import fuzzydate as fd
