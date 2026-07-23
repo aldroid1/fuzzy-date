@@ -2,111 +2,282 @@ mod python;
 
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use fuzzy_date_rs::FuzzyDuration;
+use fuzzy_date_rs::token::Token;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDate, PyDateTime};
 use std::collections::HashMap;
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 mod fuzzydate {
     use super::*;
-    use crate::fuzzydate::__core__::Config;
     use fuzzy_date_rs::token::{Token, UnitGroup, UnitNames, WeekStartDay};
-    use fuzzy_date_rs::{FuzzyDate, FuzzySeconds};
+    use fuzzy_date_rs::{FuzzyDate as FuzzyDateRs, FuzzySeconds};
 
-    const ATTR_CONFIG: &'static str = "config";
+    #[pyclass]
+    pub struct FuzzyDate {
+        first_weekday: WeekStartDay,
 
-    #[pymodule]
-    mod __core__ {
-        use super::*;
-        use fuzzy_date_rs::token::Token;
+        #[pyo3(get)]
+        pub(crate) first_weekday_monday: bool,
 
-        #[pyclass]
-        pub(crate) struct Config {
-            #[pyo3(get)]
-            pub(crate) patterns: HashMap<String, String>,
+        #[pyo3(get)]
+        pub(crate) patterns: HashMap<String, String>,
 
-            #[pyo3(get)]
-            pub(crate) tokens: HashMap<String, u32>,
+        #[pyo3(get)]
+        pub(crate) tokens: HashMap<String, u32>,
 
-            #[pyo3(get, set)]
-            pub(crate) units: HashMap<String, String>,
+        #[pyo3(get, set)]
+        pub(crate) units: HashMap<String, String>,
 
-            #[pyo3(get, set)]
-            pub(crate) units_long: HashMap<String, String>,
+        #[pyo3(get, set)]
+        pub(crate) units_long: HashMap<String, String>,
 
-            #[pyo3(get, set)]
-            pub(crate) units_short: HashMap<String, String>,
+        #[pyo3(get, set)]
+        pub(crate) units_short: HashMap<String, String>,
+    }
+
+    #[pymethods]
+    impl FuzzyDate {
+        #[new]
+        pub fn new() -> Self {
+            Self {
+                first_weekday: WeekStartDay::Monday,
+                first_weekday_monday: true,
+                patterns: HashMap::new(),
+                tokens: HashMap::new(),
+                units: UnitNames::get_defaults(&UnitGroup::Default),
+                units_long: UnitNames::get_defaults(&UnitGroup::Long),
+                units_short: UnitNames::get_defaults(&UnitGroup::Short),
+            }
         }
 
-        #[pymethods]
-        impl Config {
-            /// Add custom patterns that should replace default patterns, e.g.
-            /// in order to localize English wording
-            ///
-            /// All strings are lowercased by default and merged with any previously
-            /// added patterns. Colliding patterns will be replaced silently. Raises
-            /// a ValueError if an unsupported pattern value is used, or if different
-            /// amount of variables are used in the custom pattern.
-            ///
-            /// :param patterns: Map of patterns where keys are new patterns to identify and values
-            ///                  are existing patterns to interpret them as. See
-            ///                  fuzzydate.pattern.* constants for accepted values.
-            /// :type source: dict[str, str]
-            /// :raises ValueError
-            /// :rtype None
-            ///
-            #[pyo3(text_signature = "(patterns: dict[str, str]) -> None")]
-            fn add_patterns(&mut self, patterns: HashMap<String, String>) -> PyResult<()> {
-                for (pattern, value) in patterns {
-                    if !fuzzy_date_rs::pattern::Pattern::is_valid(&value) {
-                        return Err(PyValueError::new_err(format!(
-                            "Pattern \"{}\" value \"{}\" does not exist",
-                            pattern, value,
-                        )));
-                    }
-
-                    let vars_in_custom: usize = pattern.split("[").count() - 1;
-                    let vars_in_value: usize = value.split("[").count() - 1;
-
-                    if vars_in_custom != vars_in_value {
-                        return Err(PyValueError::new_err(format!(
-                            "Pattern \"{}\" and \"{}\" have different variables",
-                            pattern, value,
-                        )));
-                    }
-
-                    self.patterns.insert(pattern.to_lowercase(), value);
+        /// Add custom patterns that should replace default patterns, e.g.
+        /// in order to localize English wording
+        ///
+        /// All strings are lowercased by default and merged with any previously
+        /// added patterns. Colliding patterns will be replaced silently. Raises
+        /// a ValueError if an unsupported pattern value is used, or if different
+        /// amount of variables are used in the custom pattern.
+        ///
+        /// :param patterns: Map of patterns where keys are new patterns to identify and values
+        ///                  are existing patterns to interpret them as. See
+        ///                  fuzzydate.pattern.* constants for accepted values.
+        /// :type source: dict[str, str]
+        /// :raises ValueError
+        /// :rtype Self
+        ///
+        #[pyo3(text_signature = "(patterns: dict[str, Pattern]) -> None")]
+        pub fn add_patterns(mut slf: PyRefMut<Self>, patterns: HashMap<String, String>) -> PyResult<PyRefMut<Self>> {
+            for (pattern, value) in patterns {
+                if !fuzzy_date_rs::pattern::Pattern::is_valid(&value) {
+                    return Err(PyValueError::new_err(format!(
+                        "Pattern \"{}\" value \"{}\" does not exist",
+                        pattern, value,
+                    )));
                 }
 
-                Ok(())
+                let vars_in_custom: usize = pattern.split("[").count() - 1;
+                let vars_in_value: usize = value.split("[").count() - 1;
+
+                if vars_in_custom != vars_in_value {
+                    return Err(PyValueError::new_err(format!(
+                        "Pattern \"{}\" and \"{}\" have different variables",
+                        pattern, value,
+                    )));
+                }
+
+                slf.patterns.insert(pattern.to_lowercase(), value);
             }
 
-            /// Add text strings to identify as tokens
-            ///
-            /// All strings are lowercased by default and merged with any previously
-            /// added tokens. Overlapping keys will be replaced. Raises a ValueError
-            /// if an unsupported token value is used.
-            ///
-            /// :param tokens: Map of tokens where keys are new strings to identify and values are
-            ///                token values to classify them as. See fuzzydate.token.* constants
-            ///                for accepted values.
-            /// :type source: dict[str, int]
-            /// :raises ValueError
-            /// :rtype None
-            ///
-            #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
-            fn add_tokens(&mut self, tokens: HashMap<String, u32>) -> PyResult<()> {
-                for (keyword, gid) in tokens {
-                    if Token::from_gid(gid).is_some() {
-                        self.tokens.insert(keyword.to_lowercase(), gid);
-                        continue;
-                    }
+            Ok(slf)
+        }
 
-                    return Err(PyValueError::new_err(format!("Token \"{}\" value {} does not exist", keyword, gid,)));
+        /// Add text strings to identify as tokens
+        ///
+        /// All strings are lowercased by default and merged with any previously
+        /// added tokens. Overlapping keys will be replaced. Raises a ValueError
+        /// if an unsupported token value is used.
+        ///
+        /// :param tokens: Map of tokens where keys are new strings to identify and values are
+        ///                token values to classify them as. See fuzzydate.token.* constants
+        ///                for accepted values.
+        /// :type source: dict[str, int]
+        /// :raises ValueError
+        /// :rtype Self
+        ///
+        #[pyo3(text_signature = "(tokens: dict[str, int]) -> None")]
+        pub fn add_tokens(mut slf: PyRefMut<Self>, tokens: HashMap<String, u32>) -> PyResult<PyRefMut<Self>> {
+            for (keyword, gid) in tokens {
+                if Token::from_gid(gid).is_some() {
+                    slf.tokens.insert(keyword.to_lowercase(), gid);
+                    continue;
                 }
 
-                Ok(())
+                return Err(PyValueError::new_err(format!("Token \"{}\" value {} does not exist", keyword, gid,)));
+            }
+
+            Ok(slf)
+        }
+
+        /// Set first weekday to either Monday or Sunday
+        ///
+        /// Defaults to Monday.
+        ///
+        /// :param use_monday: True for Monday, False for Sunday
+        /// :type use_monday: bool
+        /// :rtype Self
+        ///
+        pub fn set_first_weekday_monday(mut slf: PyRefMut<Self>, use_monday: bool) -> PyRefMut<Self> {
+            slf.first_weekday_monday = use_monday;
+            slf.first_weekday = match use_monday {
+                true => WeekStartDay::Monday,
+                false => WeekStartDay::Sunday,
+            };
+            slf
+        }
+
+        /// Turn time string into datetime.date object
+        ///
+        /// Current date (`today`) defaults to system date in UTC. Time of day
+        /// is assumed to be midnight in case of any time adjustments. Raises
+        /// a ValueError if the conversion fails.
+        ///
+        /// :param source: Source string
+        /// :type source: str
+        /// :param today: Current date. Defaults to system date in UTC.
+        /// :type today: datetime.date, optional
+        /// :raises ValueError
+        /// :rtype datetime.date
+        ///
+        #[pyo3(
+            signature = (source, today=None),
+            text_signature = "(source: str, today: datetime.date = None) -> datetime.date"
+        )]
+        pub fn to_date(&self, source: &str, today: Option<Bound<PyDate>>) -> PyResult<NaiveDate> {
+            let timestamp = python::into_date(today)?;
+
+            let result = FuzzyDateRs::from_time(timestamp)
+                .set_first_weekday(self.first_weekday.to_owned())
+                .set_custom_patterns(self.patterns.to_owned())
+                .set_custom_tokens(tokens_from_gids(&self.tokens))
+                .to_datetime(source);
+
+            if let Some(v) = result {
+                return Ok(v.date_naive());
+            }
+
+            Err(PyValueError::new_err(format!("Unable to convert \"{}\" into date", source)))
+        }
+
+        /// Turn time string into datetime.datetime object
+        ///
+        /// Current time (`now`) defaults to system time in UTC. If custom `now`
+        /// does not contain a timezone, UTC timezone will be used. Raises a
+        /// ValueError if the conversion fails.
+        ///
+        /// :param source: Source string
+        /// :type source: str
+        /// :param now: Current time. Defaults to system time in UTC.
+        /// :type now: datetime.datetime, optional
+        /// :raises ValueError
+        /// :rtype datetime.datetime
+        ///
+        #[pyo3(
+            signature = (source, now=None),
+            text_signature = "(source: str, now: datetime.datetime = None) -> datetime.datetime"
+        )]
+        pub fn to_datetime(&self, source: &str, now: Option<Bound<PyDateTime>>) -> PyResult<DateTime<FixedOffset>> {
+            let timestamp = python::into_datetime(now)?;
+
+            let result = FuzzyDateRs::from_time(timestamp)
+                .set_first_weekday(self.first_weekday.to_owned())
+                .set_custom_patterns(self.patterns.to_owned())
+                .set_custom_tokens(tokens_from_gids(&self.tokens))
+                .to_datetime(source);
+
+            if let Some(v) = result {
+                return Ok(v);
+            }
+
+            Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime", source)))
+        }
+
+        /// Convert number of seconds into a time duration string
+        ///
+        /// Build a time duration string from number of seconds, e.g. 93600.0 is
+        /// converted to "1d 2h". Maximum supported unit is weeks, minimum supported
+        /// unit is seconds. Units that have no value (are 0) are not shown.
+        ///
+        /// Returns an empty string if number of seconds is not enough for the
+        /// lowest shown unit.
+        ///
+        /// :param source: Number of seconds
+        /// :type source: float
+        /// :param unit: Unit type to use. Possible values are "long", "short" and None. Defaults to
+        ///              None. For example, "long" would display seconds as "seconds", short as "s" and
+        ///              default as "sec".
+        /// :type unit: str, optional
+        /// :param max: Maximum unit to show, defaults 'w' for weeks. Possible values are "s/sec" for
+        ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
+        ///             and "w/week/weeks" for weeks.
+        /// :type max: str, optional, default "w"
+        /// :param min: Minimum unit to show, defaults 's' for seconds. Possible values are "s/sec" for
+        ///             seconds, "min/mins" for minutes, "h/hr/hrs" for hours, "d/day/days" for days
+        ///             and "w/week/weeks" for weeks.
+        /// :type min: str, optional, default "s"
+        /// :rtype str
+        ///
+        #[pyo3(
+            signature = (seconds, units=None, max="w", min="s"),
+            text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
+        )]
+        fn to_duration(&self, seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
+            let unit_group = units.unwrap_or("");
+
+            let custom_units = match unit_group {
+                "short" => self.units_short.to_owned(),
+                "long" => self.units_long.to_owned(),
+                _ => self.units.to_owned(),
+            };
+
+            let result = FuzzyDuration::new()
+                .set_default_units(UnitGroup::from_str(unit_group))
+                .set_custom_units(custom_units)
+                .set_min_unit(min)
+                .set_max_unit(max)
+                .to_duration(seconds);
+
+            Ok(result)
+        }
+
+        /// Turn time duration string into seconds
+        ///
+        /// Only accepts exact time duration strings, such as "1h" rather than
+        /// "1 hour ago". Raises a ValueError if anything else than an exact
+        /// length of time is provided, or if years or months have been included.
+        ///
+        /// :param source: Source string
+        /// :type source: str
+        /// :raises ValueError
+        /// :rtype float
+        ///
+        #[pyo3(
+            signature = (source,),
+            text_signature = "(source: str) -> float"
+        )]
+        fn to_seconds(&self, source: &str) -> PyResult<f64> {
+            let config_patterns = self.patterns.to_owned();
+            let config_tokens = tokens_from_gids(&self.tokens);
+
+            let result = FuzzySeconds::new()
+                .set_custom_patterns(config_patterns)
+                .set_custom_tokens(config_tokens)
+                .to_seconds(source);
+
+            match result {
+                Ok(v) => Ok(v),
+                Err(e) => Err(PyValueError::new_err(e)),
             }
         }
     }
@@ -393,39 +564,18 @@ mod fuzzydate {
     ///
     #[pyfunction]
     #[pyo3(
-        pass_module,
         signature = (source, today=None, weekday_start_mon=true),
         text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True) -> datetime.date"
     )]
     fn to_date(
-        module: &Bound<'_, PyModule>,
-        py: Python,
+        py: Python<'_>,
         source: &str,
         today: Option<Bound<PyDate>>,
         weekday_start_mon: bool,
     ) -> PyResult<NaiveDate> {
-        let date_value = &python::into_date(py, today)?;
-        let config_patterns = read_config(module)?.patterns;
-        let config_tokens = read_tokens(module)?;
-
-        py.detach(move || {
-            let week_start_day = match weekday_start_mon {
-                true => WeekStartDay::Monday,
-                false => WeekStartDay::Sunday,
-            };
-
-            let result = FuzzyDate::from_time(date_value.to_owned())
-                .set_first_weekday(week_start_day)
-                .set_custom_patterns(config_patterns)
-                .set_custom_tokens(config_tokens)
-                .to_datetime(source);
-
-            if let Some(v) = result {
-                return Ok(v.date_naive());
-            }
-
-            Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime", source)))
-        })
+        let fd = Py::new(py, FuzzyDate::new())?;
+        let fd_ref = fd.borrow_mut(py);
+        FuzzyDate::set_first_weekday_monday(fd_ref, weekday_start_mon).to_date(source, today)
     }
 
     /// Turn time string into datetime.datetime object
@@ -442,42 +592,20 @@ mod fuzzydate {
     /// :type weekday_start_mon: bool, optional, default True
     /// :raises ValueError
     /// :rtype datetime.datetime
-    ///
     #[pyfunction]
     #[pyo3(
-        pass_module,
         signature = (source, now=None, weekday_start_mon=true),
-        text_signature = "(source: str, now: datetime.datetime = None, weekday_start_mon: bool = True) -> datetime.datetime"
+        text_signature = "(source: str, today: datetime.date = None, weekday_start_mon: bool = True) -> datetime.date"
     )]
-    fn to_datetime(
-        module: &Bound<'_, PyModule>,
-        py: Python,
+    pub fn to_datetime(
+        py: Python<'_>,
         source: &str,
         now: Option<Bound<PyDateTime>>,
         weekday_start_mon: bool,
     ) -> PyResult<DateTime<FixedOffset>> {
-        let date_value = &python::into_datetime(py, now)?;
-        let config_patterns = read_config(module)?.patterns;
-        let config_tokens = read_tokens(module)?;
-
-        py.detach(move || {
-            let week_start_day = match weekday_start_mon {
-                true => WeekStartDay::Monday,
-                false => WeekStartDay::Sunday,
-            };
-
-            let result = FuzzyDate::from_time(date_value.to_owned())
-                .set_first_weekday(week_start_day)
-                .set_custom_patterns(config_patterns)
-                .set_custom_tokens(config_tokens)
-                .to_datetime(source);
-
-            if let Some(v) = result {
-                return Ok(v);
-            }
-
-            Err(PyValueError::new_err(format!("Unable to convert \"{}\" into datetime", source)))
-        })
+        let fd = Py::new(py, FuzzyDate::new())?;
+        let fd_ref = fd.borrow_mut(py);
+        FuzzyDate::set_first_weekday_monday(fd_ref, weekday_start_mon).to_datetime(source, now)
     }
 
     /// Convert number of seconds into a time duration string
@@ -507,36 +635,11 @@ mod fuzzydate {
     ///
     #[pyfunction]
     #[pyo3(
-        pass_module,
-        signature = (seconds, units=None, max="w", min="s"),
-        text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
+            signature = (seconds, units=None, max="w", min="s"),
+            text_signature = "(seconds: float, units: str = None, max: str = 'w', min: str = 's') -> str"
     )]
-    fn to_duration(
-        module: &Bound<'_, PyModule>,
-        py: Python,
-        seconds: f64,
-        units: Option<&str>,
-        max: &str,
-        min: &str,
-    ) -> PyResult<String> {
-        let unit_group = units.unwrap_or("");
-
-        let custom_units = match unit_group {
-            "short" => read_config(module)?.units_short,
-            "long" => read_config(module)?.units_long,
-            _ => read_config(module)?.units,
-        };
-
-        py.detach(move || {
-            let result = FuzzyDuration::new()
-                .set_default_units(UnitGroup::from_str(unit_group))
-                .set_custom_units(custom_units)
-                .set_min_unit(min)
-                .set_max_unit(max)
-                .to_duration(seconds);
-
-            Ok(result)
-        })
+    pub fn to_duration(seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
+        FuzzyDate::new().to_duration(seconds, units, max, min)
     }
 
     /// Turn time duration string into seconds
@@ -552,68 +655,28 @@ mod fuzzydate {
     ///
     #[pyfunction]
     #[pyo3(
-        pass_module,
-        signature = (source,),
-        text_signature = "(source: str) -> float"
+            signature = (source,),
+            text_signature = "(source: str) -> float"
     )]
-    fn to_seconds(module: &Bound<'_, PyModule>, py: Python, source: &str) -> PyResult<f64> {
-        let config_patterns = read_config(module)?.patterns;
-        let config_tokens = read_tokens(module)?;
-
-        py.detach(move || {
-            let result = FuzzySeconds::new()
-                .set_custom_patterns(config_patterns)
-                .set_custom_tokens(config_tokens)
-                .to_seconds(source);
-
-            match result {
-                Ok(v) => Ok(v),
-                Err(e) => Err(PyValueError::new_err(e)),
-            }
-        })
+    pub fn to_seconds(source: &str) -> PyResult<f64> {
+        FuzzyDate::new().to_seconds(source)
     }
 
     #[pymodule_init]
-    fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        module.add(
-            ATTR_CONFIG,
-            Config {
-                patterns: HashMap::new(),
-                tokens: HashMap::new(),
-                units: UnitNames::get_defaults(&UnitGroup::Default),
-                units_long: UnitNames::get_defaults(&UnitGroup::Long),
-                units_short: UnitNames::get_defaults(&UnitGroup::Short),
-            },
-        )?;
-
+    fn init(_module: &Bound<'_, PyModule>) -> PyResult<()> {
         Ok(())
     }
+}
 
-    /// Read config registered to Python module
-    fn read_config(module: &Bound<'_, PyModule>) -> Result<Config, PyErr> {
-        let config = &module.as_borrowed().getattr(ATTR_CONFIG)?.cast::<Config>()?.borrow();
+/// Turn custom GID tokens registered with Python into internal tokens
+fn tokens_from_gids(tokens: &HashMap<String, u32>) -> HashMap<String, Token> {
+    let mut result = HashMap::new();
 
-        Ok(Config {
-            patterns: config.patterns.clone(),
-            tokens: config.tokens.clone(),
-            units: config.units.clone(),
-            units_long: config.units_long.clone(),
-            units_short: config.units_short.clone(),
-        })
-    }
-
-    /// Read custom tokens registered to Python module, and return
-    /// them as tokens the tokenization (currently) accepts
-    fn read_tokens(module: &Bound<'_, PyModule>) -> Result<HashMap<String, Token>, PyErr> {
-        let config = read_config(module)?;
-        let mut result = HashMap::new();
-
-        for (keyword, token_gid) in config.tokens.to_owned() {
-            if let Some(token) = Token::from_gid(token_gid) {
-                result.insert(keyword, token);
-            }
+    for (keyword, token_gid) in tokens {
+        if let Some(token) = Token::from_gid(token_gid.to_owned()) {
+            result.insert(keyword.to_owned(), token);
         }
-
-        Ok(result)
     }
+
+    result
 }

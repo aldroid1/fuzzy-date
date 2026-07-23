@@ -305,7 +305,7 @@ impl Token {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum WeekStartDay {
     Monday,
     Sunday,
