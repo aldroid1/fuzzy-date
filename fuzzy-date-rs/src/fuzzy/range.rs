@@ -13,6 +13,13 @@ struct RangeValue {
 }
 
 impl RangeValue {
+    fn end_first_of_month(mut self) -> Result<Self, ()> {
+        self.end_time = self
+            .end_time
+            .offset_range_month(TimeUnit::Days, self.end_time.month(), Change::First)?;
+        Ok(self)
+    }
+
     fn end_move(mut self, unit: TimeUnit, amount: i64) -> Result<Self, ()> {
         self.end_time = self.end_time.offset_unit_keyword(unit, amount, &self.rules)?;
         Ok(self)
@@ -38,13 +45,13 @@ impl RangeValue {
 
     fn reset_time_all(mut self) -> Result<Self, ()> {
         self.start_time = self.start_time.time_hms(0, 0, 0, 0)?;
-        self.end_time = self.end_time.time_hms(23, 59, 59, 999)?;
+        self.end_time = self.end_time.time_hms(0, 0, 0, 0)?;
         Ok(self)
     }
 
     fn reset_time_min_sec_ms(mut self) -> Result<Self, ()> {
         self.start_time = self.start_time.time_hms(self.start_time.hour(), 0, 0, 0)?;
-        self.end_time = self.end_time.time_hms(self.end_time.hour(), 59, 59, 999)?;
+        self.end_time = self.end_time.time_hms(self.end_time.hour(), 0, 0, 0)?;
         Ok(self)
     }
 
@@ -54,7 +61,7 @@ impl RangeValue {
                 .time_hms(self.start_time.hour(), self.start_time.minute(), self.start_time.seconds(), 0)?;
         self.end_time =
             self.end_time
-                .time_hms(self.end_time.hour(), self.end_time.minute(), self.end_time.seconds(), 999)?;
+                .time_hms(self.end_time.hour(), self.end_time.minute(), self.end_time.seconds(), 0)?;
         Ok(self)
     }
 
@@ -62,7 +69,7 @@ impl RangeValue {
         self.start_time = self
             .start_time
             .time_hms(self.start_time.hour(), self.start_time.minute(), 0, 0)?;
-        self.end_time = self.end_time.time_hms(self.end_time.hour(), self.end_time.minute(), 59, 999)?;
+        self.end_time = self.end_time.time_hms(self.end_time.hour(), self.end_time.minute(), 0, 0)?;
         Ok(self)
     }
 
@@ -125,63 +132,77 @@ pub(crate) fn convert_to_range(
 /// Turn call pattern into a range
 fn parse_call_pattern(call: CallPattern, r: RangeValue, v: &mut CallValues) -> Result<RangeValue, ()> {
     match call.pattern_type {
-        Pattern::Today | Pattern::Yesterday | Pattern::Tomorrow => r.reset_time_all(),
+        Pattern::Today | Pattern::Tomorrow | Pattern::Yesterday => r.end_move(TimeUnit::Days, 1)?.reset_time_all(),
 
         Pattern::ThisUnit => match v.get_unit(0) {
-            TimeUnit::Minutes => r.reset_time_sec_ms(),
-            TimeUnit::Hours => r.reset_time_min_sec_ms(),
-            TimeUnit::Weeks => r.end_with_current()?.reset_time_all(),
-            TimeUnit::Months => r.end_with_current()?.start_first_of_month()?.reset_time_all(),
-            TimeUnit::Years => r.end_with_current()?.start_first_of_year()?.reset_time_all(),
+            TimeUnit::Minutes => r.end_move(TimeUnit::Minutes, 1)?.reset_time_sec_ms(),
+            TimeUnit::Hours => r.end_move(TimeUnit::Hours, 1)?.reset_time_min_sec_ms(),
+            TimeUnit::Weeks => r.end_with_current()?.end_move(TimeUnit::Days, 1)?.reset_time_all(),
+            TimeUnit::Months => r
+                .end_with_current()?
+                .end_move(TimeUnit::Days, 1)?
+                .start_first_of_month()?
+                .reset_time_all(),
+            TimeUnit::Years => r
+                .end_with_current()?
+                .start_first_of_year()?
+                .end_move(TimeUnit::Days, 1)?
+                .reset_time_all(),
             _ => Err(()),
         },
 
         Pattern::PrevUnit => match v.get_unit(0) {
-            TimeUnit::Minutes => r.reset_time_sec_ms(),
-            TimeUnit::Hours => r.reset_time_min_sec_ms(),
-            TimeUnit::Weeks => r.end_move(TimeUnit::Days, 6)?.reset_time_all(),
-            TimeUnit::Months => r.start_first_of_month()?.end_last_of_month()?.reset_time_all(),
-            TimeUnit::Years => r.start_first_of_year()?.end_last_of_year()?.reset_time_all(),
+            TimeUnit::Minutes => r.end_move(TimeUnit::Minutes, 1)?.reset_time_sec_ms(),
+            TimeUnit::Hours => r.end_move(TimeUnit::Hours, 1)?.reset_time_min_sec_ms(),
+            TimeUnit::Weeks => r.end_move(TimeUnit::Days, 7)?.reset_time_all(),
+            TimeUnit::Months => r
+                .start_first_of_month()?
+                .end_last_of_month()?
+                .end_move(TimeUnit::Days, 1)?
+                .reset_time_all(),
+            TimeUnit::Years => r
+                .start_first_of_year()?
+                .end_last_of_year()?
+                .end_move(TimeUnit::Days, 1)?
+                .reset_time_all(),
             _ => Err(()),
         },
 
         Pattern::PrevNUnit => match v.get_unit(1) {
-            TimeUnit::Seconds => r.end_with_current()?.reset_time_ms(),
-            TimeUnit::Minutes => r.end_with_current()?.reset_time_sec_ms(),
-            TimeUnit::Hours => r.end_move(TimeUnit::Hours, v.get_int(0) - 1)?.reset_time_min_sec_ms(),
-            TimeUnit::Days => r.end_move(TimeUnit::Days, v.get_int(0) - 1)?.reset_time_all(),
-            TimeUnit::Weeks => r.end_move(TimeUnit::Days, (v.get_int(0) * 7) - 1)?.reset_time_all(),
+            TimeUnit::Seconds => r.end_with_current()?.end_move(TimeUnit::Seconds, 1)?.reset_time_ms(),
+            TimeUnit::Minutes => r.end_with_current()?.end_move(TimeUnit::Minutes, 1)?.reset_time_sec_ms(),
+            TimeUnit::Hours => r.end_move(TimeUnit::Hours, v.get_int(0))?.reset_time_min_sec_ms(),
+            TimeUnit::Days => r.end_move(TimeUnit::Days, v.get_int(0))?.reset_time_all(),
+            TimeUnit::Weeks => r.end_move(TimeUnit::Days, v.get_int(0) * 7)?.reset_time_all(),
             TimeUnit::Months => r
                 .start_first_of_month()?
-                .end_move(TimeUnit::Months, v.get_int(0) - 1)?
-                .end_last_of_month()?
+                .end_move(TimeUnit::Months, v.get_int(0))?
+                .end_first_of_month()?
                 .reset_time_all(),
             TimeUnit::Years => r
                 .start_first_of_year()?
+                .end_first_of_month()?
                 .end_move(TimeUnit::Years, v.get_int(0) - 1)?
                 .end_last_of_year()?
+                .end_move(TimeUnit::Days, 1)?
                 .reset_time_all(),
-            _ => Err(()),
-        },
-
-        Pattern::PastUnit => match v.get_unit(0) {
-            TimeUnit::Minutes | TimeUnit::Hours => r.end_with_current(),
-            TimeUnit::Weeks | TimeUnit::Months | TimeUnit::Years => r.end_with_current()?.reset_time_all(),
-            _ => Err(()),
-        },
-
-        Pattern::MinusUnit => match v.get_unit(1) {
-            TimeUnit::Seconds | TimeUnit::Minutes | TimeUnit::Hours | TimeUnit::Days => r.end_with_current(),
-            TimeUnit::Weeks | TimeUnit::Months | TimeUnit::Years => r.end_with_current()?.reset_time_all(),
             _ => Err(()),
         },
 
         Pattern::NextUnit => match v.get_unit(0) {
-            TimeUnit::Minutes => r.reset_time_sec_ms(),
-            TimeUnit::Hours => r.reset_time_min_sec_ms(),
-            TimeUnit::Weeks => r.end_move(TimeUnit::Days, 6)?.reset_time_all(),
-            TimeUnit::Months => r.start_first_of_month()?.end_last_of_month()?.reset_time_all(),
-            TimeUnit::Years => r.start_first_of_year()?.end_last_of_year()?.reset_time_all(),
+            TimeUnit::Minutes => r.end_move(TimeUnit::Minutes, 1)?.reset_time_sec_ms(),
+            TimeUnit::Hours => r.end_move(TimeUnit::Hours, 1)?.reset_time_min_sec_ms(),
+            TimeUnit::Weeks => r.end_move(TimeUnit::Days, 7)?.reset_time_all(),
+            TimeUnit::Months => r
+                .start_first_of_month()?
+                .end_last_of_month()?
+                .end_move(TimeUnit::Days, 1)?
+                .reset_time_all(),
+            TimeUnit::Years => r
+                .start_first_of_year()?
+                .end_last_of_year()?
+                .end_move(TimeUnit::Days, 1)?
+                .reset_time_all(),
             _ => Err(()),
         },
 
