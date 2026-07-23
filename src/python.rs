@@ -1,12 +1,13 @@
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use pyo3::types::{PyDate, PyDateTime};
-use pyo3::{Bound, Py, PyErr, Python};
+use pyo3::{Bound, Py, PyErr};
 
 /// Turn optional date from Python into DateTime with a timezone,
 /// setting UTC as timezone and time as midnight
-pub(crate) fn into_date(py: Python, value: Option<Bound<PyDate>>) -> Result<DateTime<FixedOffset>, PyErr> {
+pub(crate) fn into_date(value: Option<Bound<PyDate>>) -> Result<DateTime<FixedOffset>, PyErr> {
     match value {
         Some(v) => {
+            let py = v.py();
             let real_value: Py<PyDate> = v.unbind();
             let date_value = real_value.extract::<NaiveDate>(py)?;
             let date_time = NaiveDateTime::from(date_value);
@@ -21,11 +22,14 @@ pub(crate) fn into_date(py: Python, value: Option<Bound<PyDate>>) -> Result<Date
 
 /// Turn optional datetime from Python object into DateTime with a timezone
 /// information, defaulting to UTC when missing
-pub(crate) fn into_datetime(py: Python, value: Option<Bound<PyDateTime>>) -> Result<DateTime<FixedOffset>, PyErr> {
-    let py_value: Py<PyDateTime> = match value {
-        Some(v) => v.unbind(),
-        None => return Ok(Utc::now().fixed_offset()),
-    };
+pub(crate) fn into_datetime(value: Option<Bound<PyDateTime>>) -> Result<DateTime<FixedOffset>, PyErr> {
+    if value.is_none() {
+        return Ok(Utc::now().fixed_offset());
+    }
+
+    let v = value.unwrap();
+    let py = v.py();
+    let py_value: Py<PyDateTime> = v.unbind();
 
     let naive_value = match py_value.extract(py) {
         Ok(v) => return Ok(v),
@@ -45,9 +49,9 @@ mod test {
     fn test_into_date() {
         Python::initialize();
 
-        Python::attach(|py| {
+        Python::attach(|_py| {
             let expect_value = Utc::now().format("%Y-%m-%d 00:00:00 +00:00").to_string();
-            let result_value = into_date(py, None);
+            let result_value = into_date(None);
             assert_eq!(result_value.unwrap().to_string(), expect_value);
         });
 
@@ -61,9 +65,9 @@ mod test {
     fn test_into_datetime() {
         Python::initialize();
 
-        Python::attach(|py| {
+        Python::attach(|_py| {
             let expect_value = Utc::now().format("%Y-%m-%d %H:").to_string();
-            let result_value = into_datetime(py, None);
+            let result_value = into_datetime(None);
             assert!(result_value.unwrap().to_string().starts_with(expect_value.as_str()));
         });
 
@@ -82,13 +86,13 @@ mod test {
 
     fn assert_date(py: Python, test_value: PyResult<Bound<PyDate>>, expect_value: &str) {
         let date_value: Bound<PyDate> = test_value.unwrap().into_pyobject(py).unwrap();
-        let result_value = into_date(py, Some(date_value));
+        let result_value = into_date(Some(date_value));
         assert_eq!(result_value.unwrap().to_string(), expect_value);
     }
 
     fn assert_datetime(py: Python, test_value: PyResult<Bound<PyDateTime>>, expect_value: &str) {
         let date_value: Bound<PyDateTime> = test_value.unwrap().into_pyobject(py).unwrap();
-        let result_value = into_datetime(py, Some(date_value));
+        let result_value = into_datetime(Some(date_value));
         assert_eq!(result_value.unwrap().to_string(), expect_value);
     }
 }
