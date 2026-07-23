@@ -74,7 +74,7 @@ fd.to_datetime('next Summer')
 
 ### Relative range
 
-Ending time is always exclusive.
+Ending datetime is always exclusive.
 
 ```python
 import fuzzydate as fd
