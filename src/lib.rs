@@ -699,7 +699,7 @@ mod fuzzydate {
             seconds: "float",
             units: "str" = None,
             max: "str" = "w",
-            min: "str" ="s"
+            min: "str" = "s"
         ) -> "str")
     ]
     pub fn to_duration(seconds: f64, units: Option<&str>, max: &str, min: &str) -> PyResult<String> {
